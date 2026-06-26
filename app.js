@@ -8693,3 +8693,105 @@ async function loadCategoriesPageSafe() {
 window.loadCategoriesPage = loadCategoriesPageSafe;
 window.loadCategoriesPageSafe = loadCategoriesPageSafe;
 window.getPublicCategoriesRoot = getPublicCategoriesRoot;
+
+/* =========================================================
+   FIX GLOBAL: evitar que categorías invada otras páginas
+========================================================= */
+
+function currentPageFile() {
+  const path = String(window.location.pathname || "").toLowerCase();
+  const file = path.split("/").pop() || "index.html";
+  return file || "index.html";
+}
+
+function isPage(fileName) {
+  return currentPageFile() === fileName;
+}
+
+function isCategoriesPageOnly() {
+  return isPage("categorias.html");
+}
+
+function fixMainNavigationLinks() {
+  const links = document.querySelectorAll("a");
+
+  links.forEach(function (link) {
+    const text = String(link.textContent || "").trim().toLowerCase();
+
+    if (text === "inicio") {
+      link.setAttribute("href", "index.html");
+    }
+
+    if (text === "canciones") {
+      link.setAttribute("href", "canciones.html");
+    }
+
+    if (text === "artistas") {
+      link.setAttribute("href", "artistas.html");
+    }
+
+    if (text === "categorías" || text === "categorias") {
+      link.setAttribute("href", "categorias.html");
+    }
+
+    if (text === "donaciones") {
+      link.setAttribute("href", "donaciones.html");
+    }
+  });
+}
+
+function getPublicCategoriesRoot() {
+  if (!isCategoriesPageOnly()) return null;
+
+  return (
+    document.getElementById("categoriesPage") ||
+    document.getElementById("categoriesList") ||
+    document.querySelector("[data-categories-page]") ||
+    document.querySelector(".categories-page") ||
+    document.querySelector(".category-accordion")?.parentElement
+  );
+}
+
+const safeLoadCategoriesPageOnly = window.loadCategoriesPageSafe || window.loadCategoriesPage;
+
+async function loadCategoriesPageSafe() {
+  if (!isCategoriesPageOnly()) return;
+
+  if (typeof safeLoadCategoriesPageOnly === "function") {
+    return safeLoadCategoriesPageOnly();
+  }
+}
+
+async function loadCategoriesPage() {
+  if (!isCategoriesPageOnly()) return;
+
+  if (typeof loadCategoriesPageSafe === "function") {
+    return loadCategoriesPageSafe();
+  }
+}
+
+document.addEventListener("click", function (event) {
+  const link = event.target.closest("a");
+
+  if (!link) return;
+
+  const href = String(link.getAttribute("href") || "");
+
+  if (href.startsWith("categoria.html") && !isCategoriesPageOnly()) {
+    event.preventDefault();
+    window.location.href = "categorias.html";
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  fixMainNavigationLinks();
+
+  setTimeout(function () {
+    fixMainNavigationLinks();
+  }, 1200);
+});
+
+window.getPublicCategoriesRoot = getPublicCategoriesRoot;
+window.loadCategoriesPageSafe = loadCategoriesPageSafe;
+window.loadCategoriesPage = loadCategoriesPage;
+window.fixMainNavigationLinks = fixMainNavigationLinks;
