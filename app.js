@@ -1738,7 +1738,6 @@ async function loadCategoriesPage() {
 
   if (!root) return;
 
-  root.in
    /* =========================================================
    PÚBLICO: PÁGINA DE CANTO
 ========================================================= */
