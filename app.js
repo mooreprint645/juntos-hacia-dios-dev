@@ -3936,3 +3936,164 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }, 1200);
 });
+/* =========================================================
+   FIX ULTRA COMPACTO MÓVIL PARA CANTO
+========================================================= */
+
+function injectUltraCompactSongMobile() {
+  const old = document.getElementById("jhd-ultra-compact-song-mobile");
+  if (old) old.remove();
+
+  const style = document.createElement("style");
+  style.id = "jhd-ultra-compact-song-mobile";
+
+  style.textContent = `
+    @media (max-width: 900px) {
+      .song-page-section {
+        padding: 10px 10px 24px !important;
+      }
+
+      .song-detail-card {
+        padding: 14px !important;
+        border-radius: 16px !important;
+        margin: 0 auto !important;
+      }
+
+      .artists-line {
+        margin-bottom: 8px !important;
+        font-size: 0.82rem !important;
+      }
+
+      .song-detail-card h1 {
+        font-size: 1.65rem !important;
+        line-height: 1.08 !important;
+        margin: 4px 0 10px !important;
+        letter-spacing: 0 !important;
+      }
+
+      .song-meta-line {
+        font-size: 0.85rem !important;
+        margin: 0 0 10px !important;
+      }
+
+      .capo-box,
+      .transpose-box {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        padding: 10px !important;
+        margin: 10px 0 !important;
+        border-radius: 14px !important;
+      }
+
+      .capo-box span,
+      .transpose-box span {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        text-align: center !important;
+        font-size: 0.82rem !important;
+        line-height: 1.2 !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+      }
+
+      .song-btn.small-btn,
+      .capo-box .song-btn,
+      .transpose-box .song-btn {
+        width: auto !important;
+        flex: 1 1 auto !important;
+        min-width: 96px !important;
+        max-width: 170px !important;
+        min-height: 36px !important;
+        padding: 8px 12px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.1 !important;
+        border-radius: 999px !important;
+      }
+
+      .transpose-box button:last-child {
+        flex: 0 1 130px !important;
+      }
+
+      .lyrics-block {
+        margin-top: 12px !important;
+        padding: 14px !important;
+        border-radius: 14px !important;
+        font-size: 0.9rem !important;
+      }
+
+      .song-section-label {
+        margin: 8px 0 8px !important;
+        padding: 4px 9px !important;
+        font-size: 0.58rem !important;
+        line-height: 1 !important;
+      }
+
+      .song-line {
+        margin-bottom: 8px !important;
+      }
+
+      .chord-line {
+        font-size: 0.88rem !important;
+        line-height: 1 !important;
+        min-height: 1em !important;
+        color: #ffd447 !important;
+        -webkit-text-fill-color: #ffd447 !important;
+        text-shadow: 0 0 7px rgba(255, 212, 71, 0.75) !important;
+      }
+
+      .lyric-line,
+      .song-plain-line {
+        font-size: 0.9rem !important;
+        line-height: 1.32 !important;
+        font-weight: 650 !important;
+      }
+
+      .song-empty-line {
+        height: 4px !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .song-detail-card h1 {
+        font-size: 1.45rem !important;
+      }
+
+      .song-btn.small-btn,
+      .capo-box .song-btn,
+      .transpose-box .song-btn {
+        min-width: 88px !important;
+        padding: 8px 10px !important;
+        font-size: 0.74rem !important;
+      }
+
+      .lyrics-block {
+        padding: 12px !important;
+      }
+
+      .chord-line {
+        font-size: 0.82rem !important;
+      }
+
+      .lyric-line,
+      .song-plain-line {
+        font-size: 0.84rem !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(function () {
+    injectUltraCompactSongMobile();
+
+    if (currentSongForPage) {
+      updateSongLyricsDisplay();
+    }
+  }, 1800);
+});
