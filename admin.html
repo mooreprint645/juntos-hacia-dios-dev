@@ -6,25 +6,13 @@
 
   <title>Admin | Juntos Hacia Dios</title>
 
-  <meta
-    name="description"
-    content="Panel privado para administrar canciones, artistas, categorías, álbumes y enlaces de Juntos Hacia Dios."
-  />
-
-  <link rel="stylesheet" href="style.css" />
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=600" />
 </head>
 
 <body>
   <header>
     <nav class="navbar">
-      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios">
-        <span class="brand-icon">✝</span>
-        <span>Juntos Hacia Dios</span>
-      </a>
+      <a href="index.html" class="brand">Juntos Hacia Dios</a>
 
       <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">
         ☰
@@ -37,248 +25,366 @@
         <a href="categorias.html">Categorías</a>
         <a href="donaciones.html">Donaciones</a>
         <a href="admin.html" class="active">Admin</a>
-
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">
-          🌙
-        </button>
+        <button id="themeToggle" class="theme-toggle" type="button">🌙</button>
       </div>
     </nav>
   </header>
 
-  <main>
-    <section class="hero compact-hero">
-      <div class="hero-content">
-        <p class="hero-kicker">Panel privado</p>
-
-        <h1>Administración</h1>
-
-        <p>
-          Agrega y edita canciones, artistas, categorías, álbumes, capo y enlaces de apoyo.
-        </p>
-      </div>
+  <main class="admin-page">
+    <section class="admin-hero">
+      <p class="hero-kicker">Panel privado</p>
+      <h1>Administración</h1>
+      <p>
+        Agrega y edita canciones, artistas, categorías, álbumes,
+        versiones con capo y enlaces.
+      </p>
     </section>
 
-    <section class="section" id="adminLoginSection">
-      <article class="admin-card">
-        <h2>Iniciar sesión</h2>
+    <section class="admin-login-card" id="adminLoginSection">
+      <h2>Iniciar sesión</h2>
 
-        <p class="muted-text">
-          Usa el correo administrador autorizado para entrar al panel.
-        </p>
+      <label for="adminEmailInput">Correo</label>
+      <input
+        type="email"
+        id="adminEmailInput"
+        placeholder="Correo administrador"
+        autocomplete="email"
+      />
 
-        <div class="form-grid">
-          <label>
-            Correo
-            <input
-              type="email"
-              id="adminEmailInput"
-              placeholder="correo@ejemplo.com"
-              autocomplete="email"
-            />
-          </label>
+      <label for="adminPasswordInput">Contraseña</label>
+      <input
+        type="password"
+        id="adminPasswordInput"
+        placeholder="Contraseña"
+        autocomplete="current-password"
+      />
 
-          <label>
-            Contraseña
-            <input
-              type="password"
-              id="adminPasswordInput"
-              placeholder="Tu contraseña"
-              autocomplete="current-password"
-            />
-          </label>
-        </div>
+      <button type="button" class="song-btn" onclick="loginAdmin()">
+        Entrar
+      </button>
 
-        <div class="admin-actions">
-          <button class="song-btn" type="button" onclick="loginAdmin()">
-            Entrar
-          </button>
-        </div>
-
-        <p class="muted-text" id="adminLoginMessage"></p>
-      </article>
+      <p id="adminLoginMessage" class="muted-text"></p>
     </section>
 
-    <section class="section" id="adminPanel" style="display: none;">
-      <div class="section-heading split-heading">
-        <div>
-          <p class="hero-kicker">Sesión activa</p>
-          <h2>Panel de control</h2>
-          <p id="adminUserText" class="muted-text"></p>
-        </div>
+    <section class="admin-panel" id="adminPanel" style="display:none;">
+      <div class="admin-topbar">
+        <p id="adminUserText" class="muted-text"></p>
 
-        <button class="song-btn secondary" type="button" onclick="logoutAdmin()">
+        <button type="button" class="song-btn small-btn danger" onclick="logoutAdmin()">
           Cerrar sesión
         </button>
       </div>
 
-      <div class="admin-tabs">
-        <a href="#adminSongs">Canciones</a>
-        <a href="#adminArtists">Artistas</a>
-        <a href="#adminCategories">Categorías</a>
-        <a href="#adminAlbums">Álbumes</a>
-      </div>
+      <section class="admin-section" id="artistsAdminSection">
+        <div class="section-heading">
+          <p class="hero-kicker">Artistas</p>
+          <h2>Artistas / Ministerios</h2>
+        </div>
 
-      <section class="admin-section" id="adminSongs">
+        <article class="admin-form-card" id="artistFormCard">
+          <h3 id="artistFormTitle">Agregar artista</h3>
+
+          <label for="artistNameInput">Nombre</label>
+          <input
+            type="text"
+            id="artistNameInput"
+            placeholder="Ejemplo: Athenas"
+          />
+
+          <label for="artistDescriptionInput">Descripción</label>
+          <textarea
+            id="artistDescriptionInput"
+            rows="3"
+            placeholder="Breve descripción del artista o ministerio"
+          ></textarea>
+
+          <div class="admin-actions">
+            <button type="button" class="song-btn" onclick="saveArtist()">
+              Guardar artista
+            </button>
+
+            <button type="button" class="song-btn secondary" onclick="cancelArtistEdit()">
+              Cancelar
+            </button>
+          </div>
+        </article>
+
+        <div class="admin-list" id="adminArtistList"></div>
+      </section>
+      <section class="admin-section" id="categoriesAdminSection">
+        <div class="section-heading">
+          <p class="hero-kicker">Categorías</p>
+          <h2>Categorías</h2>
+        </div>
+
+        <article class="admin-form-card" id="categoryFormCard">
+          <h3 id="categoryFormTitle">Agregar categoría</h3>
+
+          <label for="categoryNameInput">Nombre</label>
+          <input
+            type="text"
+            id="categoryNameInput"
+            placeholder="Ejemplo: Adviento, María, Alabanza"
+          />
+
+          <label for="categoryDescriptionInput">Descripción</label>
+          <textarea
+            id="categoryDescriptionInput"
+            rows="3"
+            placeholder="Breve descripción de la categoría"
+          ></textarea>
+
+          <div class="admin-actions">
+            <button type="button" class="song-btn" onclick="saveCategory()">
+              Guardar categoría
+            </button>
+
+            <button type="button" class="song-btn secondary" onclick="cancelCategoryEdit()">
+              Cancelar
+            </button>
+          </div>
+        </article>
+
+        <div class="admin-list" id="adminCategoryList"></div>
+      </section>
+
+      <section class="admin-section" id="albumsAdminSection">
+        <div class="section-heading">
+          <p class="hero-kicker">Álbumes / Carpetas</p>
+          <h2>Álbumes por artista</h2>
+        </div>
+
+        <article class="admin-form-card" id="albumFormCard">
+          <h3 id="albumFormTitle">Agregar álbum / carpeta</h3>
+
+          <label for="albumArtistInput">Artista</label>
+          <select id="albumArtistInput">
+            <option value="">Selecciona artista</option>
+          </select>
+
+          <label for="albumTitleInput">Nombre del álbum / carpeta</label>
+          <input
+            type="text"
+            id="albumTitleInput"
+            placeholder="Ejemplo: Música Católica, Covers, Alabanzas"
+          />
+
+          <label for="albumDescriptionInput">Descripción</label>
+          <textarea
+            id="albumDescriptionInput"
+            rows="3"
+            placeholder="Breve descripción del álbum o carpeta"
+          ></textarea>
+
+          <div class="admin-actions">
+            <button type="button" class="song-btn" onclick="saveAlbum()">
+              Guardar álbum
+            </button>
+
+            <button type="button" class="song-btn secondary" onclick="cancelAlbumEdit()">
+              Cancelar
+            </button>
+          </div>
+        </article>
+
+        <div class="admin-list" id="adminAlbumList"></div>
+      </section>
+
+      <section class="admin-section" id="songsAdminSection">
         <div class="section-heading">
           <p class="hero-kicker">Cancionero</p>
           <h2>Canciones</h2>
-          <p>Agrega letras, acordes, tono, capo, artistas, categorías, álbumes y enlaces.</p>
         </div>
 
-        <article class="admin-card" id="songFormCard">
+        <article class="admin-form-card" id="songFormCard">
           <h3 id="songFormTitle">Agregar canción</h3>
 
-          <div class="form-grid">
-            <label>
-              Título
-              <input
-                type="text"
-                id="songTitleInput"
-                placeholder="Ej. Santo"
-              />
-            </label>
+          <label for="songTitleInput">Título</label>
+          <input
+            type="text"
+            id="songTitleInput"
+            placeholder="Ejemplo: Caminar contigo María"
+          />
 
-            <label>
-              Tipo
-              <select id="songTypeInput">
-                <option value="catolico">Católico</option>
-                <option value="cristiano">Cristiano</option>
-              </select>
-            </label>
+          <label for="songTypeInput">Tipo</label>
+          <select id="songTypeInput">
+            <option value="catolico">Católico</option>
+            <option value="cristiano">Cristiano</option>
+          </select>
 
-            <label>
-              Artistas
-              <select id="songArtistsInput" multiple size="5"></select>
-              <small class="muted-text">Puedes seleccionar más de un artista.</small>
-            </label>
+          <label for="songArtistsInput">Artistas / Colaboradores</label>
+          <select id="songArtistsInput" multiple size="5"></select>
 
-            <label>
-              Categoría
-              <select id="songCategoryInput">
-                <option value="">Selecciona categoría</option>
-              </select>
-            </label>
+          <small class="muted-text">
+            En celular puedes mantener presionado o seleccionar varios según tu navegador.
+            El primer artista seleccionado será el principal.
+          </small>
 
-            <label>
-              Álbum / carpeta
-              <select id="songAlbumInput">
-                <option value="">Sin álbum / carpeta</option>
-              </select>
-            </label>
+          <label for="songCategoryInput">Categoría principal</label>
+          <select id="songCategoryInput">
+            <option value="">Selecciona categoría</option>
+          </select>
 
-            <label>
-              Tono original
-              <input
-                type="text"
-                id="songToneInput"
-                placeholder="Ej. A, G, D, C, Am"
-              />
-              <small class="muted-text">
-                Este es el tono real de la canción. Ejemplo: A.
-              </small>
-            </label>
+          <label for="songAlbumInput">Álbum / carpeta</label>
+          <select id="songAlbumInput">
+            <option value="">Sin álbum / carpeta</option>
+          </select>
+          <label for="songToneInput">Tono original</label>
+          <input
+            type="text"
+            id="songToneInput"
+            placeholder="Ejemplo: C, D, E, G"
+          />
 
-            <label>
-              Dificultad
-              <select id="songDifficultyInput">
-                <option value="">Sin dificultad</option>
-                <option value="Fácil">Fácil</option>
-                <option value="Medio">Medio</option>
-                <option value="Avanzado">Avanzado</option>
-              </select>
-            </label>
+          <label for="songDifficultyInput">Dificultad</label>
+          <select id="songDifficultyInput">
+            <option value="">Sin dificultad</option>
+            <option value="Fácil">Fácil</option>
+            <option value="Intermedio">Intermedio</option>
+            <option value="Avanzado">Avanzado</option>
+          </select>
 
-            <label>
-              Capo / Cejilla
-              <select id="songCapoInput">
-                <option value="0">Sin capo</option>
-                <option value="1">Capo 1</option>
-                <option value="2">Capo 2</option>
-                <option value="3">Capo 3</option>
-                <option value="4">Capo 4</option>
-                <option value="5">Capo 5</option>
-                <option value="6">Capo 6</option>
-                <option value="7">Capo 7</option>
-                <option value="8">Capo 8</option>
-                <option value="9">Capo 9</option>
-                <option value="10">Capo 10</option>
-                <option value="11">Capo 11</option>
-                <option value="12">Capo 12</option>
-              </select>
-              <small class="muted-text">
-                Selecciona en qué traste se coloca el capo.
-              </small>
-            </label>
+          <div class="admin-capo-old-box">
+            <h4>Capo principal</h4>
 
-            <label>
-              Figuras que se tocan con capo
-              <input
-                type="text"
-                id="songCapoKeyInput"
-                placeholder="Ej. G"
-              />
-              <small class="muted-text">
-                Ejemplo: si el tono real es A y quieres tocar con capo 2 usando figuras de G, escribe G.
-              </small>
-            </label>
+            <p class="muted-text">
+              Este capo principal se mantiene para compatibilidad. Abajo puedes agregar varias versiones.
+            </p>
+
+            <label for="songCapoInput">Capo / Cejilla principal</label>
+            <select id="songCapoInput">
+              <option value="0">Sin capo</option>
+              <option value="1">Capo 1</option>
+              <option value="2">Capo 2</option>
+              <option value="3">Capo 3</option>
+              <option value="4">Capo 4</option>
+              <option value="5">Capo 5</option>
+              <option value="6">Capo 6</option>
+              <option value="7">Capo 7</option>
+              <option value="8">Capo 8</option>
+              <option value="9">Capo 9</option>
+              <option value="10">Capo 10</option>
+              <option value="11">Capo 11</option>
+              <option value="12">Capo 12</option>
+            </select>
+
+            <label for="songCapoKeyInput">Figuras que se tocan con capo principal</label>
+            <input
+              type="text"
+              id="songCapoKeyInput"
+              placeholder="Ejemplo: E, G, D"
+            />
           </div>
 
-          <label>
-            Letra con acordes
-            <textarea
-              id="songLyricsInput"
-              rows="16"
-              placeholder="Ejemplo:
-[Intro]
-(G)Caminar contigo (D)María
+          <div class="admin-capo-versions-box">
+            <h4>Versiones con capo</h4>
 
-[Verso 1]
-(G)Caminar contigo (D)María
-(Em)quiero aprender a (C)amar"
-            ></textarea>
-          </label>
+            <p class="muted-text">
+              Puedes agregar varias opciones para la misma canción.
+              Ejemplo: Capo 1 · D, Capo 2 · E, Capo 4 · G.
+            </p>
 
-          <div class="editor-shortcuts">
-            <button type="button" class="song-btn small-btn secondary" onclick="insertSongSection('Intro')">
+            <div class="capo-version-grid">
+              <div>
+                <label for="newCapoLabelInput">Nombre visible</label>
+                <input
+                  type="text"
+                  id="newCapoLabelInput"
+                  placeholder="Ejemplo: Capo 2 · E"
+                />
+              </div>
+
+              <div>
+                <label for="newCapoPositionInput">Capo</label>
+                <select id="newCapoPositionInput">
+                  <option value="0">Sin capo</option>
+                  <option value="1">Capo 1</option>
+                  <option value="2">Capo 2</option>
+                  <option value="3">Capo 3</option>
+                  <option value="4">Capo 4</option>
+                  <option value="5">Capo 5</option>
+                  <option value="6">Capo 6</option>
+                  <option value="7">Capo 7</option>
+                  <option value="8">Capo 8</option>
+                  <option value="9">Capo 9</option>
+                  <option value="10">Capo 10</option>
+                  <option value="11">Capo 11</option>
+                  <option value="12">Capo 12</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="newCapoKeyInput">Figuras</label>
+                <input
+                  type="text"
+                  id="newCapoKeyInput"
+                  placeholder="Ejemplo: E"
+                />
+              </div>
+            </div>
+
+            <button type="button" class="song-btn small-btn" onclick="addAdminCapoVersionFromFields()">
+              Agregar versión de capo
+            </button>
+
+            <div class="admin-capo-version-list" id="songCapoVersionsRows"></div>
+          </div>
+
+          <label for="songLyricsInput">Letra con acordes</label>
+
+          <div class="editor-buttons">
+            <button type="button" class="song-btn small-btn" onclick="insertSongSection('Intro')">
               Intro
             </button>
 
-            <button type="button" class="song-btn small-btn secondary" onclick="insertSongSection('Verso 1')">
-              Verso
+            <button type="button" class="song-btn small-btn" onclick="insertSongSection('Verso 1')">
+              Verso 1
             </button>
 
-            <button type="button" class="song-btn small-btn secondary" onclick="insertSongSection('Coro')">
+            <button type="button" class="song-btn small-btn" onclick="insertSongSection('Coro')">
               Coro
             </button>
 
-            <button type="button" class="song-btn small-btn secondary" onclick="insertSongSection('Puente')">
+            <button type="button" class="song-btn small-btn" onclick="insertSongSection('Puente')">
               Puente
             </button>
 
-            <button type="button" class="song-btn small-btn secondary" onclick="insertSongSection('Final')">
+            <button type="button" class="song-btn small-btn" onclick="insertSongSection('Final')">
               Final
             </button>
           </div>
 
-          <div class="admin-links-editor">
-            <h4>Links de apoyo</h4>
+          <textarea
+            id="songLyricsInput"
+            rows="16"
+            placeholder="[Intro]
+(C)Aquí empieza la letra
 
-            <p class="muted-text">
-              Agrega tutoriales, videos, canales, covers o recursos relacionados.
-            </p>
+[Verso 1]
+(Am)Otra línea del canto"
+          ></textarea>
+ <label for="songLinksInput">Links guardados</label>
+          <textarea
+            id="songLinksInput"
+            rows="4"
+            placeholder="Título | Tipo | Plataforma | URL"
+          ></textarea>
 
-            <div class="form-grid">
-              <label>
-                Título del link
+          <div class="admin-links-box">
+            <h4>Tutoriales y enlaces</h4>
+
+            <div class="capo-version-grid">
+              <div>
+                <label for="newLinkTitleInput">Título</label>
                 <input
                   type="text"
                   id="newLinkTitleInput"
-                  placeholder="Ej. Tutorial de guitarra"
+                  placeholder="Ejemplo: Tutorial guitarra"
                 />
-              </label>
+              </div>
 
-              <label>
-                Tipo
+              <div>
+                <label for="newLinkTypeInput">Tipo</label>
                 <select id="newLinkTypeInput">
                   <option value="Tutorial">Tutorial</option>
                   <option value="Video">Video</option>
@@ -288,10 +394,10 @@
                   <option value="Letra">Letra</option>
                   <option value="Otro">Otro</option>
                 </select>
-              </label>
+              </div>
 
-              <label>
-                Plataforma
+              <div>
+                <label for="newLinkPlatformInput">Plataforma</label>
                 <select id="newLinkPlatformInput">
                   <option value="YouTube">YouTube</option>
                   <option value="TikTok">TikTok</option>
@@ -301,223 +407,46 @@
                   <option value="Sitio web">Sitio web</option>
                   <option value="Otro">Otro</option>
                 </select>
-              </label>
-
-              <label>
-                URL
-                <input
-                  type="url"
-                  id="newLinkUrlInput"
-                  placeholder="https://..."
-                />
-              </label>
+              </div>
             </div>
 
-            <button class="song-btn small-btn" type="button" onclick="addAdminLinkFromFields()">
+            <label for="newLinkUrlInput">URL</label>
+            <input
+              type="url"
+              id="newLinkUrlInput"
+              placeholder="https://..."
+            />
+
+            <button type="button" class="song-btn small-btn" onclick="addAdminLinkFromFields()">
               Agregar link
             </button>
 
-            <div class="links-rows" id="songLinksRows"></div>
-
-            <textarea id="songLinksInput" rows="5" hidden></textarea>
+            <div id="songLinksRows"></div>
           </div>
 
           <div class="admin-actions">
-            <button class="song-btn" type="button" onclick="saveSong()">
+            <button type="button" class="song-btn" onclick="saveSong()">
               Guardar canción
             </button>
 
-            <button class="song-btn secondary" type="button" onclick="cancelSongEdit()">
+            <button type="button" class="song-btn secondary" onclick="cancelSongEdit()">
               Cancelar
             </button>
           </div>
         </article>
 
-        <article class="admin-card">
+        <article class="admin-preview-card">
           <h3>Vista previa</h3>
           <div id="adminPreviewBox"></div>
         </article>
 
-        <article class="admin-card">
-          <h3>Canciones guardadas</h3>
-          <div class="admin-list" id="adminSongList">
-            <p class="muted-text">Cargando canciones...</p>
-          </div>
-        </article>
-      </section>
-
-      <section class="admin-section" id="adminArtists">
-        <div class="section-heading">
-          <p class="hero-kicker">Ministerios y salmistas</p>
-          <h2>Artistas</h2>
-          <p>Agrega artistas, ministerios o colaboradores.</p>
-        </div>
-
-        <article class="admin-card" id="artistFormCard">
-          <h3 id="artistFormTitle">Agregar artista</h3>
-
-          <div class="form-grid">
-            <label>
-              Nombre del artista
-              <input
-                type="text"
-                id="artistNameInput"
-                placeholder="Ej. Athenas"
-              />
-            </label>
-
-            <label>
-              Descripción
-              <input
-                type="text"
-                id="artistDescriptionInput"
-                placeholder="Breve descripción del artista o ministerio"
-              />
-            </label>
-          </div>
-
-          <div class="admin-actions">
-            <button class="song-btn" type="button" onclick="saveArtist()">
-              Guardar artista
-            </button>
-
-            <button class="song-btn secondary" type="button" onclick="cancelArtistEdit()">
-              Cancelar
-            </button>
-          </div>
-        </article>
-
-        <article class="admin-card">
-          <h3>Artistas guardados</h3>
-
-          <div class="admin-list" id="adminArtistList">
-            <p class="muted-text">Cargando artistas...</p>
-          </div>
-        </article>
-      </section>
-
-      <section class="admin-section" id="adminCategories">
-        <div class="section-heading">
-          <p class="hero-kicker">Organización</p>
-          <h2>Categorías</h2>
-          <p>Agrega categorías para ordenar los cantos.</p>
-        </div>
-
-        <article class="admin-card" id="categoryFormCard">
-          <h3 id="categoryFormTitle">Agregar categoría</h3>
-
-          <div class="form-grid">
-            <label>
-              Nombre de la categoría
-              <input
-                type="text"
-                id="categoryNameInput"
-                placeholder="Ej. Adoración"
-              />
-            </label>
-
-            <label>
-              Descripción
-              <input
-                type="text"
-                id="categoryDescriptionInput"
-                placeholder="Breve descripción de la categoría"
-              />
-            </label>
-          </div>
-
-          <div class="admin-actions">
-            <button class="song-btn" type="button" onclick="saveCategory()">
-              Guardar categoría
-            </button>
-
-            <button class="song-btn secondary" type="button" onclick="cancelCategoryEdit()">
-              Cancelar
-            </button>
-          </div>
-        </article>
-
-        <article class="admin-card">
-          <h3>Categorías guardadas</h3>
-
-          <div class="admin-list" id="adminCategoryList">
-            <p class="muted-text">Cargando categorías...</p>
-          </div>
-        </article>
-      </section>
-
-      <section class="admin-section" id="adminAlbums">
-        <div class="section-heading">
-          <p class="hero-kicker">Carpetas por artista</p>
-          <h2>Álbumes / carpetas</h2>
-          <p>Organiza los cantos de cada artista por álbum, proyecto o carpeta.</p>
-        </div>
-
-        <article class="admin-card" id="albumFormCard">
-          <h3 id="albumFormTitle">Agregar álbum / carpeta</h3>
-
-          <div class="form-grid">
-            <label>
-              Artista
-              <select id="albumArtistInput">
-                <option value="">Selecciona artista</option>
-              </select>
-            </label>
-
-            <label>
-              Nombre del álbum / carpeta
-              <input
-                type="text"
-                id="albumTitleInput"
-                placeholder="Ej. Adoración en vivo"
-              />
-            </label>
-
-            <label>
-              Descripción
-              <input
-                type="text"
-                id="albumDescriptionInput"
-                placeholder="Breve descripción del álbum o carpeta"
-              />
-            </label>
-          </div>
-
-          <div class="admin-actions">
-            <button class="song-btn" type="button" onclick="saveAlbum()">
-              Guardar álbum
-            </button>
-
-            <button class="song-btn secondary" type="button" onclick="cancelAlbumEdit()">
-              Cancelar
-            </button>
-          </div>
-        </article>
-
-        <article class="admin-card">
-          <h3>Álbumes guardados</h3>
-
-          <div class="admin-list" id="adminAlbumList">
-            <p class="muted-text">Cargando álbumes...</p>
-          </div>
-        </article>
+        <div class="admin-list" id="adminSongList"></div>
       </section>
     </section>
   </main>
 
-  <footer>
-    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
-    <p>
-      <a href="index.html">Inicio</a>
-      ·
-      <a href="canciones.html">Canciones</a>
-      ·
-      <a href="artistas.html">Artistas</a>
-    </p>
-  </footer>
-
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js?v=1"></script>
+  <script src="app.js?v=700"></script>
 </body>
-</html>
+</html>         
