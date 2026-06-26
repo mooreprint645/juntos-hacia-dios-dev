@@ -1,6 +1,6 @@
 /* =========================================================
    JUNTOS HACIA DIOS
-   app.js limpio
+   app.js estable
 ========================================================= */
 
 const ADMIN_EMAIL = "mooreprint645@gmail.com";
@@ -17,27 +17,22 @@ let currentEditingSongId = null;
 let currentSongForPage = null;
 let currentTransposeSteps = 0;
 let currentCapoMode = "original";
-let currentCapoVersionIndex = -1;
 
 let allSongsForPage = [];
 let currentSongsFilter = "all";
 
 let allArtistsForPage = [];
+let allCategoriesForPage = [];
+let allCategorySongsForPage = [];
 
-let publicCategoriesData = [];
-let publicCategoriesType = "catolico";
-let publicCategoriesParentId = null;
-let publicCategorySongsData = [];
+let adminLinkItems = [];
+let adminCapoVersionItems = [];
 
 let adminCategoryBrowserType = "catolico";
 let adminCategoryBrowserParentId = null;
 let adminCategoryBrowserCategories = [];
 
 let lockedCategoryParentId = null;
-
-let adminLinkItems = [];
-let adminCapoVersionItems = [];
-
 let currentDonationSettingsId = null;
 
 /* =========================================================
@@ -110,7 +105,7 @@ function isPage(fileName) {
 
 function isHomePage() {
   const file = currentPageFile();
-  return file === "index.html" || file === "";
+  return file === "" || file === "index.html";
 }
 
 function getInitials(name) {
@@ -196,16 +191,14 @@ function setMultiOptions(selectId, items, labelKey) {
 function artistsText(song) {
   const artists = song && song._artists ? song._artists : [];
 
-  if (artists.length) {
-    return artists
-      .map(function (artist) {
-        return artist.name || "";
-      })
-      .filter(Boolean)
-      .join(" · ");
-  }
+  if (!artists.length) return "Sin artista";
 
-  return "Sin artista";
+  return artists
+    .map(function (artist) {
+      return artist.name || "";
+    })
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function artistLinksHTML(artists) {
@@ -340,11 +333,15 @@ function fixMainNavigationLinks() {
 function hideAdminLinkOnPublicPages() {
   if (isPage("admin.html")) return;
 
-  document.querySelectorAll('a[href="admin.html"]').forEach(function (link) {
-    link.remove();
+  document.querySelectorAll("a").forEach(function (link) {
+    const href = String(link.getAttribute("href") || "").toLowerCase();
+    const text = String(link.textContent || "").trim().toLowerCase();
+
+    if (href.includes("admin.html") || text === "admin" || text === "administración") {
+      link.remove();
+    }
   });
 }
-
 /* =========================================================
    SUPABASE: LECTURA
 ========================================================= */
@@ -446,7 +443,7 @@ async function fetchSongsBase(ids) {
     .select("*")
     .order("title", { ascending: true });
 
-  if (ids && ids.length) {
+  if (Array.isArray(ids) && ids.length) {
     query = query.in("id", ids);
   }
 
@@ -600,6 +597,7 @@ async function fetchSongsWithRelations(ids) {
     error: null
   };
 }
+
 /* =========================================================
    LINKS DE CANCIONES
 ========================================================= */
@@ -828,13 +826,13 @@ function getCapoTransposeSteps(song) {
   return capoPosition > 0 ? -capoPosition : 0;
 }
 
-function getSelectedCapoVersionSong() {
+function getSelectedCapoSong() {
   if (!currentSongForPage) return null;
 
   const versions = currentSongForPage._capoVersions || [];
 
-  if (currentCapoVersionIndex >= 0 && versions[currentCapoVersionIndex]) {
-    return capoVersionToSong(currentSongForPage, versions[currentCapoVersionIndex]);
+  if (currentSongForPage._selectedCapoVersionIndex >= 0 && versions[currentSongForPage._selectedCapoVersionIndex]) {
+    return capoVersionToSong(currentSongForPage, versions[currentSongForPage._selectedCapoVersionIndex]);
   }
 
   return currentSongForPage;
@@ -844,7 +842,7 @@ function getTotalTransposeSteps() {
   if (!currentSongForPage) return currentTransposeSteps;
 
   if (currentCapoMode === "capo") {
-    return currentTransposeSteps + getCapoTransposeSteps(getSelectedCapoVersionSong());
+    return currentTransposeSteps + getCapoTransposeSteps(getSelectedCapoSong());
   }
 
   return currentTransposeSteps;
@@ -944,13 +942,22 @@ function resetTranspose() {
 function setCapoMode(mode) {
   currentCapoMode = mode === "capo" ? "capo" : "original";
   currentTransposeSteps = 0;
+
+  if (currentSongForPage) {
+    currentSongForPage._selectedCapoVersionIndex = -1;
+  }
+
   updateSongLyricsDisplay();
 }
 
 function setCapoVersionByIndex(index) {
-  currentCapoVersionIndex = Number(index);
   currentCapoMode = "capo";
   currentTransposeSteps = 0;
+
+  if (currentSongForPage) {
+    currentSongForPage._selectedCapoVersionIndex = Number(index);
+  }
+
   updateSongLyricsDisplay();
 }
 
@@ -982,7 +989,7 @@ function updateSongLyricsDisplay() {
       return;
     }
 
-    const selectedSong = getSelectedCapoVersionSong();
+    const selectedSong = getSelectedCapoSong();
     const capo = getCapoPosition(selectedSong);
     const capoKey = selectedSong.capo_key || "";
 
@@ -991,9 +998,8 @@ function updateSongLyricsDisplay() {
       : "Con capo";
   }
 }
-
 /* =========================================================
-   PÚBLICO: HOME
+   PÚBLICO: INICIO
 ========================================================= */
 
 async function loadHomeSongs() {
@@ -1211,6 +1217,8 @@ async function loadSongsPage() {
 }
 
 function setupSongsSearch() {
+  if (!isPage("canciones.html")) return;
+
   const input = $("songsSearchInput") || $("songSearchInput") || $("searchInput");
 
   if (!input) return;
@@ -1287,6 +1295,8 @@ async function loadArtistsPage() {
 }
 
 function setupArtistsSearch() {
+  if (!isPage("artistas.html")) return;
+
   const input = $("artistsSearchInput") || $("artistSearchInput") || $("artistSearch");
 
   if (!input) return;
@@ -1307,17 +1317,18 @@ function setupArtistsSearch() {
     renderArtistsPage(filtered);
   });
 }
+
 /* =========================================================
-   PÚBLICO: CATEGORÍAS LIMPIAS
+   PÚBLICO: CATEGORÍAS COMPACTAS
 ========================================================= */
 
-function getPublicCategoriesRoot() {
+function getCategoriesRoot() {
   if (!isPage("categorias.html")) return null;
 
   return $("categoriesPage") || $("categoriesGrid") || $("categoryList");
 }
 
-function getPublicCategorySearchInput() {
+function getCategoriesSearchInput() {
   if (!isPage("categorias.html")) return null;
 
   return (
@@ -1332,16 +1343,16 @@ function getPublicCategorySearchInput() {
 }
 
 function getPublicCategoryById(categoryId) {
-  return publicCategoriesData.find(function (category) {
+  return allCategoriesForPage.find(function (category) {
     return String(category.id) === String(categoryId);
   });
 }
 
 function getPublicCategoryChildren(parentId) {
-  return publicCategoriesData
+  return allCategoriesForPage
     .filter(function (category) {
-      if (publicCategoriesType) {
-        if (category.song_type !== publicCategoriesType) return false;
+      if (adminCategoryBrowserType) {
+        if (category.song_type !== adminCategoryBrowserType) return false;
       } else if (category.song_type) {
         return false;
       }
@@ -1375,16 +1386,16 @@ function getPublicCategoryPath(parentId) {
 }
 
 function setPublicCategoryType(type) {
-  publicCategoriesType = type || "";
-  publicCategoriesParentId = null;
-  renderPublicCategoriesExplorer();
+  adminCategoryBrowserType = type || "";
+  adminCategoryBrowserParentId = null;
+  renderCategoriesExplorer();
 }
 
 function openPublicCategoryFolder(categoryId) {
-  publicCategoriesParentId = categoryId || null;
-  renderPublicCategoriesExplorer();
+  adminCategoryBrowserParentId = categoryId || null;
+  renderCategoriesExplorer();
 
-  const root = getPublicCategoriesRoot();
+  const root = getCategoriesRoot();
 
   if (root) {
     root.scrollIntoView({
@@ -1395,7 +1406,7 @@ function openPublicCategoryFolder(categoryId) {
 }
 
 function renderPublicCategoryPath() {
-  const path = getPublicCategoryPath(publicCategoriesParentId);
+  const path = getPublicCategoryPath(adminCategoryBrowserParentId);
 
   let html = `
     <div class="public-category-path">
@@ -1427,21 +1438,21 @@ function categorySongsHref(category) {
   return `categorias.html?categoria=${safeUrlParam(category.slug || "")}`;
 }
 
-function renderPublicCategoriesExplorer() {
-  const root = getPublicCategoriesRoot();
+function renderCategoriesExplorer() {
+  const root = getCategoriesRoot();
 
   if (!root) return;
 
-  const children = getPublicCategoryChildren(publicCategoriesParentId);
+  const children = getPublicCategoryChildren(adminCategoryBrowserParentId);
 
   root.innerHTML = `
     <div class="public-category-explorer">
-      <p class="muted">${publicCategoriesData.length} categorías disponibles</p>
+      <p class="muted">${allCategoriesForPage.length} categorías disponibles</p>
 
       <div class="public-category-tabs">
         <button
           type="button"
-          class="song-btn small-btn public-category-tab ${publicCategoriesType === "catolico" ? "active" : ""}"
+          class="song-btn small-btn public-category-tab ${adminCategoryBrowserType === "catolico" ? "active" : ""}"
           onclick="setPublicCategoryType('catolico')"
         >
           Católico
@@ -1449,7 +1460,7 @@ function renderPublicCategoriesExplorer() {
 
         <button
           type="button"
-          class="song-btn small-btn public-category-tab ${publicCategoriesType === "cristiano" ? "active" : ""}"
+          class="song-btn small-btn public-category-tab ${adminCategoryBrowserType === "cristiano" ? "active" : ""}"
           onclick="setPublicCategoryType('cristiano')"
         >
           Cristiano
@@ -1457,7 +1468,7 @@ function renderPublicCategoriesExplorer() {
 
         <button
           type="button"
-          class="song-btn small-btn public-category-tab ${publicCategoriesType === "" ? "active" : ""}"
+          class="song-btn small-btn public-category-tab ${adminCategoryBrowserType === "" ? "active" : ""}"
           onclick="setPublicCategoryType('')"
         >
           General
@@ -1469,7 +1480,7 @@ function renderPublicCategoriesExplorer() {
       ${children.length ? `
         <div class="public-category-grid">
           ${children.map(function (category) {
-            const childCount = publicCategoriesData.filter(function (child) {
+            const childCount = allCategoriesForPage.filter(function (child) {
               return String(child.parent_id || "") === String(category.id || "");
             }).length;
 
@@ -1505,32 +1516,34 @@ function renderPublicCategoriesExplorer() {
         <div class="public-category-empty">
           <p>No hay subcategorías aquí.</p>
 
-          <button
-            type="button"
-            class="song-btn small-btn"
-            onclick="showPublicCategorySongsFromCurrentFolder()"
-          >
-            Ver cantos de esta categoría
-          </button>
+          ${adminCategoryBrowserParentId ? `
+            <button
+              type="button"
+              class="song-btn small-btn"
+              onclick="showCategorySongsByCurrentFolder()"
+            >
+              Ver cantos de esta categoría
+            </button>
+          ` : ""}
         </div>
       `}
     </div>
   `;
 }
 
-function renderPublicCategorySearchResults(query) {
-  const root = getPublicCategoriesRoot();
+function renderCategorySearchResults(query) {
+  const root = getCategoriesRoot();
 
   if (!root) return;
 
   const cleanQuery = String(query || "").trim().toLowerCase();
 
   if (!cleanQuery) {
-    renderPublicCategoriesExplorer();
+    renderCategoriesExplorer();
     return;
   }
 
-  const results = publicCategoriesData
+  const results = allCategoriesForPage
     .filter(function (category) {
       return (
         String(category.name || "").toLowerCase().includes(cleanQuery) ||
@@ -1548,7 +1561,7 @@ function renderPublicCategorySearchResults(query) {
       ${results.length ? `
         <div class="public-category-grid">
           ${results.map(function (category) {
-            const childCount = publicCategoriesData.filter(function (child) {
+            const childCount = allCategoriesForPage.filter(function (child) {
               return String(child.parent_id || "") === String(category.id || "");
             }).length;
 
@@ -1565,7 +1578,7 @@ function renderPublicCategorySearchResults(query) {
                       type="button"
                       class="song-btn small-btn"
                       onclick="
-                        publicCategoriesType='${escapeHTML(category.song_type || "")}';
+                        adminCategoryBrowserType='${escapeHTML(category.song_type || "")}';
                         openPublicCategoryFolder('${escapeHTML(category.id)}');
                       "
                     >
@@ -1593,17 +1606,13 @@ function renderPublicCategorySearchResults(query) {
   `;
 }
 
-function publicCategorySongArtists(song) {
-  return artistsText(song);
-}
-
-function publicCategorySongCard(song) {
+function categorySongCard(song) {
   const slug = song.slug || slugify(song.title || "");
 
   return `
     <a class="category-song-card" href="canto.html?slug=${safeUrlParam(slug)}">
       <div>
-        <p class="eyebrow">${escapeHTML(publicCategorySongArtists(song))}</p>
+        <p class="eyebrow">${escapeHTML(artistsText(song))}</p>
         <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
         <p>${escapeHTML(songMetaText(song))}</p>
       </div>
@@ -1612,10 +1621,10 @@ function publicCategorySongCard(song) {
   `;
 }
 
-async function ensurePublicCategorySongsData() {
-  if (publicCategorySongsData.length) {
+async function ensureCategorySongsLoaded() {
+  if (allCategorySongsForPage.length) {
     return {
-      data: publicCategorySongsData,
+      data: allCategorySongsForPage,
       error: null
     };
   }
@@ -1623,33 +1632,20 @@ async function ensurePublicCategorySongsData() {
   const result = await fetchSongsWithRelations();
 
   if (!result.error) {
-    publicCategorySongsData = result.data || [];
+    allCategorySongsForPage = result.data || [];
   }
 
   return result;
 }
 
-async function showPublicCategorySongsBySlug(categorySlug) {
+async function showCategorySongsBySlug(categorySlug) {
   if (!isPage("categorias.html")) return;
 
-  const root = getPublicCategoriesRoot();
+  const root = getCategoriesRoot();
 
   if (!root) return;
 
   const cleanSlug = String(categorySlug || "").trim();
-
-  if (!cleanSlug) {
-    root.innerHTML = `
-      <div class="public-category-empty">
-        <h3>No se encontró la categoría</h3>
-        <p>La categoría no tiene un identificador válido.</p>
-        <button type="button" class="song-btn small-btn" onclick="loadCategoriesPage()">
-          Volver a categorías
-        </button>
-      </div>
-    `;
-    return;
-  }
 
   root.innerHTML = `
     <div class="public-category-empty">
@@ -1658,7 +1654,7 @@ async function showPublicCategorySongsBySlug(categorySlug) {
     </div>
   `;
 
-  const category = publicCategoriesData.find(function (item) {
+  const category = allCategoriesForPage.find(function (item) {
     return String(item.slug || "") === cleanSlug;
   });
 
@@ -1675,7 +1671,7 @@ async function showPublicCategorySongsBySlug(categorySlug) {
     return;
   }
 
-  const songsResult = await ensurePublicCategorySongsData();
+  const songsResult = await ensureCategorySongsLoaded();
 
   if (songsResult.error) {
     root.innerHTML = `
@@ -1712,7 +1708,7 @@ async function showPublicCategorySongsBySlug(categorySlug) {
 
       ${categorySongs.length ? `
         <div class="category-songs-list">
-          ${categorySongs.map(publicCategorySongCard).join("")}
+          ${categorySongs.map(categorySongCard).join("")}
         </div>
       ` : `
         <div class="public-category-empty">
@@ -1724,301 +1720,26 @@ async function showPublicCategorySongsBySlug(categorySlug) {
   `;
 }
 
-function showPublicCategorySongsFromCurrentFolder() {
-  const category = getPublicCategoryById(publicCategoriesParentId);
+function showCategorySongsByCurrentFolder() {
+  const category = getPublicCategoryById(adminCategoryBrowserParentId);
 
   if (!category) {
-    renderPublicCategoriesExplorer();
+    renderCategoriesExplorer();
     return;
   }
 
-  showPublicCategorySongsBySlug(category.slug || "");
+  showCategorySongsBySlug(category.slug || "");
 }
 
 async function loadCategoriesPage() {
   if (!isPage("categorias.html")) return;
 
-  const root = getPublicCategoriesRoot();
+  const root = getCategoriesRoot();
 
   if (!root) return;
 
-  root.innerHTML = `
-    <div class="public-category-empty">
-      <h3>Cargando categorías...</h3>
-      <p>Un momento por favor.</p>
-    </div>
-  `;
-
-  const result = await fetchCategories();
-
-  if (result.error) {
-    root.innerHTML = `
-      <div class="public-category-empty">
-        <h3>Error cargando categorías</h3>
-        <p>${escapeHTML(result.error.message || "No se pudieron cargar.")}</p>
-      </div>
-    `;
-    return;
-  }
-
-  publicCategoriesData = result.data || [];
-
-  const search = getPublicCategorySearchInput();
-
-  if (search && !search.dataset.categoriesReady) {
-    search.dataset.categoriesReady = "true";
-
-    search.addEventListener("input", function () {
-      renderPublicCategorySearchResults(search.value);
-    });
-  }
-
-  const categorySlug = getUrlParam("categoria");
-
-  if (categorySlug) {
-    await showPublicCategorySongsBySlug(categorySlug);
-    return;
-  }
-
-  if (search && String(search.value || "").trim()) {
-    renderPublicCategorySearchResults(search.value);
-  } else {
-    renderPublicCategoriesExplorer();
-  }
-}
-/* =========================================================
-   PÚBLICO: PERFIL DE ARTISTA
-========================================================= */
-
-function renderArtistSongRow(song) {
-  const slug = song.slug || slugify(song.title || "");
-  const meta = songMetaText(song);
-
-  return `
-    <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(slug)}">
-      <div>
-        <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
-        <p>${escapeHTML(meta || "Canto disponible")}</p>
-      </div>
-      <span>›</span>
-    </a>
-  `;
-}
-
-function renderArtistSection(title, subtitle, songs) {
-  const safeSongs = songs || [];
-
-  if (!safeSongs.length) return "";
-
-  return `
-    <section class="artist-profile-section">
-      <div class="artist-section-heading">
-        <div>
-          <p class="eyebrow">${escapeHTML(subtitle || "")}</p>
-          <h2>${escapeHTML(title || "Cantos")}</h2>
-        </div>
-      </div>
-
-      <div class="artist-song-list">
-        ${safeSongs.map(renderArtistSongRow).join("")}
-      </div>
-    </section>
-  `;
-}
-
-function setupArtistProfileActions() {
-  const actions = document.querySelectorAll(".artist-profile-actions button[data-target]");
-
-  actions.forEach(function (button) {
-    button.addEventListener("click", function () {
-      const targetId = button.getAttribute("data-target");
-      const target = targetId ? $(targetId) : null;
-
-      if (target) {
-        target.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      }
-
-      actions.forEach(function (item) {
-        item.classList.remove("active");
-      });
-
-      button.classList.add("active");
-    });
-  });
-}
-
-async function loadArtistProfile() {
-  if (!isPage("artista.html")) return;
-
-  const box = $("artistProfile") || $("artistProfileContent") || $("artistDetail");
-
-  if (!box) return;
-
-  const slug = getUrlParam("slug");
-  const client = getSupabase();
-
-  if (!client || !slug) {
-    box.innerHTML = `
-      <div class="song-card">
-        <h3>Artista no encontrado</h3>
-        <p>Vuelve a la lista de artistas e intenta de nuevo.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const { data: artist, error } = await client
-    .from("artists")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  if (error || !artist) {
-    box.innerHTML = `
-      <div class="song-card">
-        <h3>Artista no encontrado</h3>
-        <p>Este artista no existe o fue eliminado.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const relationResult = await client
-    .from("song_artists")
-    .select("song_id")
-    .eq("artist_id", artist.id);
-
-  const directResult = await client
-    .from("songs")
-    .select("id")
-    .eq("artist_id", artist.id);
-
-  const songIds = Array.from(new Set([
-    ...((relationResult.data || []).map(function (row) {
-      return row.song_id;
-    })),
-    ...((directResult.data || []).map(function (row) {
-      return row.id;
-    }))
-  ].filter(Boolean)));
-
-  const songsResult = await fetchSongsWithRelations(songIds);
-  const songs = songsResult.data || [];
-
-  const albumsResult = await client
-    .from("albums")
-    .select("*")
-    .eq("artist_id", artist.id)
-    .order("sort_order", { ascending: true })
-    .order("title", { ascending: true });
-
-  const albums = albumsResult.data || [];
-
-  const recentSongs = songs
-    .slice()
-    .sort(function (a, b) {
-      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-    })
-    .slice(0, 6);
-
-  const albumSections = albums.map(function (album) {
-    const albumSongs = songs.filter(function (song) {
-      return (song._albums || []).some(function (songAlbum) {
-        return String(songAlbum.id) === String(album.id);
-      });
-    });
-
-    if (!albumSongs.length) return "";
-
-    return `
-      <section class="artist-profile-section" id="artist-albums-section">
-        <div class="artist-section-heading">
-          <div>
-            <p class="eyebrow">Álbum / carpeta</p>
-            <h2>📁 ${escapeHTML(album.title || "Álbum")}</h2>
-            <p>${escapeHTML(album.description || "")}</p>
-          </div>
-        </div>
-
-        <div class="artist-song-list">
-          ${albumSongs.map(renderArtistSongRow).join("")}
-        </div>
-      </section>
-    `;
-  }).join("");
-
-  const songsWithoutArtistAlbum = songs.filter(function (song) {
-    const hasAlbumFromThisArtist = (song._albums || []).some(function (album) {
-      return String(album.artist_id) === String(artist.id);
-    });
-
-    return !hasAlbumFromThisArtist;
-  });
-
-  const collaborationSongs = songs.filter(function (song) {
-    return (song._artists || []).length > 1;
-  });
-
-  box.innerHTML = `
-    <section class="artist-hero-card">
-      <div class="artist-avatar-public big">
-        ${escapeHTML(getInitials(artist.name))}
-      </div>
-
-      <div>
-        <p class="hero-kicker">${escapeHTML(artistTypeLabel(artist.artist_type || ""))}</p>
-        <h1>${escapeHTML(artist.name || "Sin nombre")}</h1>
-        <p>${escapeHTML(artist.description || "Ministerio o artista registrado.")}</p>
-
-        <div class="artist-profile-actions">
-          <button type="button" class="song-btn small-btn active" data-target="artist-recent-section">
-            Recientes
-          </button>
-
-          <button type="button" class="song-btn small-btn" data-target="artist-songs-section">
-            Cantos
-          </button>
-
-          <button type="button" class="song-btn small-btn" data-target="artist-albums-section">
-            Álbumes
-          </button>
-
-          <button type="button" class="song-btn small-btn" data-target="artist-collabs-section">
-            Colaboraciones
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <div id="artist-recent-section">
-      ${renderArtistSection("Recientes", "Últimos cantos agregados", recentSongs)}
-    </div>
-
-    <div id="artist-songs-section">
-      ${renderArtistSection("Cantos", "Todos los cantos de este artista", songsWithoutArtistAlbum)}
-    </div>
-
-    ${albumSections || ""}
-
-    <div id="artist-collabs-section">
-      ${renderArtistSection("Colaboraciones", "Cantos con otros artistas", collaborationSongs)}
-    </div>
-
-    ${!songs.length ? `
-      <div class="song-card">
-        <h3>Este artista aún no tiene cantos</h3>
-        <p>Agrega canciones desde el panel de administración.</p>
-      </div>
-    ` : ""}
-  `;
-
-  setupArtistProfileActions();
-}
-
-/* =========================================================
+  root.in
+   /* =========================================================
    PÚBLICO: PÁGINA DE CANTO
 ========================================================= */
 
@@ -2026,7 +1747,6 @@ function renderCapoButtons(song) {
   const versions = song._capoVersions || [];
   const capoPosition = getCapoPosition(song);
   const capoKey = song.capo_key || "";
-
   const buttons = [];
 
   if (capoPosition > 0) {
@@ -2039,11 +1759,7 @@ function renderCapoButtons(song) {
 
   versions.forEach(function (version, index) {
     buttons.push(`
-      <button
-        type="button"
-        class="song-btn small-btn"
-        onclick="setCapoVersionByIndex(${index})"
-      >
+      <button type="button" class="song-btn small-btn" onclick="setCapoVersionByIndex(${index})">
         ${escapeHTML(capoVersionLabel(version))}
       </button>
     `);
@@ -2112,10 +1828,11 @@ async function loadSongPage() {
         _capoVersions: []
       });
 
+  fullSong._selectedCapoVersionIndex = -1;
+
   currentSongForPage = fullSong;
   currentTransposeSteps = 0;
   currentCapoMode = "original";
-  currentCapoVersionIndex = -1;
 
   const meta = songMetaText(fullSong);
 
@@ -2131,9 +1848,7 @@ async function loadSongPage() {
 
       <h1>${escapeHTML(fullSong.title || "Sin título")}</h1>
 
-      <p class="song-meta-line">
-        ${escapeHTML(meta)}
-      </p>
+      <p class="song-meta-line">${escapeHTML(meta)}</p>
 
       ${renderCapoButtons(fullSong)}
 
@@ -2161,8 +1876,97 @@ async function loadSongPage() {
 
   updateSongLyricsDisplay();
 }
+
 /* =========================================================
-   ADMIN: LOGIN Y CARGA GENERAL
+   DONACIONES
+========================================================= */
+
+async function fetchDonationSettings() {
+  const client = getSupabase();
+
+  if (!client) {
+    return {
+      data: null,
+      error: { message: "Sin conexión a Supabase" }
+    };
+  }
+
+  const { data, error } = await client
+    .from("donation_settings")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return {
+    data: data || null,
+    error: error || null
+  };
+}
+
+function donationSafeValue(value, fallback) {
+  return value || fallback || "";
+}
+
+async function loadDonationPage() {
+  if (!isPage("donaciones.html")) return;
+
+  const box = $("donationPage") || $("donationContent") || $("donacionesContent");
+
+  if (!box) return;
+
+  box.innerHTML = `
+    <div class="public-category-empty">
+      <h3>Cargando donaciones...</h3>
+      <p>Un momento por favor.</p>
+    </div>
+  `;
+
+  const result = await fetchDonationSettings();
+
+  if (result.error) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>No se pudieron cargar las donaciones</h3>
+        <p>${escapeHTML(result.error.message || "Intenta nuevamente.")}</p>
+      </div>
+    `;
+    return;
+  }
+
+  const data = result.data || {};
+
+  box.innerHTML = `
+    <section class="donation-page">
+      <article class="song-detail-card">
+        <p class="eyebrow">Donaciones</p>
+        <h1>${escapeHTML(donationSafeValue(data.title, "Apoya este proyecto"))}</h1>
+        <p>${escapeHTML(donationSafeValue(data.subtitle, "Tu donación nos ayuda a seguir compartiendo cantos."))}</p>
+
+        <div class="song-card" style="margin-top:18px;">
+          <h3>Datos bancarios</h3>
+          <p><strong>Banco:</strong> ${escapeHTML(donationSafeValue(data.bank_name, "No especificado"))}</p>
+          <p><strong>Titular:</strong> ${escapeHTML(donationSafeValue(data.account_holder, "No especificado"))}</p>
+          <p><strong>Cuenta:</strong> ${escapeHTML(donationSafeValue(data.account_number, "No especificado"))}</p>
+          <p><strong>Tipo:</strong> ${escapeHTML(donationSafeValue(data.account_type, "No especificado"))}</p>
+        </div>
+
+        ${data.note ? `
+          <div class="song-card" style="margin-top:14px;">
+            <p>${escapeHTML(data.note)}</p>
+          </div>
+        ` : ""}
+
+        <a class="song-btn" href="index.html" style="margin-top:18px;">
+          ${escapeHTML(donationSafeValue(data.button_text, "Volver al inicio"))}
+        </a>
+      </article>
+    </section>
+  `;
+}
+
+/* =========================================================
+   ADMIN: LOGIN
 ========================================================= */
 
 async function loginAdmin() {
@@ -2287,7 +2091,6 @@ async function loadAdminData() {
 
   setupAdminCollapsibleSections();
 }
-
 /* =========================================================
    ADMIN: ARTISTAS
 ========================================================= */
@@ -2911,7 +2714,10 @@ async function saveAdminCategoryOrder() {
     loadCategoryParentOptions(),
     loadCategoriesPage()
   ]);
-}
+}   
+/* =========================================================
+   ADMIN: RENDER CATEGORÍAS Y CRUD
+========================================================= */
 
 function renderAdminCategoryBrowser() {
   const list = $("adminCategoryList");
@@ -2939,8 +2745,305 @@ function renderAdminCategoryBrowser() {
           <button
             type="button"
             class="admin-category-tab ${adminCategoryBrowserType === "cristiano" ? "active" : ""}"
-            oncl
- /* =========================================================
+            onclick="setAdminCategoryBrowserType('cristiano')"
+          >
+            Cristiano
+          </button>
+
+          <button
+            type="button"
+            class="admin-category-tab ${adminCategoryBrowserType === "" ? "active" : ""}"
+            onclick="setAdminCategoryBrowserType('')"
+          >
+            General
+          </button>
+        </div>
+
+        <button type="button" class="song-btn small-btn" onclick="prepareAddCategoryInsideCurrentFolder()">
+          + Agregar aquí
+        </button>
+      </div>
+
+      ${renderAdminCategoryPath()}
+
+      ${currentCategory ? `
+        <div class="admin-category-current-box">
+          <h3>${escapeHTML(currentCategory.name || "Categoría")}</h3>
+          <p>
+            ${escapeHTML(categoryTypeLabel(currentCategory.song_type || ""))}
+            · Orden ${escapeHTML(currentCategory.sort_order || 0)}
+            ${currentCategory.description ? " · " + escapeHTML(currentCategory.description) : ""}
+          </p>
+
+          <div class="admin-category-folder-actions" style="margin-top:10px;">
+            <button type="button" class="song-btn small-btn" onclick="editCategory('${escapeHTML(currentCategory.id)}')">
+              Editar esta categoría
+            </button>
+
+            <button type="button" class="song-btn small-btn danger" onclick="deleteCategory('${escapeHTML(currentCategory.id)}')">
+              Eliminar esta categoría
+            </button>
+          </div>
+        </div>
+      ` : ""}
+
+      ${children.length ? `
+        <div class="admin-category-folder-grid">
+          ${children.map(function (category, index) {
+            const childCount = getCategoryChildrenFromBrowser(category.id).length;
+
+            return `
+              <article class="admin-category-folder-card reorder-card">
+                <div class="admin-category-order-row">
+                  <div>
+                    <h3>📁 ${escapeHTML(category.name || "Categoría")}</h3>
+                    <p>
+                      ${escapeHTML(categoryTypeLabel(category.song_type || ""))}
+                      · Orden ${escapeHTML(category.sort_order || 0)}
+                    </p>
+                    <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+                    <p>${childCount} subcategoría(s)</p>
+                  </div>
+
+                  <div class="admin-category-order-actions">
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="moveAdminCategoryInOrder('${escapeHTML(category.id)}', -1)"
+                      ${index === 0 ? "disabled" : ""}
+                    >
+                      ↑ Subir
+                    </button>
+
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="moveAdminCategoryInOrder('${escapeHTML(category.id)}', 1)"
+                      ${index === children.length - 1 ? "disabled" : ""}
+                    >
+                      ↓ Bajar
+                    </button>
+
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="openAdminCategoryFolder('${escapeHTML(category.id)}')"
+                    >
+                      Abrir
+                    </button>
+
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="editCategory('${escapeHTML(category.id)}')"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      class="song-btn small-btn danger"
+                      onclick="deleteCategory('${escapeHTML(category.id)}')"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+
+        <div class="admin-category-order-save">
+          <button type="button" class="song-btn small-btn" onclick="saveAdminCategoryOrder()">
+            Guardar orden
+          </button>
+        </div>
+
+        <p id="adminCategoryOrderMessage" class="admin-category-order-message"></p>
+      ` : `
+        <div class="admin-category-empty">
+          <p>No hay subcategorías aquí.</p>
+          <button type="button" class="song-btn small-btn" onclick="prepareAddCategoryInsideCurrentFolder()">
+            + Agregar primera categoría aquí
+          </button>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+async function loadAdminCategories() {
+  const list = $("adminCategoryList");
+
+  if (!list) return;
+
+  ensureCategoryTreeFields();
+
+  const { data, error } = await fetchCategories();
+
+  if (error) {
+    list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
+    return;
+  }
+
+  adminCategoryBrowserCategories = data || [];
+  renderAdminCategoryBrowser();
+}
+
+function resetCategoryForm() {
+  ensureCategoryTreeFields();
+
+  currentEditingCategoryId = null;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Agregar categoría";
+  }
+
+  setInputValue("categoryNameInput", "");
+  setInputValue("categoryTypeInput", adminCategoryBrowserType || "");
+  setInputValue("categorySortInput", "10");
+  setInputValue("categoryDescriptionInput", "");
+
+  setLockedCategoryParent(adminCategoryBrowserParentId || "");
+}
+
+function cancelCategoryEdit() {
+  lockedCategoryParentId = null;
+  resetCategoryForm();
+}
+
+async function saveCategory() {
+  ensureCategoryTreeFields();
+
+  const name = getInputValue("categoryNameInput");
+  const songType = getInputValue("categoryTypeInput");
+  const parentId = getInputValue("categoryParentInput");
+  const sortRaw = getInputValue("categorySortInput");
+  const description = getInputValue("categoryDescriptionInput");
+
+  if (!name) {
+    alert("Escribe el nombre de la categoría.");
+    return;
+  }
+
+  const client = getSupabase();
+
+  if (!client) {
+    alert("No se pudo conectar con Supabase.");
+    return;
+  }
+
+  const payload = {
+    name: name,
+    slug: slugify(name),
+    song_type: songType || "",
+    parent_id: parentId || null,
+    sort_order: Number(sortRaw || 0),
+    description: description
+  };
+
+  const result = currentEditingCategoryId
+    ? await client.from("categories").update(payload).eq("id", currentEditingCategoryId)
+    : await client.from("categories").insert(payload);
+
+  if (result.error) {
+    alert("No se pudo guardar categoría: " + result.error.message);
+    return;
+  }
+
+  const wasEditing = !!currentEditingCategoryId;
+
+  lockedCategoryParentId = null;
+  resetCategoryForm();
+
+  await Promise.all([
+    loadAdminCategories(),
+    loadCategoryOptions(),
+    loadCategoryParentOptions(),
+    loadCategoriesPage()
+  ]);
+
+  alert(wasEditing ? "Categoría actualizada." : "Categoría guardada.");
+}
+
+async function editCategory(id) {
+  lockedCategoryParentId = null;
+  ensureCategoryTreeFields();
+
+  const client = getSupabase();
+
+  if (!client) return;
+
+  const { data, error } = await client
+    .from("categories")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    alert("No se pudo cargar la categoría.");
+    return;
+  }
+
+  currentEditingCategoryId = id;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Editar categoría";
+  }
+
+  await loadCategoryParentOptions();
+
+  setInputValue("categoryNameInput", data.name || "");
+  setInputValue("categoryTypeInput", data.song_type || "");
+  setInputValue("categoryParentInput", data.parent_id || "");
+  setInputValue("categorySortInput", String(data.sort_order || 0));
+  setInputValue("categoryDescriptionInput", data.description || "");
+
+  adminCategoryBrowserType = data.song_type || "";
+  adminCategoryBrowserParentId = data.parent_id || null;
+  renderAdminCategoryBrowser();
+
+  const form = $("categoryFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+async function deleteCategory(id) {
+  if (!confirm("¿Eliminar esta categoría?")) return;
+
+  const client = getSupabase();
+
+  if (!client) return;
+
+  const { error } = await client
+    .from("categories")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("No se pudo eliminar: " + error.message);
+    return;
+  }
+
+  await Promise.all([
+    loadAdminCategories(),
+    loadCategoryOptions(),
+    loadCategoryParentOptions(),
+    loadCategoriesPage()
+  ]);
+}
+
+/* =========================================================
    ADMIN: ÁLBUMES
 ========================================================= */
 
@@ -3121,6 +3224,37 @@ async function loadAlbumOptions() {
     `;
   });
 }
+   /* =========================================================
+   ADMIN: EDITOR DE LETRA
+========================================================= */
+
+function insertAtCursor(textareaId, text) {
+  const textarea = $(textareaId);
+
+  if (!textarea) return;
+
+  const start = textarea.selectionStart || 0;
+  const end = textarea.selectionEnd || 0;
+  const before = textarea.value.substring(0, start);
+  const after = textarea.value.substring(end);
+
+  textarea.value = before + text + after;
+
+  const newPosition = start + text.length;
+
+  textarea.focus();
+  textarea.setSelectionRange(newPosition, newPosition);
+
+  updateAdminPreview();
+}
+
+function insertSongSection(sectionName) {
+  const cleanName = String(sectionName || "").trim();
+
+  if (!cleanName) return;
+
+  insertAtCursor("songLyricsInput", "\n[" + cleanName + "]\n");
+}
 
 /* =========================================================
    ADMIN: LINKS DE CANCIONES
@@ -3131,8 +3265,12 @@ function resetAdminLinkItems() {
   renderAdminLinkRows();
 }
 
+function getAdminLinkRowsElement() {
+  return $("songLinksRows") || $("adminSongLinksRows");
+}
+
 function renderAdminLinkRows() {
-  const rows = $("songLinksRows");
+  const rows = getAdminLinkRowsElement();
 
   if (!rows) return;
 
@@ -3149,7 +3287,7 @@ function renderAdminLinkRows() {
         <p>${escapeHTML(link.url || "")}</p>
 
         <div class="admin-actions">
-          <button type="button" class="song-btn small-btn" onclick="removeAdminLinkItem(${index})">
+          <button type="button" class="song-btn small-btn danger" onclick="removeAdminLinkItem(${index})">
             Quitar
           </button>
         </div>
@@ -3158,11 +3296,15 @@ function renderAdminLinkRows() {
   }).join("");
 }
 
+function getNewLinkValue(primaryId, fallbackId) {
+  return getInputValue(primaryId) || getInputValue(fallbackId);
+}
+
 function addAdminLinkFromFields() {
-  const title = getInputValue("newLinkTitleInput");
-  const linkType = getInputValue("newLinkTypeInput") || "Tutorial";
-  const platform = getInputValue("newLinkPlatformInput");
-  const url = getInputValue("newLinkUrlInput");
+  const title = getNewLinkValue("newLinkTitleInput", "newSongLinkTitleInput");
+  const linkType = getNewLinkValue("newLinkTypeInput", "newSongLinkTypeInput") || "Tutorial";
+  const platform = getNewLinkValue("newLinkPlatformInput", "newSongLinkPlatformInput");
+  const url = getNewLinkValue("newLinkUrlInput", "newSongLinkUrlInput");
 
   if (!title || !url) {
     alert("Escribe título y URL del link.");
@@ -3178,9 +3320,19 @@ function addAdminLinkFromFields() {
   });
 
   setInputValue("newLinkTitleInput", "");
+  setInputValue("newSongLinkTitleInput", "");
   setInputValue("newLinkTypeInput", "");
+  setInputValue("newSongLinkTypeInput", "");
   setInputValue("newLinkPlatformInput", "");
+  setInputValue("newSongLinkPlatformInput", "");
   setInputValue("newLinkUrlInput", "");
+  setInputValue("newSongLinkUrlInput", "");
+
+  const textarea = $("songLinksInput");
+
+  if (textarea) {
+    textarea.value = linksToText(adminLinkItems);
+  }
 
   renderAdminLinkRows();
   updateAdminPreview();
@@ -3195,11 +3347,29 @@ function removeAdminLinkItem(index) {
     });
   });
 
+  const textarea = $("songLinksInput");
+
+  if (textarea) {
+    textarea.value = linksToText(adminLinkItems);
+  }
+
   renderAdminLinkRows();
   updateAdminPreview();
 }
 
-async function saveSongLinks(songId) {
+function getAdminLinksFromForm() {
+  const textarea = $("songLinksInput");
+
+  if (textarea) {
+    const parsed = parseSongLinksText(textarea.value);
+
+    if (parsed.length) return parsed;
+  }
+
+  return adminLinkItems || [];
+}
+
+async function saveSongLinks(songId, links) {
   const client = getSupabase();
 
   if (!client || !songId) return;
@@ -3209,22 +3379,24 @@ async function saveSongLinks(songId) {
     .delete()
     .eq("song_id", songId);
 
-  if (!adminLinkItems.length) return;
+  const safeLinks = links || [];
 
-  const payload = adminLinkItems.map(function (link, index) {
-    return {
-      song_id: songId,
-      title: link.title || "Link",
-      link_type: link.link_type || "Tutorial",
-      platform: link.platform || "",
-      url: link.url || "",
-      sort_order: index
-    };
-  });
+  if (!safeLinks.length) return;
 
   await client
     .from("song_links")
-    .insert(payload);
+    .insert(
+      safeLinks.map(function (link, index) {
+        return {
+          song_id: songId,
+          title: link.title || "Link",
+          link_type: link.link_type || "Tutorial",
+          platform: link.platform || "",
+          url: link.url || "",
+          sort_order: index
+        };
+      })
+    );
 }
 
 /* =========================================================
@@ -3250,10 +3422,13 @@ function renderAdminCapoVersionRows() {
     return `
       <div class="admin-list-item">
         <strong>${escapeHTML(capoVersionLabel(version))}</strong>
-        <p>Capo ${escapeHTML(version.capo_position || 0)} ${version.capo_key ? "· " + escapeHTML(version.capo_key) : ""}</p>
+        <p>
+          Capo ${escapeHTML(version.capo_position || 0)}
+          ${version.capo_key ? " · " + escapeHTML(version.capo_key) : ""}
+        </p>
 
         <div class="admin-actions">
-          <button type="button" class="song-btn small-btn" onclick="removeAdminCapoVersionItem(${index})">
+          <button type="button" class="song-btn small-btn danger" onclick="removeAdminCapoVersionItem(${index})">
             Quitar
           </button>
         </div>
@@ -3296,26 +3471,14 @@ function addAdminCapoVersionFromFields() {
 function removeAdminCapoVersionItem(index) {
   adminCapoVersionItems.splice(index, 1);
 
-  adminCapoVersionItems = adminCapoVersionItems.map(function (item, itemIndex) {
-    return Object.assign({}, item, {
+  adminCapoVersionItems = adminCapoVersionItems.map(function (version, itemIndex) {
+    return Object.assign({}, version, {
       sort_order: itemIndex
     });
   });
 
   renderAdminCapoVersionRows();
   updateAdminPreview();
-}
-
-async function loadAdminCapoVersionsForSong(songId) {
-  if (!songId) {
-    resetAdminCapoVersionItems();
-    return;
-  }
-
-  const result = await fetchCapoVersionsBySongIds([songId]);
-
-  adminCapoVersionItems = result.data || [];
-  renderAdminCapoVersionRows();
 }
 
 async function saveSongCapoVersions(songId) {
@@ -3330,54 +3493,27 @@ async function saveSongCapoVersions(songId) {
 
   if (!adminCapoVersionItems.length) return;
 
-  const payload = adminCapoVersionItems.map(function (version, index) {
-    return {
-      song_id: songId,
-      label: version.label || "",
-      capo_position: Number(version.capo_position || 0),
-      capo_key: version.capo_key || "",
-      sort_order: index
-    };
-  });
-
   await client
     .from("song_capo_versions")
-    .insert(payload);
+    .insert(
+      adminCapoVersionItems.map(function (version, index) {
+        return {
+          song_id: songId,
+          label: version.label || "",
+          capo_position: Number(version.capo_position || 0),
+          capo_key: version.capo_key || "",
+          sort_order: index
+        };
+      })
+    );
 }
 
 /* =========================================================
-   ADMIN: EDITOR DE LETRA Y PREVIEW
+   ADMIN: PREVIEW DE CANCIÓN
 ========================================================= */
 
-function insertAtCursor(textareaId, text) {
-  const textarea = $(textareaId);
-
-  if (!textarea) return;
-
-  const start = textarea.selectionStart || 0;
-  const end = textarea.selectionEnd || 0;
-  const before = textarea.value.substring(0, start);
-  const after = textarea.value.substring(end);
-
-  textarea.value = before + text + after;
-
-  const newPosition = start + text.length;
-
-  textarea.focus();
-  textarea.setSelectionRange(newPosition, newPosition);
-  updateAdminPreview();
-}
-
-function insertSongSection(sectionName) {
-  const cleanName = String(sectionName || "").trim();
-
-  if (!cleanName) return;
-
-  insertAtCursor("songLyricsInput", "\n[" + cleanName + "]\n");
-}
-
 function updateAdminPreview() {
-  const preview = $("songPreview");
+  const preview = $("songPreview") || $("adminSongPreview") || $("songPreviewContent");
 
   if (!preview) return;
 
@@ -3385,9 +3521,10 @@ function updateAdminPreview() {
   const tone = getInputValue("songToneInput") || "Tono";
   const difficulty = getInputValue("songDifficultyInput") || "";
   const lyrics = $("songLyricsInput") ? $("songLyricsInput").value : "";
-
   const capoPosition = Number(getInputValue("songCapoInput") || 0);
   const capoKey = getInputValue("songCapoKeyInput");
+
+  const links = getAdminLinksFromForm();
 
   const fakeSong = {
     title: title,
@@ -3427,7 +3564,7 @@ function updateAdminPreview() {
         ${renderChordedLyrics(lyrics, 0)}
       </pre>
 
-      ${renderSongLinksHTML(adminLinkItems)}
+      ${renderSongLinksHTML(links)}
     </article>
   `;
 }
@@ -3476,6 +3613,7 @@ async function saveSong() {
   const categoryId = getInputValue("songCategoryInput");
   const albumId = getInputValue("songAlbumInput");
   const artistIds = getSelectedValues("songArtistsInput");
+  const links = getAdminLinksFromForm();
 
   const capoPositionRaw = getInputValue("songCapoInput");
   const capoPosition = capoPositionRaw ? Number(capoPositionRaw) : 0;
@@ -3521,7 +3659,6 @@ async function saveSong() {
     capo_key: capoPosition > 0 ? capoKey : ""
   };
 
-  let savedSongId = currentEditingSongId;
   let result;
 
   if (currentEditingSongId) {
@@ -3544,7 +3681,7 @@ async function saveSong() {
     return;
   }
 
-  savedSongId = result.data.id;
+  const savedSongId = result.data.id;
 
   await client.from("song_artists").delete().eq("song_id", savedSongId);
   await client.from("song_categories").delete().eq("song_id", savedSongId);
@@ -3576,7 +3713,7 @@ async function saveSong() {
     });
   }
 
-  await saveSongLinks(savedSongId);
+  await saveSongLinks(savedSongId, links);
   await saveSongCapoVersions(savedSongId);
 
   const wasEditing = !!currentEditingSongId;
@@ -3597,13 +3734,10 @@ async function editSong(id) {
 
   if (!client) return;
 
-  const { data: song, error } = await client
-    .from("songs")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const fullResult = await fetchSongsWithRelations([id]);
+  const song = fullResult.data && fullResult.data[0] ? fullResult.data[0] : null;
 
-  if (error || !song) {
+  if (fullResult.error || !song) {
     alert("No se pudo cargar la canción.");
     return;
   }
@@ -3616,39 +3750,50 @@ async function editSong(id) {
     title.textContent = "Editar canción";
   }
 
-  const fullResult = await fetchSongsWithRelations([id]);
-  const fullSong = fullResult.data && fullResult.data[0]
-    ? fullResult.data[0]
-    : Object.assign({}, song, {
-        _artists: [],
-        _categories: [],
-        _albums: [],
-        _links: [],
-        _capoVersions: []
-      });
+  setInputValue("songTitleInput", song.title || "");
+  setInputValue("songTypeInput", song.song_type || "catolico");
+  setInputValue("songToneInput", song.tone || "");
+  setInputValue("songDifficultyInput", song.difficulty || "");
+  setInputValue("songLyricsInput", song.lyrics || "");
+  setInputValue("songCapoInput", String(song.capo_position || 0));
+  setInputValue("songCapoKeyInput", song.capo_key || "");
+  setInputValue("songCategoryInput", song._categories && song._categories[0] ? song._categories[0].id : "");
+  setInputValue("songAlbumInput", song._albums && song._albums[0] ? song._albums[0].id : "");
 
-  setInputValue("songTitleInput", fullSong.title || "");
-  setInputValue("songTypeInput", fullSong.song_type || "catolico");
-  setInputValue("songToneInput", fullSong.tone || "");
-  setInputValue("songDifficultyInput", fullSong.difficulty || "");
-  setInputValue("songLyricsInput", fullSong.lyrics || "");
-  setInputValue("songCapoInput", String(fullSong.capo_position || 0));
-  setInputValue("songCapoKeyInput", fullSong.capo_key || "");
-  setInputValue("songCategoryInput", fullSong._categories && fullSong._categories[0] ? fullSong._categories[0].id : "");
-  setInputValue("songAlbumInput", fullSong._albums && fullSong._albums[0] ? fullSong._albums[0].id : "");
   setSelectedValues(
     "songArtistsInput",
-    (fullSong._artists || []).map(function (artist) {
+    (song._artists || []).map(function (artist) {
       return artist.id;
     })
   );
 
-  adminLinkItems = fullSong._links || [];
+  adminLinkItems = (song._links || []).map(function (link, index) {
+    return {
+      title: link.title || "Link",
+      link_type: link.link_type || "Tutorial",
+      platform: link.platform || "",
+      url: link.url || "",
+      sort_order: index
+    };
+  });
+
+  const textarea = $("songLinksInput");
+
+  if (textarea) {
+    textarea.value = linksToText(adminLinkItems);
+  }
+
+  adminCapoVersionItems = (song._capoVersions || []).map(function (version, index) {
+    return {
+      label: version.label || "",
+      capo_position: version.capo_position || 0,
+      capo_key: version.capo_key || "",
+      sort_order: index
+    };
+  });
+
   renderAdminLinkRows();
-
-  adminCapoVersionItems = fullSong._capoVersions || [];
   renderAdminCapoVersionRows();
-
   updateAdminPreview();
 
   const form = $("songFormCard");
@@ -3726,36 +3871,9 @@ async function loadAdminSongs() {
     `;
   }).join("");
 }
-/* =========================================================
-   DONACIONES
+   /* =========================================================
+   ADMIN: DONACIONES
 ========================================================= */
-
-async function fetchDonationSettings() {
-  const client = getSupabase();
-
-  if (!client) {
-    return {
-      data: null,
-      error: { message: "Sin conexión a Supabase" }
-    };
-  }
-
-  const { data, error } = await client
-    .from("donation_settings")
-    .select("*")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  return {
-    data: data || null,
-    error: error || null
-  };
-}
-
-function donationSafeValue(value, fallback) {
-  return value || fallback || "";
-}
 
 function ensureAdminDonationSection() {
   const adminPanel = $("adminPanel");
@@ -3890,63 +4008,6 @@ async function saveDonationSettings() {
 
   currentDonationSettingsId = result.data.id;
   showMessage("donationAdminMessage", "Donaciones guardadas correctamente.");
-}
-
-async function loadDonationPage() {
-  if (!isPage("donaciones.html")) return;
-
-  const box = $("donationPage") || $("donationContent") || $("donacionesContent");
-
-  if (!box) return;
-
-  box.innerHTML = `
-    <div class="public-category-empty">
-      <h3>Cargando donaciones...</h3>
-      <p>Un momento por favor.</p>
-    </div>
-  `;
-
-  const result = await fetchDonationSettings();
-
-  if (result.error) {
-    box.innerHTML = `
-      <div class="song-card">
-        <h3>No se pudieron cargar las donaciones</h3>
-        <p>${escapeHTML(result.error.message || "Intenta nuevamente.")}</p>
-      </div>
-    `;
-    return;
-  }
-
-  const data = result.data || {};
-
-  box.innerHTML = `
-    <section class="donation-page">
-      <article class="song-detail-card">
-        <p class="eyebrow">Donaciones</p>
-        <h1>${escapeHTML(donationSafeValue(data.title, "Apoya este proyecto"))}</h1>
-        <p>${escapeHTML(donationSafeValue(data.subtitle, "Tu donación nos ayuda a seguir compartiendo cantos."))}</p>
-
-        <div class="song-card" style="margin-top:18px;">
-          <h3>Datos bancarios</h3>
-          <p><strong>Banco:</strong> ${escapeHTML(donationSafeValue(data.bank_name, "No especificado"))}</p>
-          <p><strong>Titular:</strong> ${escapeHTML(donationSafeValue(data.account_holder, "No especificado"))}</p>
-          <p><strong>Cuenta:</strong> ${escapeHTML(donationSafeValue(data.account_number, "No especificado"))}</p>
-          <p><strong>Tipo:</strong> ${escapeHTML(donationSafeValue(data.account_type, "No especificado"))}</p>
-        </div>
-
-        ${data.note ? `
-          <div class="song-card" style="margin-top:14px;">
-            <p>${escapeHTML(data.note)}</p>
-          </div>
-        ` : ""}
-
-        <a class="song-btn" href="index.html" style="margin-top:18px;">
-          ${escapeHTML(donationSafeValue(data.button_text, "Volver al inicio"))}
-        </a>
-      </article>
-    </section>
-  `;
 }
 
 /* =========================================================
@@ -4140,6 +4201,14 @@ function injectAppStyles() {
       height: 6px !important;
     }
 
+    .admin-section-closed > *:not(.section-heading) {
+      display: none !important;
+    }
+
+    .admin-section .section-heading {
+      cursor: pointer !important;
+    }
+
     @media (max-width: 768px) {
       body {
         overflow-x: hidden !important;
@@ -4208,7 +4277,15 @@ function initAdminPage() {
 
   checkAdminSession();
 
-  ["songLyricsInput", "songTitleInput", "songToneInput", "songDifficultyInput", "songCapoInput", "songCapoKeyInput"].forEach(function (id) {
+  [
+    "songLyricsInput",
+    "songTitleInput",
+    "songToneInput",
+    "songDifficultyInput",
+    "songCapoInput",
+    "songCapoKeyInput",
+    "songLinksInput"
+  ].forEach(function (id) {
     const input = $(id);
 
     if (input && !input.dataset.previewReady) {
@@ -4220,6 +4297,7 @@ function initAdminPage() {
 
 document.addEventListener("DOMContentLoaded", function () {
   injectAppStyles();
+
   initTheme();
   initMenu();
   fixMainNavigationLinks();
@@ -4239,8 +4317,8 @@ window.setSongsFilter = setSongsFilter;
 
 window.setPublicCategoryType = setPublicCategoryType;
 window.openPublicCategoryFolder = openPublicCategoryFolder;
-window.showPublicCategorySongsBySlug = showPublicCategorySongsBySlug;
-window.showPublicCategorySongsFromCurrentFolder = showPublicCategorySongsFromCurrentFolder;
+window.showCategorySongsBySlug = showCategorySongsBySlug;
+window.showCategorySongsByCurrentFolder = showCategorySongsByCurrentFolder;
 window.loadCategoriesPage = loadCategoriesPage;
 
 window.changeTranspose = changeTranspose;
