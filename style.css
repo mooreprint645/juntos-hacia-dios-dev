@@ -2502,3 +2502,83 @@ button.danger {
     width: 100% !important;
   }
 }
+/* =========================================================
+   ADMIN: ORDEN INTERACTIVO DE CATEGORÍAS
+========================================================= */
+
+.admin-category-folder-card.reorder-card {
+  grid-template-columns: 1fr !important;
+}
+
+.admin-category-order-row {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.admin-category-drag-handle {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(250, 204, 21, 0.12) !important;
+  color: var(--accent) !important;
+  font-weight: 950 !important;
+  cursor: grab !important;
+}
+
+.admin-category-order-actions {
+  display: flex !important;
+  gap: 6px !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+.admin-category-order-actions button {
+  min-width: 38px !important;
+  width: 38px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  font-size: 0.9rem !important;
+}
+
+.admin-category-order-save {
+  margin-top: 10px !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+.admin-category-order-message {
+  margin-top: 8px !important;
+  color: var(--muted) !important;
+  font-size: 0.86rem !important;
+}
+
+@media (max-width: 768px) {
+  .admin-category-order-row {
+    grid-template-columns: auto 1fr !important;
+  }
+
+  .admin-category-order-actions {
+    grid-column: 1 / -1 !important;
+    justify-content: flex-start !important;
+  }
+
+  .admin-category-order-actions button {
+    width: 44px !important;
+    min-width: 44px !important;
+  }
+
+  .admin-category-order-save {
+    justify-content: stretch !important;
+  }
+
+  .admin-category-order-save button {
+    width: 100% !important;
+  }
+}
