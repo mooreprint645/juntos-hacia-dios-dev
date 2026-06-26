@@ -6048,3 +6048,418 @@ async function loadCategoryOptions() {
     `;
   });
 }
+/* =========================================================
+   PATCH: ADMIN CATEGORÍAS TIPO CARPETAS
+========================================================= */
+
+let adminCategoryBrowserType = "catolico";
+let adminCategoryBrowserParentId = null;
+let adminCategoryBrowserCategories = [];
+
+function getCategoryByIdFromBrowser(id) {
+  return adminCategoryBrowserCategories.find(function (category) {
+    return String(category.id) === String(id);
+  }) || null;
+}
+
+function getCategoryChildrenFromBrowser(parentId) {
+  return adminCategoryBrowserCategories
+    .filter(function (category) {
+      return String(category.parent_id || "") === String(parentId || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+}
+
+function getCategoryPathFromBrowser(categoryId) {
+  const path = [];
+  let current = getCategoryByIdFromBrowser(categoryId);
+
+  while (current) {
+    path.unshift(current);
+    current = current.parent_id ? getCategoryByIdFromBrowser(current.parent_id) : null;
+  }
+
+  return path;
+}
+
+function setAdminCategoryBrowserType(type) {
+  adminCategoryBrowserType = type || "";
+  adminCategoryBrowserParentId = null;
+  renderAdminCategoryBrowser();
+}
+
+function openAdminCategoryFolder(categoryId) {
+  adminCategoryBrowserParentId = categoryId || null;
+  renderAdminCategoryBrowser();
+}
+
+function prepareAddCategoryInsideCurrentFolder() {
+  ensureCategoryTreeFields();
+
+  currentEditingCategoryId = null;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Agregar categoría";
+  }
+
+  const parentCategory = adminCategoryBrowserParentId
+    ? getCategoryByIdFromBrowser(adminCategoryBrowserParentId)
+    : null;
+
+  setInputValue("categoryNameInput", "");
+  setInputValue("categoryTypeInput", adminCategoryBrowserType || "");
+  setInputValue("categoryParentInput", adminCategoryBrowserParentId || "");
+  setInputValue("categorySortInput", "10");
+  setInputValue("categoryDescriptionInput", "");
+
+  if (parentCategory && !getInputValue("categoryTypeInput")) {
+    setInputValue("categoryTypeInput", parentCategory.song_type || "");
+  }
+
+  const form = $("categoryFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function renderAdminCategoryPath() {
+  if (!adminCategoryBrowserParentId) {
+    return `
+      <div class="admin-category-path">
+        <span>Ruta:</span>
+        <button type="button" onclick="openAdminCategoryFolder(null)">
+          Inicio
+        </button>
+      </div>
+    `;
+  }
+
+  const path = getCategoryPathFromBrowser(adminCategoryBrowserParentId);
+
+  return `
+    <div class="admin-category-path">
+      <span>Ruta:</span>
+
+      <button type="button" onclick="openAdminCategoryFolder(null)">
+        Inicio
+      </button>
+
+      ${path.map(function (category) {
+        return `
+          <span>›</span>
+          <button type="button" onclick="openAdminCategoryFolder('${escapeHTML(category.id)}')">
+            ${escapeHTML(category.name || "Categoría")}
+          </button>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderAdminCategoryBrowser() {
+  const list = $("adminCategoryList");
+
+  if (!list) return;
+
+  const visibleCategories = adminCategoryBrowserCategories.filter(function (category) {
+    if (!adminCategoryBrowserType) return !category.song_type;
+    return category.song_type === adminCategoryBrowserType;
+  });
+
+  const currentCategory = adminCategoryBrowserParentId
+    ? getCategoryByIdFromBrowser(adminCategoryBrowserParentId)
+    : null;
+
+  const children = visibleCategories
+    .filter(function (category) {
+      return String(category.parent_id || "") === String(adminCategoryBrowserParentId || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+
+  list.innerHTML = `
+    <div class="admin-category-browser">
+      <div class="admin-category-browser-top">
+        <div class="admin-category-tabs">
+          <button
+            type="button"
+            class="admin-category-tab ${adminCategoryBrowserType === "catolico" ? "active" : ""}"
+            onclick="setAdminCategoryBrowserType('catolico')"
+          >
+            Católico
+          </button>
+
+          <button
+            type="button"
+            class="admin-category-tab ${adminCategoryBrowserType === "cristiano" ? "active" : ""}"
+            onclick="setAdminCategoryBrowserType('cristiano')"
+          >
+            Cristiano
+          </button>
+
+          <button
+            type="button"
+            class="admin-category-tab ${adminCategoryBrowserType === "" ? "active" : ""}"
+            onclick="setAdminCategoryBrowserType('')"
+          >
+            General
+          </button>
+        </div>
+
+        <button type="button" class="song-btn small-btn" onclick="prepareAddCategoryInsideCurrentFolder()">
+          + Agregar aquí
+        </button>
+      </div>
+
+      ${renderAdminCategoryPath()}
+
+      ${currentCategory ? `
+        <div class="admin-category-current-box">
+          <h3>${escapeHTML(currentCategory.name || "Categoría")}</h3>
+          <p>
+            ${escapeHTML(categoryTypeLabel(currentCategory.song_type || ""))}
+            · Orden ${escapeHTML(currentCategory.sort_order || 0)}
+            ${currentCategory.description ? " · " + escapeHTML(currentCategory.description) : ""}
+          </p>
+
+          <div class="admin-category-folder-actions" style="margin-top:10px;">
+            <button type="button" class="song-btn small-btn" onclick="editCategory('${escapeHTML(currentCategory.id)}')">
+              Editar esta categoría
+            </button>
+
+            <button type="button" class="song-btn small-btn danger" onclick="deleteCategory('${escapeHTML(currentCategory.id)}')">
+              Eliminar esta categoría
+            </button>
+          </div>
+        </div>
+      ` : ""}
+
+      ${children.length ? `
+        <div class="admin-category-folder-grid">
+          ${children.map(function (category) {
+            const childCount = getCategoryChildrenFromBrowser(category.id).length;
+
+            return `
+              <article class="admin-category-folder-card">
+                <div>
+                  <h3>📁 ${escapeHTML(category.name || "Categoría")}</h3>
+                  <p>
+                    ${escapeHTML(categoryTypeLabel(category.song_type || ""))}
+                    · Orden ${escapeHTML(category.sort_order || 0)}
+                  </p>
+                  <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+                  <p>${childCount} subcategoría(s)</p>
+                </div>
+
+                <div class="admin-category-folder-actions">
+                  <button type="button" class="song-btn small-btn" onclick="openAdminCategoryFolder('${escapeHTML(category.id)}')">
+                    Abrir
+                  </button>
+
+                  <button type="button" class="song-btn small-btn" onclick="editCategory('${escapeHTML(category.id)}')">
+                    Editar
+                  </button>
+
+                  <button type="button" class="song-btn small-btn danger" onclick="deleteCategory('${escapeHTML(category.id)}')">
+                    Eliminar
+                  </button>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : `
+        <div class="admin-category-empty">
+          <p>No hay subcategorías aquí.</p>
+          <button type="button" class="song-btn small-btn" onclick="prepareAddCategoryInsideCurrentFolder()">
+            + Agregar primera categoría aquí
+          </button>
+        </div>
+      `}
+    </div>
+  `;
+}
+/* =========================================================
+   ACTIVAR NAVEGADOR DE CATEGORÍAS TIPO CARPETAS
+========================================================= */
+
+async function loadAdminCategories() {
+  ensureCategoryTreeFields();
+
+  const list = $("adminCategoryList");
+
+  if (!list) return;
+
+  const { data, error } = await fetchCategories();
+
+  if (error) {
+    list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
+    return;
+  }
+
+  adminCategoryBrowserCategories = data || [];
+
+  if (!adminCategoryBrowserCategories.length) {
+    list.innerHTML = `<p class="muted-text">No hay categorías todavía.</p>`;
+    return;
+  }
+
+  renderAdminCategoryBrowser();
+  await loadCategoryParentOptions();
+}
+
+/* Cuando editas una categoría, abrir también su carpeta padre */
+async function editCategory(id) {
+  ensureCategoryTreeFields();
+
+  const client = getSupabase();
+
+  if (!client) return;
+
+  const { data, error } = await client
+    .from("categories")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    alert("No se pudo cargar la categoría.");
+    return;
+  }
+
+  currentEditingCategoryId = id;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Editar categoría";
+  }
+
+  await loadCategoryParentOptions();
+
+  setInputValue("categoryNameInput", data.name || "");
+  setInputValue("categoryTypeInput", data.song_type || "");
+  setInputValue("categoryParentInput", data.parent_id || "");
+  setInputValue("categorySortInput", String(data.sort_order || 0));
+  setInputValue("categoryDescriptionInput", data.description || "");
+
+  adminCategoryBrowserType = data.song_type || "";
+  adminCategoryBrowserParentId = data.parent_id || null;
+  renderAdminCategoryBrowser();
+
+  const form = $("categoryFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+async function saveCategory() {
+  ensureCategoryTreeFields();
+
+  const name = getInputValue("categoryNameInput");
+  const description = getInputValue("categoryDescriptionInput");
+  const songType = getInputValue("categoryTypeInput");
+  const parentId = getInputValue("categoryParentInput");
+  const sortOrder = Number(getInputValue("categorySortInput") || 0);
+
+  if (!name) {
+    alert("Escribe el nombre de la categoría.");
+    return;
+  }
+
+  const client = getSupabase();
+
+  if (!client) {
+    alert("No se pudo conectar con Supabase.");
+    return;
+  }
+
+  const payload = {
+    name: name,
+    slug: slugify(name),
+    description: description,
+    song_type: songType,
+    parent_id: parentId || null,
+    sort_order: Number.isNaN(sortOrder) ? 0 : sortOrder
+  };
+
+  const result = currentEditingCategoryId
+    ? await client.from("categories").update(payload).eq("id", currentEditingCategoryId)
+    : await client.from("categories").insert(payload);
+
+  if (result.error) {
+    alert("No se pudo guardar categoría: " + result.error.message);
+    return;
+  }
+
+  const wasEditing = !!currentEditingCategoryId;
+
+  adminCategoryBrowserType = songType || "";
+  adminCategoryBrowserParentId = parentId || null;
+
+  resetCategoryForm();
+
+  await Promise.all([
+    loadAdminCategories(),
+    loadCategoryOptions(),
+    loadCategoryParentOptions(),
+    loadCategoriesPage()
+  ]);
+
+  alert(wasEditing ? "Categoría actualizada." : "Categoría guardada.");
+}
+
+function resetCategoryForm() {
+  ensureCategoryTreeFields();
+
+  currentEditingCategoryId = null;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Agregar categoría";
+  }
+
+  setInputValue("categoryNameInput", "");
+  setInputValue("categoryTypeInput", adminCategoryBrowserType || "");
+  setInputValue("categoryParentInput", adminCategoryBrowserParentId || "");
+  setInputValue("categorySortInput", "10");
+  setInputValue("categoryDescriptionInput", "");
+
+  loadCategoryParentOptions();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(function () {
+    ensureCategoryTreeFields();
+    loadAdminCategories();
+  }, 1200);
+});
+
+window.setAdminCategoryBrowserType = setAdminCategoryBrowserType;
+window.openAdminCategoryFolder = openAdminCategoryFolder;
+window.prepareAddCategoryInsideCurrentFolder = prepareAddCategoryInsideCurrentFolder;
+window.renderAdminCategoryBrowser = renderAdminCategoryBrowser;
