@@ -992,3 +992,133 @@ body.light-mode .shimmer-block {
   margin-bottom: 10px;
   white-space: pre-wrap;
 }
+/* =========================================================
+   FIX FINAL: MÓVIL + LETRA DE CANCIONES
+========================================================= */
+
+.song-detail-card {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.lyrics-block {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  font-size: 16px;
+  line-height: 1.45;
+  padding: 22px;
+}
+
+.chord-line {
+  display: block;
+  color: var(--accent);
+  font-weight: 800;
+  line-height: 1.1;
+  min-height: 1.1em;
+  white-space: pre;
+}
+
+.lyric-line {
+  display: block;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 12px;
+  white-space: pre;
+}
+
+@media (max-width: 768px) {
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .navbar {
+    padding: 14px 18px;
+    align-items: center;
+  }
+
+  .brand {
+    font-size: 0.95rem;
+    max-width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+  }
+
+  .nav-menu {
+    display: none;
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 64px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .nav-menu.show-menu,
+  .nav-menu.open {
+    display: flex;
+  }
+
+  .nav-menu a,
+  .nav-menu button {
+    width: 100%;
+    text-align: left;
+  }
+
+  .song-detail-card {
+    padding: 18px;
+  }
+
+  .song-detail-card h1 {
+    font-size: 2rem;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+
+  .capo-box,
+  .transpose-box {
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .capo-box span,
+  .transpose-box span {
+    width: 100%;
+    text-align: center;
+  }
+
+  .song-btn.small-btn {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  .lyrics-block {
+    font-size: 15px;
+    padding: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .song-detail-card h1 {
+    font-size: 1.65rem;
+  }
+
+  .lyrics-block {
+    font-size: 14px;
+    padding: 16px;
+  }
+}
