@@ -1921,6 +1921,106 @@ async function loadSongPage() {
   updateSongLyricsDisplay();
 }
 
+async function loadArtistProfile() {
+  if (!isPage("artista.html")) return;
+
+  const box = $("artistProfile") || $("artistProfileContent") || $("artistDetail");
+
+  if (!box) return;
+
+  const slug = getUrlParam("slug");
+  const client = getSupabase();
+
+  if (!client || !slug) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>Artista no encontrado</h3>
+        <p>Vuelve a la lista de artistas e intenta de nuevo.</p>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const { data: artist, error } = await client
+      .from("artists")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+    if (error || !artist) {
+      box.innerHTML = `
+        <div class="song-card">
+          <h3>Artista no encontrado</h3>
+          <p>Este artista no existe o fue eliminado.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const relationResult = await client
+      .from("song_artists")
+      .select("song_id")
+      .eq("artist_id", artist.id);
+
+    const songIds = (relationResult.data || [])
+      .map(function (row) {
+        return row.song_id;
+      })
+      .filter(Boolean);
+
+    const songsResult = await fetchSongsWithRelations(songIds);
+    const songs = songsResult.data || [];
+
+    box.innerHTML = `
+      <section class="artist-hero-card">
+        <div class="artist-avatar-public big">
+          ${escapeHTML(getInitials(artist.name))}
+        </div>
+
+        <div>
+          <p class="hero-kicker">${escapeHTML(artistTypeLabel(artist.artist_type || ""))}</p>
+          <h1>${escapeHTML(artist.name || "Sin nombre")}</h1>
+          <p>${escapeHTML(artist.description || "Ministerio o artista registrado.")}</p>
+        </div>
+      </section>
+
+      ${songs.length ? `
+        <section class="artist-profile-section">
+          <h2>Cantos de este artista</h2>
+
+          <div class="artist-song-list">
+            ${songs.map(function (song) {
+              const songSlug = song.slug || slugify(song.title || "");
+
+              return `
+                <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
+                  <div>
+                    <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
+                    <p>${escapeHTML(songMetaText(song) || "Canto disponible")}</p>
+                  </div>
+                  <span>›</span>
+                </a>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      ` : `
+        <div class="song-card">
+          <h3>Este artista aún no tiene cantos</h3>
+          <p>Agrega canciones desde el panel de administración.</p>
+        </div>
+      `}
+    `;
+  } catch (error) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>Error cargando artista</h3>
+        <p>${escapeHTML(error.message || "Intenta nuevamente.")}</p>
+      </div>
+    `;
+  }
+}
 /* =========================================================
    DONACIONES
 ========================================================= */
