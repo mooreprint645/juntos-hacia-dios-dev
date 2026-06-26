@@ -3031,3 +3031,76 @@ window.loadArtistsPage = loadArtistsPage;
 window.loadCategoriesPage = loadCategoriesPage;
 window.loadArtistProfile = loadArtistProfile;
 window.loadSongPage = loadSongPage;
+
+/* =========================================================
+   FIX VISUAL: SECCIONES BONITAS + ACORDES DESTACADOS
+   En admin se escribe [Intro], [Verso 1], [Coro]
+   En público se muestra como etiqueta visual
+========================================================= */
+
+function renderChordedLyrics(lyrics, transposeSteps) {
+  const steps = Number(transposeSteps || 0);
+  const lines = String(lyrics || "").split("\n");
+
+  return lines.map(function (line) {
+    const rawLine = String(line || "");
+    const trimmed = rawLine.trim();
+
+    if (!trimmed) {
+      return `<span class="song-empty-line"></span>`;
+    }
+
+    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
+
+    if (sectionMatch) {
+      return `
+        <span class="song-section-label">
+          ${escapeHTML(sectionMatch[1])}
+        </span>
+      `;
+    }
+
+    if (!rawLine.includes("(")) {
+      return `
+        <span class="song-plain-line">
+          ${escapeHTML(rawLine)}
+        </span>
+      `;
+    }
+
+    let chordLine = "";
+    let lyricLine = "";
+    let lyricPosition = 0;
+
+    const regex = /\(([^)]+)\)/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(rawLine)) !== null) {
+      const textBeforeChord = rawLine.slice(lastIndex, match.index);
+
+      lyricLine += textBeforeChord;
+      lyricPosition += textBeforeChord.length;
+
+      const chord = transposeChordGroup(match[1], steps);
+
+      while (chordLine.length < lyricPosition) {
+        chordLine += " ";
+      }
+
+      chordLine += chord;
+
+      lastIndex = regex.lastIndex;
+    }
+
+    const textAfterLastChord = rawLine.slice(lastIndex);
+    lyricLine += textAfterLastChord;
+
+    return `
+      <span class="song-line">
+        <span class="chord-line">${escapeHTML(chordLine)}</span>
+        <span class="lyric-line">${escapeHTML(lyricLine)}</span>
+      </span>
+    `;
+  }).join("");
+}
