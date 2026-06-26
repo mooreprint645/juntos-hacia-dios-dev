@@ -966,3 +966,29 @@ body.light-mode .shimmer-block {
     padding: 20px;
   }
 }
+/* =========================================================
+   FIX: ACORDES ENCIMA DE LA LETRA
+========================================================= */
+
+.lyrics-block {
+  white-space: pre-wrap;
+  font-family: "Courier New", Courier, monospace;
+  line-height: 1.35;
+}
+
+.chord-line {
+  display: block;
+  color: var(--accent);
+  font-weight: 800;
+  line-height: 1.1;
+  min-height: 1.1em;
+  white-space: pre;
+}
+
+.lyric-line {
+  display: block;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
