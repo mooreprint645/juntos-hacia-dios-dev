@@ -1819,3 +1819,15 @@ button.danger {
     flex: 0 0 auto !important;
   }
 }
+/* Ajuste visual del botón activo del menú interno admin */
+.admin-jump-menu a.active-admin-jump {
+  background: var(--accent) !important;
+  color: #111827 !important;
+  border-color: var(--accent) !important;
+  opacity: 1 !important;
+  box-shadow: 0 8px 18px rgba(250, 204, 21, 0.22) !important;
+}
+
+.admin-jump-menu a {
+  opacity: 1 !important;
+}
