@@ -6015,3 +6015,36 @@ window.toggleCategoryAccordion = toggleCategoryAccordion;
 window.toggleAdminCategoryAccordion = toggleAdminCategoryAccordion;
 window.renderCategoryAccordionTree = renderCategoryAccordionTree;
 window.renderAdminCategoryAccordionTree = renderAdminCategoryAccordionTree;
+
+
+/* =========================================================
+   PATCH: selector de categoría más limpio para canciones
+========================================================= */
+
+function shortCategoryOptionText(category) {
+  const typeText = categoryTypeLabel(category.song_type || "");
+  const indent = categoryIndent(category.level);
+
+  return indent + (category.name || "Categoría") + " · " + typeText;
+}
+
+async function loadCategoryOptions() {
+  const { data } = await fetchCategories();
+  const categories = data || [];
+  const tree = buildCategoryTree(categories, null);
+  const flat = flattenCategoryTree(tree, 0, "");
+
+  const select = $("songCategoryInput");
+
+  if (!select) return;
+
+  select.innerHTML = `<option value="">Selecciona categoría</option>`;
+
+  flat.forEach(function (category) {
+    select.innerHTML += `
+      <option value="${escapeHTML(category.id)}">
+        ${escapeHTML(shortCategoryOptionText(category))}
+      </option>
+    `;
+  });
+}
