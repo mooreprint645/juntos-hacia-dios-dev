@@ -2600,3 +2600,101 @@ button.danger {
     min-width: 0 !important;
   }
 }
+/* =========================================================
+   FIX FINAL: categorías admin limpio y usable
+========================================================= */
+
+.admin-category-drag-handle {
+  display: none !important;
+}
+
+.admin-category-folder-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+}
+
+.admin-category-folder-card.reorder-card {
+  display: block !important;
+  padding: 16px !important;
+  min-width: 0 !important;
+}
+
+.admin-category-order-row {
+  display: block !important;
+}
+
+.admin-category-folder-card h3 {
+  font-size: 1.15rem !important;
+  line-height: 1.2 !important;
+  margin-bottom: 8px !important;
+}
+
+.admin-category-folder-card p {
+  font-size: 0.9rem !important;
+  line-height: 1.35 !important;
+  margin: 4px 0 !important;
+}
+
+.admin-category-order-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  margin-top: 14px !important;
+  justify-content: stretch !important;
+}
+
+.admin-category-order-actions button {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 6px 8px !important;
+  border-radius: 12px !important;
+  font-size: 0.82rem !important;
+  white-space: nowrap !important;
+}
+
+.admin-category-order-actions button:nth-child(1)::after {
+  content: " Subir";
+}
+
+.admin-category-order-actions button:nth-child(2)::after {
+  content: " Bajar";
+}
+
+.admin-category-order-save {
+  justify-content: flex-start !important;
+  margin-top: 16px !important;
+}
+
+.admin-category-order-save button {
+  width: auto !important;
+  min-width: 180px !important;
+}
+
+/* Teléfono: una sola columna y botones claros */
+@media (max-width: 768px) {
+  .admin-category-folder-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-category-folder-card.reorder-card {
+    padding: 14px !important;
+  }
+
+  .admin-category-order-actions {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .admin-category-order-actions button {
+    height: 42px !important;
+    min-height: 42px !important;
+    font-size: 0.86rem !important;
+  }
+
+  .admin-category-order-save button {
+    width: 100% !important;
+  }
+}
