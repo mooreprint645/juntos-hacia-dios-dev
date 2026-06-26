@@ -2323,3 +2323,20 @@ button.danger {
     margin-left: 0 !important;
   }
 }
+/* =========================================================
+   FIX MÓVIL: selector de categorías más usable
+========================================================= */
+
+@media (max-width: 768px) {
+  #songCategoryInput,
+  #categoryParentInput {
+    font-size: 0.9rem !important;
+    line-height: 1.25 !important;
+    min-height: 46px !important;
+  }
+
+  #songCategoryInput option,
+  #categoryParentInput option {
+    font-size: 0.9rem !important;
+  }
+}
