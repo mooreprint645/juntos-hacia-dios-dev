@@ -6864,3 +6864,140 @@ async function fetchSongsWithRelations(ids) {
     error: null
   };
 }
+/* =========================================================
+   FIX: reordenar categorías visualmente antes de guardar
+========================================================= */
+
+function moveAdminCategoryInOrder(categoryId, direction) {
+  const visibleCategories = adminCategoryBrowserCategories.filter(function (category) {
+    if (!adminCategoryBrowserType) return !category.song_type;
+    return category.song_type === adminCategoryBrowserType;
+  });
+
+  const siblings = visibleCategories
+    .filter(function (category) {
+      return String(category.parent_id || "") === String(adminCategoryBrowserParentId || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+
+  const index = siblings.findIndex(function (category) {
+    return String(category.id) === String(categoryId);
+  });
+
+  if (index === -1) return;
+
+  const newIndex = index + direction;
+
+  if (newIndex < 0 || newIndex >= siblings.length) return;
+
+  const current = siblings[index];
+  const target = siblings[newIndex];
+
+  const currentOrder = Number(current.sort_order || 0);
+  const targetOrder = Number(target.sort_order || 0);
+
+  current.sort_order = targetOrder;
+  target.sort_order = currentOrder;
+
+  const originalCurrent = adminCategoryBrowserCategories.find(function (category) {
+    return String(category.id) === String(current.id);
+  });
+
+  const originalTarget = adminCategoryBrowserCategories.find(function (category) {
+    return String(category.id) === String(target.id);
+  });
+
+  if (originalCurrent) {
+    originalCurrent.sort_order = current.sort_order;
+  }
+
+  if (originalTarget) {
+    originalTarget.sort_order = target.sort_order;
+  }
+
+  renderAdminCategoryBrowser();
+
+  setTimeout(function () {
+    showMessage("adminCategoryOrderMessage", "Orden cambiado. Toca Guardar orden.");
+  }, 50);
+}
+
+async function saveAdminCategoryOrder() {
+  const client = getSupabase();
+
+  if (!client) {
+    showMessage("adminCategoryOrderMessage", "No se pudo conectar con Supabase.");
+    return;
+  }
+
+  const visibleCategories = adminCategoryBrowserCategories.filter(function (category) {
+    if (!adminCategoryBrowserType) return !category.song_type;
+    return category.song_type === adminCategoryBrowserType;
+  });
+
+  const siblings = visibleCategories
+    .filter(function (category) {
+      return String(category.parent_id || "") === String(adminCategoryBrowserParentId || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+
+  if (!siblings.length) {
+    showMessage("adminCategoryOrderMessage", "No hay categorías para ordenar.");
+    return;
+  }
+
+  showMessage("adminCategoryOrderMessage", "Guardando orden...");
+
+  for (let index = 0; index < siblings.length; index++) {
+    const category = siblings[index];
+    const newOrder = (index + 1) * 10;
+
+    const { error } = await client
+      .from("categories")
+      .update({
+        sort_order: newOrder
+      })
+      .eq("id", category.id);
+
+    if (error) {
+      showMessage("adminCategoryOrderMessage", "Error guardando orden: " + error.message);
+      return;
+    }
+
+    category.sort_order = newOrder;
+
+    const originalCategory = adminCategoryBrowserCategories.find(function (item) {
+      return String(item.id) === String(category.id);
+    });
+
+    if (originalCategory) {
+      originalCategory.sort_order = newOrder;
+    }
+  }
+
+  showMessage("adminCategoryOrderMessage", "Orden guardado correctamente.");
+
+  await Promise.all([
+    loadAdminCategories(),
+    loadCategoryOptions(),
+    loadCategoryParentOptions(),
+    loadCategoriesPage()
+  ]);
+}
+
+window.moveAdminCategoryInOrder = moveAdminCategoryInOrder;
+window.saveAdminCategoryOrder = saveAdminCategoryOrder;
