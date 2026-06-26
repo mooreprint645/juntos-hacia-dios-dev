@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Canciones | Juntos Hacia Dios</title>
+
+  <meta
+    name="description"
+    content="Explora canciones cristianas y católicas con letras, acordes, tono, capo, artistas y recursos."
+  />
+
+  <link rel="stylesheet" href="style.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="app.js" defer></script>
+</head>
+
+<body>
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios">
+        <span class="brand-icon">✝</span>
+        <span>Juntos Hacia Dios</span>
+      </a>
+
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">
+        ☰
+      </button>
+
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Inicio</a>
+        <a href="canciones.html" class="active">Canciones</a>
+        <a href="artistas.html">Artistas</a>
+        <a href="categorias.html">Categorías</a>
+        <a href="donaciones.html">Donaciones</a>
+        <a href="admin.html">Admin</a>
+
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">
+          🌙
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero compact-hero">
+      <div class="hero-content">
+        <p class="hero-kicker">Cancionero</p>
+
+        <h1>Canciones</h1>
+
+        <p>
+          Busca cantos por título, artista, tono, dificultad o categoría.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="toolbar">
+        <div class="search-box">
+          <label for="songsSearchInput">Buscar canción</label>
+          <input
+            type="search"
+            id="songsSearchInput"
+            placeholder="Ej. Santo, Hosanna, Athenas, C..."
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="filter-buttons" aria-label="Filtros de canciones">
+          <button class="song-btn small-btn" type="button" onclick="setSongsFilter('all')">
+            Todas
+          </button>
+
+          <button class="song-btn small-btn secondary" type="button" onclick="setSongsFilter('catolico')">
+            Católicas
+          </button>
+
+          <button class="song-btn small-btn secondary" type="button" onclick="setSongsFilter('cristiano')">
+            Cristianas
+          </button>
+        </div>
+      </div>
+
+      <p class="muted-text" id="songCountText">Cargando canciones...</p>
+
+      <div class="songs-grid" id="songsGrid">
+        <div class="song-card shimmer-card">
+          <h3>Cargando canciones...</h3>
+          <p>Un momento por favor.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
+    <p>
+      <a href="index.html">Inicio</a>
+      ·
+      <a href="artistas.html">Artistas</a>
+      ·
+      <a href="categorias.html">Categorías</a>
+    </p>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
