@@ -7079,3 +7079,199 @@ function prepareAddCategoryInsideCurrentFolder() {
 
 window.prepareAddCategoryInsideCurrentFolder = prepareAddCategoryInsideCurrentFolder;
 window.setCategoryParentSingleOption = setCategoryParentSingleOption;
+
+/* =========================================================
+   FIX FUERTE: agregar categoría dentro de carpeta actual
+   y simplificar selector de categoría padre
+========================================================= */
+
+let lockedCategoryParentId = null;
+
+function categoryPathTextForParent(parentId) {
+  if (!parentId) return "Sin padre / categoría principal";
+
+  const path = getCategoryPathFromBrowser(parentId)
+    .map(function (category) {
+      return category.name || "";
+    })
+    .filter(Boolean)
+    .join(" > ");
+
+  return path || "Categoría seleccionada";
+}
+
+function setLockedCategoryParent(parentId) {
+  lockedCategoryParentId = parentId || "";
+
+  const select = $("categoryParentInput");
+
+  if (!select) return;
+
+  if (!lockedCategoryParentId) {
+    select.innerHTML = `
+      <option value="">Sin padre / categoría principal</option>
+    `;
+    select.value = "";
+    return;
+  }
+
+  select.innerHTML = `
+    <option value="${escapeHTML(lockedCategoryParentId)}">
+      Dentro de: ${escapeHTML(categoryPathTextForParent(lockedCategoryParentId))}
+    </option>
+  `;
+
+  select.value = lockedCategoryParentId;
+}
+
+async function loadCategoryParentOptions() {
+  ensureCategoryTreeFields();
+
+  const select = $("categoryParentInput");
+
+  if (!select) return;
+
+  if (lockedCategoryParentId !== null) {
+    setLockedCategoryParent(lockedCategoryParentId);
+    return;
+  }
+
+  const { data } = await fetchCategories();
+  const categories = data || [];
+
+  const tree = buildCategoryTree(categories, null);
+  const flat = flattenCategoryTree(tree, 0, "");
+
+  select.innerHTML = `<option value="">Sin padre / categoría principal</option>`;
+
+  flat.forEach(function (category) {
+    if (currentEditingCategoryId && String(category.id) === String(currentEditingCategoryId)) {
+      return;
+    }
+
+    select.innerHTML += `
+      <option value="${escapeHTML(category.id)}">
+        ${escapeHTML(categoryIndent(category.level) + category.path)}
+      </option>
+    `;
+  });
+}
+
+function prepareAddCategoryInsideCurrentFolder() {
+  ensureCategoryTreeFields();
+
+  currentEditingCategoryId = null;
+
+  const title = $("categoryFormTitle");
+
+  const currentParent = adminCategoryBrowserParentId || "";
+
+  if (title) {
+    title.textContent = currentParent
+      ? "Agregar subcategoría dentro de " + categoryPathTextForParent(currentParent)
+      : "Agregar categoría principal";
+  }
+
+  const parentCategory = currentParent
+    ? getCategoryByIdFromBrowser(currentParent)
+    : null;
+
+  setInputValue("categoryNameInput", "");
+  setInputValue(
+    "categoryTypeInput",
+    parentCategory ? parentCategory.song_type || "" : adminCategoryBrowserType || ""
+  );
+  setInputValue("categorySortInput", "10");
+  setInputValue("categoryDescriptionInput", "");
+
+  setLockedCategoryParent(currentParent);
+
+  const form = $("categoryFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+async function editCategory(id) {
+  lockedCategoryParentId = null;
+  ensureCategoryTreeFields();
+
+  const client = getSupabase();
+
+  if (!client) return;
+
+  const { data, error } = await client
+    .from("categories")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    alert("No se pudo cargar la categoría.");
+    return;
+  }
+
+  currentEditingCategoryId = id;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Editar categoría";
+  }
+
+  await loadCategoryParentOptions();
+
+  setInputValue("categoryNameInput", data.name || "");
+  setInputValue("categoryTypeInput", data.song_type || "");
+  setInputValue("categoryParentInput", data.parent_id || "");
+  setInputValue("categorySortInput", String(data.sort_order || 0));
+  setInputValue("categoryDescriptionInput", data.description || "");
+
+  adminCategoryBrowserType = data.song_type || "";
+  adminCategoryBrowserParentId = data.parent_id || null;
+  renderAdminCategoryBrowser();
+
+  const form = $("categoryFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function resetCategoryForm() {
+  ensureCategoryTreeFields();
+
+  currentEditingCategoryId = null;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Agregar categoría";
+  }
+
+  setInputValue("categoryNameInput", "");
+  setInputValue("categoryTypeInput", adminCategoryBrowserType || "");
+  setInputValue("categorySortInput", "10");
+  setInputValue("categoryDescriptionInput", "");
+
+  setLockedCategoryParent(adminCategoryBrowserParentId || "");
+}
+
+function cancelCategoryEdit() {
+  lockedCategoryParentId = null;
+  resetCategoryForm();
+}
+
+window.prepareAddCategoryInsideCurrentFolder = prepareAddCategoryInsideCurrentFolder;
+window.loadCategoryParentOptions = loadCategoryParentOptions;
+window.setLockedCategoryParent = setLockedCategoryParent;
+window.editCategory = editCategory;
+window.resetCategoryForm = resetCategoryForm;
+window.cancelCategoryEdit = cancelCategoryEdit;
