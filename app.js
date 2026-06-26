@@ -8659,3 +8659,37 @@ async function showPublicCategorySongsBySlug(categorySlug) {
 
 window.showPublicCategorySongsBySlug = showPublicCategorySongsBySlug;
 window.publicCategorySongCard = publicCategorySongCard;
+
+/* =========================================================
+   FIX SEGURO: categorías solo cargan en categorias.html
+========================================================= */
+
+function isRealCategoriesPage() {
+  const path = String(window.location.pathname || "").toLowerCase();
+  return path.includes("categorias.html") || path.endsWith("/categorias");
+}
+
+function getPublicCategoriesRoot() {
+  if (!isRealCategoriesPage()) return null;
+
+  return (
+    document.getElementById("categoriesPage") ||
+    document.getElementById("categoriesList") ||
+    document.querySelector("[data-categories-page]") ||
+    document.querySelector(".categories-page") ||
+    document.querySelector(".category-accordion")?.parentElement ||
+    document.querySelector("main .container") ||
+    document.querySelector("main")
+  );
+}
+
+const previousLoadCategoriesPageSafe = window.loadCategoriesPageSafe || loadCategoriesPageSafe;
+
+async function loadCategoriesPageSafe() {
+  if (!isRealCategoriesPage()) return;
+  return previousLoadCategoriesPageSafe();
+}
+
+window.loadCategoriesPage = loadCategoriesPageSafe;
+window.loadCategoriesPageSafe = loadCategoriesPageSafe;
+window.getPublicCategoriesRoot = getPublicCategoriesRoot;
