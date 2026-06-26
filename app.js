@@ -8795,3 +8795,359 @@ window.getPublicCategoriesRoot = getPublicCategoriesRoot;
 window.loadCategoriesPageSafe = loadCategoriesPageSafe;
 window.loadCategoriesPage = loadCategoriesPage;
 window.fixMainNavigationLinks = fixMainNavigationLinks;
+
+/* =========================================================
+   FIX DEFINITIVO: categorias.html carga sus categorías
+========================================================= */
+
+let finalCategoriesData = [];
+let finalCategoriesType = "catolico";
+let finalCategoriesParentId = null;
+
+function isFinalCategoriesPage() {
+  const path = String(window.location.pathname || "").toLowerCase();
+  return path.includes("categorias.html");
+}
+
+function finalCategoriesRoot() {
+  if (!isFinalCategoriesPage()) return null;
+
+  return (
+    document.getElementById("categoriesPage") ||
+    document.getElementById("categoriesList") ||
+    document.querySelector(".categories-page") ||
+    document.querySelector("[data-categories-page]")
+  );
+}
+
+function finalCategoryById(id) {
+  return finalCategoriesData.find(function (category) {
+    return String(category.id) === String(id);
+  });
+}
+
+function finalCategoryChildren(parentId) {
+  return finalCategoriesData
+    .filter(function (category) {
+      if (finalCategoriesType) {
+        if (category.song_type !== finalCategoriesType) return false;
+      } else {
+        if (category.song_type) return false;
+      }
+
+      return String(category.parent_id || "") === String(parentId || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+}
+
+function finalCategoryPath(parentId) {
+  const path = [];
+  let currentId = parentId;
+
+  while (currentId) {
+    const category = finalCategoryById(currentId);
+
+    if (!category) break;
+
+    path.unshift(category);
+    currentId = category.parent_id || null;
+  }
+
+  return path;
+}
+
+function setFinalCategoriesType(type) {
+  finalCategoriesType = type || "";
+  finalCategoriesParentId = null;
+  renderFinalCategories();
+}
+
+function openFinalCategoryFolder(categoryId) {
+  finalCategoriesParentId = categoryId || null;
+  renderFinalCategories();
+
+  const root = finalCategoriesRoot();
+
+  if (root) {
+    root.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function renderFinalCategoryPath() {
+  const path = finalCategoryPath(finalCategoriesParentId);
+
+  let html = `
+    <div class="public-category-path">
+      <span>Ruta:</span>
+      <button type="button" class="song-btn small-btn" onclick="openFinalCategoryFolder(null)">
+        Inicio
+      </button>
+  `;
+
+  path.forEach(function (category) {
+    html += `
+      <span>›</span>
+      <button
+        type="button"
+        class="song-btn small-btn"
+        onclick="openFinalCategoryFolder('${escapeHTML(category.id)}')"
+      >
+        ${escapeHTML(category.name || "Categoría")}
+      </button>
+    `;
+  });
+
+  html += `</div>`;
+
+  return html;
+}
+
+function finalCategorySongsLink(category) {
+  return `categorias.html?categoria=${encodeURIComponent(category.slug || "")}`;
+}
+
+function renderFinalCategories() {
+  const root = finalCategoriesRoot();
+
+  if (!root) return;
+
+  const children = finalCategoryChildren(finalCategoriesParentId);
+
+  root.innerHTML = `
+    <div class="public-category-explorer">
+      <p class="muted">${finalCategoriesData.length} categorías disponibles</p>
+
+      <div class="public-category-tabs">
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${finalCategoriesType === "catolico" ? "active" : ""}"
+          onclick="setFinalCategoriesType('catolico')"
+        >
+          Católico
+        </button>
+
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${finalCategoriesType === "cristiano" ? "active" : ""}"
+          onclick="setFinalCategoriesType('cristiano')"
+        >
+          Cristiano
+        </button>
+
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${finalCategoriesType === "" ? "active" : ""}"
+          onclick="setFinalCategoriesType('')"
+        >
+          General
+        </button>
+      </div>
+
+      ${renderFinalCategoryPath()}
+
+      ${children.length ? `
+        <div class="public-category-grid">
+          ${children.map(function (category) {
+            const childCount = finalCategoriesData.filter(function (child) {
+              return String(child.parent_id || "") === String(category.id || "");
+            }).length;
+
+            return `
+              <article class="public-category-card">
+                <h3>📁 ${escapeHTML(category.name || "Categoría")}</h3>
+                <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+                <p>${childCount} subcategoría(s)</p>
+
+                <div class="public-category-card-actions">
+                  ${childCount ? `
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="openFinalCategoryFolder('${escapeHTML(category.id)}')"
+                    >
+                      Abrir carpeta
+                    </button>
+                  ` : ""}
+
+                  <a
+                    class="song-btn small-btn secondary"
+                    href="${finalCategorySongsLink(category)}"
+                  >
+                    Ver cantos
+                  </a>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : `
+        <div class="public-category-empty">
+          <p>No hay subcategorías aquí.</p>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function finalCategorySearchInput() {
+  return (
+    document.getElementById("categorySearchInput") ||
+    document.getElementById("categoriesSearchInput") ||
+    document.querySelector('input[type="search"]') ||
+    Array.from(document.querySelectorAll("input")).find(function (input) {
+      return String(input.placeholder || "").toLowerCase().includes("ador");
+    })
+  );
+}
+
+function renderFinalCategorySearch(query) {
+  const root = finalCategoriesRoot();
+
+  if (!root) return;
+
+  const cleanQuery = String(query || "").trim().toLowerCase();
+
+  if (!cleanQuery) {
+    renderFinalCategories();
+    return;
+  }
+
+  const results = finalCategoriesData
+    .filter(function (category) {
+      return (
+        String(category.name || "").toLowerCase().includes(cleanQuery) ||
+        String(category.description || "").toLowerCase().includes(cleanQuery)
+      );
+    })
+    .sort(function (a, b) {
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+
+  root.innerHTML = `
+    <div class="public-category-explorer">
+      <p class="muted">${results.length} categoría(s) encontrada(s)</p>
+
+      ${results.length ? `
+        <div class="public-category-grid">
+          ${results.map(function (category) {
+            const childCount = finalCategoriesData.filter(function (child) {
+              return String(child.parent_id || "") === String(category.id || "");
+            }).length;
+
+            return `
+              <article class="public-category-card">
+                <p class="eyebrow">${escapeHTML(category.song_type || "general")}</p>
+                <h3>${escapeHTML(category.name || "Categoría")}</h3>
+                <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+                <p>${childCount} subcategoría(s)</p>
+
+                <div class="public-category-card-actions">
+                  ${childCount ? `
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="
+                        finalCategoriesType='${escapeHTML(category.song_type || "")}';
+                        openFinalCategoryFolder('${escapeHTML(category.id)}');
+                      "
+                    >
+                      Abrir carpeta
+                    </button>
+                  ` : ""}
+
+                  <a
+                    class="song-btn small-btn secondary"
+                    href="${finalCategorySongsLink(category)}"
+                  >
+                    Ver cantos
+                  </a>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : `
+        <div class="public-category-empty">
+          <p>No encontramos categorías con ese texto.</p>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+async function loadFinalCategoriesPage() {
+  if (!isFinalCategoriesPage()) return;
+
+  const root = finalCategoriesRoot();
+
+  if (!root) return;
+
+  root.innerHTML = `
+    <div class="public-category-empty">
+      <h3>Cargando categorías...</h3>
+      <p>Un momento por favor.</p>
+    </div>
+  `;
+
+  const result = await fetchCategories();
+
+  if (result.error) {
+    root.innerHTML = `
+      <div class="public-category-empty">
+        <h3>Error cargando categorías</h3>
+        <p>${escapeHTML(result.error.message || "No se pudieron cargar.")}</p>
+      </div>
+    `;
+    return;
+  }
+
+  finalCategoriesData = result.data || [];
+
+  const search = finalCategorySearchInput();
+
+  if (search && !search.dataset.finalCategoriesReady) {
+    search.dataset.finalCategoriesReady = "true";
+
+    search.addEventListener("input", function () {
+      renderFinalCategorySearch(search.value);
+    });
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const categorySlug = params.get("categoria");
+
+  if (categorySlug) {
+    showPublicCategorySongsBySlug(categorySlug);
+    return;
+  }
+
+  if (search && String(search.value || "").trim()) {
+    renderFinalCategorySearch(search.value);
+  } else {
+    renderFinalCategories();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(function () {
+    loadFinalCategoriesPage();
+  }, 2200);
+});
+
+window.loadCategoriesPage = loadFinalCategoriesPage;
+window.loadCategoriesPageSafe = loadFinalCategoriesPage;
+window.loadFinalCategoriesPage = loadFinalCategoriesPage;
+window.setFinalCategoriesType = setFinalCategoriesType;
+window.openFinalCategoryFolder = openFinalCategoryFolder;
+window.renderFinalCategories = renderFinalCategories;
+window.renderFinalCategorySearch = renderFinalCategorySearch;
