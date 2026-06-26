@@ -5110,3 +5110,665 @@ async function loadArtistProfile() {
 }
 
 window.loadArtistProfile = loadArtistProfile;
+
+/* =========================================================
+   PATCH: ARTISTAS POR TIPO Y CATEGORÍAS EN ÁRBOL
+========================================================= */
+
+function categoryTypeLabel(type) {
+  if (type === "catolico") return "Católico";
+  if (type === "cristiano") return "Cristiano";
+  return "General";
+}
+
+function artistTypeLabel(type) {
+  if (type === "catolico") return "Católico";
+  if (type === "cristiano") return "Cristiano";
+  if (type === "mixto") return "Mixto";
+  return "Sin tipo";
+}
+
+function buildCategoryTree(categories, parentId) {
+  const safeParent = parentId || null;
+
+  return (categories || [])
+    .filter(function (category) {
+      return String(category.parent_id || "") === String(safeParent || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    })
+    .map(function (category) {
+      return Object.assign({}, category, {
+        children: buildCategoryTree(categories, category.id)
+      });
+    });
+}
+
+function flattenCategoryTree(tree, level, prefix) {
+  let rows = [];
+
+  (tree || []).forEach(function (category) {
+    const path = prefix
+      ? prefix + " > " + (category.name || "")
+      : category.name || "";
+
+    rows.push({
+      id: category.id,
+      name: category.name || "",
+      path: path,
+      level: level || 0,
+      song_type: category.song_type || "",
+      parent_id: category.parent_id || "",
+      sort_order: category.sort_order || 0,
+      description: category.description || ""
+    });
+
+    rows = rows.concat(flattenCategoryTree(category.children || [], (level || 0) + 1, path));
+  });
+
+  return rows;
+}
+
+function categoryIndent(level) {
+  const count = Number(level || 0);
+
+  if (count <= 0) return "";
+
+  return "— ".repeat(count);
+}
+
+async function fetchCategories() {
+  const client = getSupabase();
+
+  if (!client) {
+    return {
+      data: [],
+      error: { message: "Sin conexión a Supabase" }
+    };
+  }
+
+  return await client
+    .from("categories")
+    .select("*")
+    .order("song_type", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+}
+
+function ensureArtistTypeField() {
+  const nameInput = $("artistNameInput");
+
+  if (!nameInput) return;
+  if ($("artistTypeInput")) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <label for="artistTypeInput">Tipo de artista</label>
+    <select id="artistTypeInput">
+      <option value="">Sin tipo</option>
+      <option value="catolico">Católico</option>
+      <option value="cristiano">Cristiano</option>
+      <option value="mixto">Mixto</option>
+    </select>
+  `;
+
+  nameInput.insertAdjacentElement("afterend", wrapper);
+}
+
+function ensureCategoryTreeFields() {
+  const nameInput = $("categoryNameInput");
+
+  if (!nameInput) return;
+  if ($("categoryTypeInput")) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <label for="categoryTypeInput">Tipo de categoría</label>
+    <select id="categoryTypeInput">
+      <option value="">General</option>
+      <option value="catolico">Católico</option>
+      <option value="cristiano">Cristiano</option>
+    </select>
+
+    <label for="categoryParentInput">Categoría padre</label>
+    <select id="categoryParentInput">
+      <option value="">Sin padre / categoría principal</option>
+    </select>
+
+    <label for="categorySortInput">Orden</label>
+    <input
+      type="number"
+      id="categorySortInput"
+      placeholder="Ejemplo: 10"
+      value="0"
+    />
+  `;
+
+  nameInput.insertAdjacentElement("afterend", wrapper);
+}
+
+function ensureAdminTreeFields() {
+  ensureArtistTypeField();
+  ensureCategoryTreeFields();
+}
+/* =========================================================
+   REEMPLAZO: artistas con tipo
+========================================================= */
+
+async function saveArtist() {
+  ensureArtistTypeField();
+
+  const name = getInputValue("artistNameInput");
+  const description = getInputValue("artistDescriptionInput");
+  const artistType = getInputValue("artistTypeInput");
+
+  if (!name) {
+    alert("Escribe el nombre del artista.");
+    return;
+  }
+
+  const client = getSupabase();
+
+  if (!client) {
+    alert("No se pudo conectar con Supabase.");
+    return;
+  }
+
+  const payload = {
+    name: name,
+    slug: slugify(name),
+    description: description,
+    artist_type: artistType,
+    avatar_url: "",
+    cover_url: ""
+  };
+
+  const result = currentEditingArtistId
+    ? await client.from("artists").update(payload).eq("id", currentEditingArtistId)
+    : await client.from("artists").insert(payload);
+
+  if (result.error) {
+    alert("No se pudo guardar artista: " + result.error.message);
+    return;
+  }
+
+  const wasEditing = !!currentEditingArtistId;
+
+  resetArtistForm();
+
+  await Promise.all([
+    loadAdminArtists(),
+    loadArtistOptions(),
+    loadArtistsPage(),
+    loadHomeArtists()
+  ]);
+
+  alert(wasEditing ? "Artista actualizado." : "Artista guardado.");
+}
+
+async function editArtist(id) {
+  ensureArtistTypeField();
+
+  const client = getSupabase();
+
+  if (!client) return;
+
+  const { data, error } = await client
+    .from("artists")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    alert("No se pudo cargar el artista.");
+    return;
+  }
+
+  currentEditingArtistId = id;
+
+  const title = $("artistFormTitle");
+
+  if (title) {
+    title.textContent = "Editar artista";
+  }
+
+  setInputValue("artistNameInput", data.name || "");
+  setInputValue("artistTypeInput", data.artist_type || "");
+  setInputValue("artistDescriptionInput", data.description || "");
+
+  const form = $("artistFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function resetArtistForm() {
+  ensureArtistTypeField();
+
+  currentEditingArtistId = null;
+
+  const title = $("artistFormTitle");
+
+  if (title) {
+    title.textContent = "Agregar artista";
+  }
+
+  setInputValue("artistNameInput", "");
+  setInputValue("artistTypeInput", "");
+  setInputValue("artistDescriptionInput", "");
+}
+
+async function loadAdminArtists() {
+  ensureArtistTypeField();
+
+  const list = $("adminArtistList");
+
+  if (!list) return;
+
+  const { data, error } = await fetchArtists();
+
+  if (error) {
+    list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
+    return;
+  }
+
+  if (!data || !data.length) {
+    list.innerHTML = `<p class="muted-text">No hay artistas todavía.</p>`;
+    return;
+  }
+
+  list.innerHTML = data.map(function (artist) {
+    const typeText = artistTypeLabel(artist.artist_type || "");
+
+    return `
+      <div class="admin-list-item">
+        <div class="admin-person-row">
+          <div class="artist-avatar-small">
+            ${escapeHTML(getInitials(artist.name))}
+          </div>
+
+          <div>
+            <strong>${escapeHTML(artist.name || "Sin nombre")}</strong>
+            <p>${escapeHTML(typeText)} · ${escapeHTML(artist.description || "Sin descripción.")}</p>
+          </div>
+        </div>
+
+        <div class="admin-actions">
+          <button type="button" class="song-btn small-btn" onclick="editArtist('${artist.id}')">
+            Editar
+          </button>
+
+          <button type="button" class="song-btn small-btn danger" onclick="deleteArtist('${artist.id}')">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+/* =========================================================
+   REEMPLAZO: categorías con padre, tipo y orden
+========================================================= */
+
+async function loadCategoryParentOptions() {
+  ensureCategoryTreeFields();
+
+  const select = $("categoryParentInput");
+
+  if (!select) return;
+
+  const { data } = await fetchCategories();
+  const categories = data || [];
+
+  const tree = buildCategoryTree(categories, null);
+  const flat = flattenCategoryTree(tree, 0, "");
+
+  select.innerHTML = `<option value="">Sin padre / categoría principal</option>`;
+
+  flat.forEach(function (category) {
+    if (currentEditingCategoryId && String(category.id) === String(currentEditingCategoryId)) {
+      return;
+    }
+
+    select.innerHTML += `
+      <option value="${escapeHTML(category.id)}">
+        ${escapeHTML(categoryIndent(category.level) + category.path)}
+      </option>
+    `;
+  });
+}
+
+async function saveCategory() {
+  ensureCategoryTreeFields();
+
+  const name = getInputValue("categoryNameInput");
+  const description = getInputValue("categoryDescriptionInput");
+  const songType = getInputValue("categoryTypeInput");
+  const parentId = getInputValue("categoryParentInput");
+  const sortOrder = Number(getInputValue("categorySortInput") || 0);
+
+  if (!name) {
+    alert("Escribe el nombre de la categoría.");
+    return;
+  }
+
+  const client = getSupabase();
+
+  if (!client) {
+    alert("No se pudo conectar con Supabase.");
+    return;
+  }
+
+  const payload = {
+    name: name,
+    slug: slugify(name),
+    description: description,
+    song_type: songType,
+    parent_id: parentId || null,
+    sort_order: Number.isNaN(sortOrder) ? 0 : sortOrder
+  };
+
+  const result = currentEditingCategoryId
+    ? await client.from("categories").update(payload).eq("id", currentEditingCategoryId)
+    : await client.from("categories").insert(payload);
+
+  if (result.error) {
+    alert("No se pudo guardar categoría: " + result.error.message);
+    return;
+  }
+
+  const wasEditing = !!currentEditingCategoryId;
+
+  resetCategoryForm();
+
+  await Promise.all([
+    loadAdminCategories(),
+    loadCategoryOptions(),
+    loadCategoryParentOptions(),
+    loadCategoriesPage()
+  ]);
+
+  alert(wasEditing ? "Categoría actualizada." : "Categoría guardada.");
+}
+
+async function editCategory(id) {
+  ensureCategoryTreeFields();
+
+  const client = getSupabase();
+
+  if (!client) return;
+
+  const { data, error } = await client
+    .from("categories")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    alert("No se pudo cargar la categoría.");
+    return;
+  }
+
+  currentEditingCategoryId = id;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Editar categoría";
+  }
+
+  await loadCategoryParentOptions();
+
+  setInputValue("categoryNameInput", data.name || "");
+  setInputValue("categoryTypeInput", data.song_type || "");
+  setInputValue("categoryParentInput", data.parent_id || "");
+  setInputValue("categorySortInput", String(data.sort_order || 0));
+  setInputValue("categoryDescriptionInput", data.description || "");
+
+  const form = $("categoryFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function resetCategoryForm() {
+  ensureCategoryTreeFields();
+
+  currentEditingCategoryId = null;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = "Agregar categoría";
+  }
+
+  setInputValue("categoryNameInput", "");
+  setInputValue("categoryTypeInput", "");
+  setInputValue("categoryParentInput", "");
+  setInputValue("categorySortInput", "0");
+  setInputValue("categoryDescriptionInput", "");
+
+  loadCategoryParentOptions();
+}
+
+async function loadAdminCategories() {
+  ensureCategoryTreeFields();
+
+  const list = $("adminCategoryList");
+
+  if (!list) return;
+
+  const { data, error } = await fetchCategories();
+
+  if (error) {
+    list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
+    return;
+  }
+
+  const categories = data || [];
+
+  if (!categories.length) {
+    list.innerHTML = `<p class="muted-text">No hay categorías todavía.</p>`;
+    return;
+  }
+
+  const tree = buildCategoryTree(categories, null);
+  const flat = flattenCategoryTree(tree, 0, "");
+
+  list.innerHTML = flat.map(function (category) {
+    const typeText = categoryTypeLabel(category.song_type || "");
+    const levelPadding = Number(category.level || 0) * 18;
+
+    return `
+      <div class="admin-list-item" style="margin-left:${levelPadding}px;">
+        <div>
+          <strong>${escapeHTML(categoryIndent(category.level) + category.name)}</strong>
+          <p>${escapeHTML(typeText)} · Orden ${escapeHTML(category.sort_order || 0)}</p>
+          <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+        </div>
+
+        <div class="admin-actions">
+          <button type="button" class="song-btn small-btn" onclick="editCategory('${category.id}')">
+            Editar
+          </button>
+
+          <button type="button" class="song-btn small-btn danger" onclick="deleteCategory('${category.id}')">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  await loadCategoryParentOptions();
+   }
+/* =========================================================
+   REEMPLAZO: opciones de categorías para canciones
+========================================================= */
+
+async function loadCategoryOptions() {
+  const { data } = await fetchCategories();
+  const categories = data || [];
+  const tree = buildCategoryTree(categories, null);
+  const flat = flattenCategoryTree(tree, 0, "");
+
+  const select = $("songCategoryInput");
+
+  if (!select) return;
+
+  select.innerHTML = `<option value="">Selecciona categoría</option>`;
+
+  flat.forEach(function (category) {
+    const typeText = categoryTypeLabel(category.song_type || "");
+
+    select.innerHTML += `
+      <option value="${escapeHTML(category.id)}">
+        ${escapeHTML(categoryIndent(category.level) + category.path + " · " + typeText)}
+      </option>
+    `;
+  });
+}
+
+/* =========================================================
+   REEMPLAZO: render público de categorías en árbol
+========================================================= */
+
+function renderCategoryTreePublic(categories, level) {
+  const safeLevel = Number(level || 0);
+
+  if (!categories || !categories.length) return "";
+
+  return `
+    <div class="public-category-tree level-${safeLevel}">
+      ${categories.map(function (category) {
+        const hasChildren = category.children && category.children.length;
+
+        return `
+          <article class="public-category-node category-level-${safeLevel}">
+            <button
+              class="category-card public-category-button"
+              type="button"
+              onclick="selectCategoryById('${escapeHTML(category.id)}')"
+            >
+              <span class="category-type-pill">
+                ${escapeHTML(categoryTypeLabel(category.song_type || ""))}
+              </span>
+
+              <h3>${escapeHTML(category.name || "Categoría")}</h3>
+
+              <p>${escapeHTML(category.description || "Ver cantos de esta categoría.")}</p>
+            </button>
+
+            ${hasChildren ? renderCategoryTreePublic(category.children, safeLevel + 1) : ""}
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderCategoriesPage(items) {
+  const grid = $("categoriesGrid") || $("categoryList");
+  const countText = $("categoryCountText");
+
+  if (!grid) return;
+
+  const categories = items || [];
+
+  if (countText) {
+    countText.textContent = categories.length === 1
+      ? "1 categoría encontrada"
+      : categories.length + " categorías encontradas";
+  }
+
+  if (!categories.length) {
+    grid.innerHTML = `
+      <div class="song-card">
+        <h3>No se encontraron categorías</h3>
+        <p>Intenta buscar con otro nombre.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const catolicas = categories.filter(function (category) {
+    return category.song_type === "catolico";
+  });
+
+  const cristianas = categories.filter(function (category) {
+    return category.song_type === "cristiano";
+  });
+
+  const generales = categories.filter(function (category) {
+    return !category.song_type;
+  });
+
+  const catolicasTree = buildCategoryTree(catolicas, null);
+  const cristianasTree = buildCategoryTree(cristianas, null);
+  const generalesTree = buildCategoryTree(generales, null);
+
+  grid.innerHTML = `
+    ${catolicasTree.length ? `
+      <section class="category-family-section">
+        <div class="section-heading">
+          <p class="hero-kicker">Católico</p>
+          <h2>Categorías católicas</h2>
+        </div>
+
+        ${renderCategoryTreePublic(catolicasTree, 0)}
+      </section>
+    ` : ""}
+
+    ${cristianasTree.length ? `
+      <section class="category-family-section">
+        <div class="section-heading">
+          <p class="hero-kicker">Cristiano</p>
+          <h2>Categorías cristianas</h2>
+        </div>
+
+        ${renderCategoryTreePublic(cristianasTree, 0)}
+      </section>
+    ` : ""}
+
+    ${generalesTree.length ? `
+      <section class="category-family-section">
+        <div class="section-heading">
+          <p class="hero-kicker">General</p>
+          <h2>Otras categorías</h2>
+        </div>
+
+        ${renderCategoryTreePublic(generalesTree, 0)}
+      </section>
+    ` : ""}
+  `;
+}
+
+/* =========================================================
+   INIT EXTRA PARA CAMPOS NUEVOS
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(function () {
+    ensureAdminTreeFields();
+    loadCategoryParentOptions();
+  }, 1000);
+});
+
+window.ensureAdminTreeFields = ensureAdminTreeFields;
+window.loadCategoryParentOptions = loadCategoryParentOptions;
+window.buildCategoryTree = buildCategoryTree;
+window.flattenCategoryTree = flattenCategoryTree;
