@@ -2927,3 +2927,173 @@ window.loadArtistsPage = loadArtistsPage;
 window.loadCategoriesPage = loadCategoriesPage;
 window.loadArtistProfile = loadArtistProfile;
 window.loadSongPage = loadSongPage;
+/* =========================================================
+   FIX: ACORDES ARRIBA DE LA LETRA + CAPO CORRECTO
+   Este bloque corrige la forma de mostrar acordes y capo.
+========================================================= */
+
+function getTotalTransposeSteps() {
+  if (!currentSongForPage) return currentTransposeSteps;
+
+  const capoPosition = getCapoPosition(currentSongForPage);
+
+  if (capoPosition > 0) {
+    if (currentCapoMode === "capo") {
+      return currentTransposeSteps;
+    }
+
+    return currentTransposeSteps + capoPosition;
+  }
+
+  return currentTransposeSteps;
+}
+
+function renderChordedLyrics(lyrics, transposeSteps) {
+  const steps = Number(transposeSteps || 0);
+  const lines = String(lyrics || "").split("\n");
+
+  return lines.map(function (line) {
+    if (!line.includes("(")) {
+      return escapeHTML(line);
+    }
+
+    let chordLine = "";
+    let lyricLine = "";
+    let lyricPosition = 0;
+
+    const regex = /\(([^)]+)\)/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(line)) !== null) {
+      const textBeforeChord = line.slice(lastIndex, match.index);
+
+      lyricLine += textBeforeChord;
+      lyricPosition += textBeforeChord.length;
+
+      const chord = transposeChordGroup(match[1], steps);
+
+      while (chordLine.length < lyricPosition) {
+        chordLine += " ";
+      }
+
+      chordLine += chord;
+
+      lastIndex = regex.lastIndex;
+    }
+
+    const textAfterLastChord = line.slice(lastIndex);
+    lyricLine += textAfterLastChord;
+
+    return `<span class="chord-line">${escapeHTML(chordLine)}</span>
+<span class="lyric-line">${escapeHTML(lyricLine)}</span>`;
+  }).join("\n");
+}
+
+function adminRenderLyricsPreview(lyrics) {
+  return renderChordedLyrics(lyrics || "", 0);
+}
+
+async function loadSongPage() {
+  const box = $("songPage") || $("songDetail") || $("cantoContent");
+
+  if (!box) return;
+
+  const slug = getUrlParam("slug");
+  const client = getSupabase();
+
+  if (!client || !slug) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>Canto no encontrado</h3>
+        <p>Vuelve al cancionero e intenta de nuevo.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const { data: song, error } = await client
+    .from("songs")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error || !song) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>Canto no encontrado</h3>
+        <p>Este canto no existe o fue eliminado.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const { data: songs } = await fetchSongsWithRelations([song.id]);
+
+  const fullSong = songs && songs[0]
+    ? songs[0]
+    : Object.assign({}, song, {
+        _artists: [],
+        _categories: [],
+        _albums: [],
+        _links: []
+      });
+
+  currentSongForPage = fullSong;
+  currentTransposeSteps = 0;
+  currentCapoMode = "original";
+
+  const capoPosition = getCapoPosition(fullSong);
+  const capoKey = fullSong.capo_key || "";
+  const meta = songMetaText(fullSong);
+
+  box.innerHTML = `
+    <article class="song-detail-card">
+      <p class="artists-line">
+        ${artistLinksHTML(fullSong._artists)}
+      </p>
+
+      <h1>${escapeHTML(fullSong.title || "Sin título")}</h1>
+
+      <p class="song-meta-line">
+        ${escapeHTML(meta)}
+      </p>
+
+      ${capoPosition > 0 ? `
+        <div class="capo-box">
+          <span id="capoModeLabel">Sin capo</span>
+
+          <button type="button" class="song-btn small-btn" onclick="setCapoMode('original')">
+            Sin capo
+          </button>
+
+          <button type="button" class="song-btn small-btn" onclick="setCapoMode('capo')">
+            Con capo ${capoPosition}${capoKey ? " · " + escapeHTML(capoKey) : ""}
+          </button>
+        </div>
+      ` : ""}
+
+      <div class="transpose-box">
+        <button type="button" class="song-btn small-btn" onclick="changeTranspose(-1)">
+          Bajar tono
+        </button>
+
+        <span id="transposeLabel">Tono original</span>
+
+        <button type="button" class="song-btn small-btn" onclick="changeTranspose(1)">
+          Subir tono
+        </button>
+
+        <button type="button" class="song-btn small-btn" onclick="resetTranspose()">
+          Original
+        </button>
+      </div>
+
+      <pre class="lyrics-block" id="lyricsContent"></pre>
+
+      ${renderSongLinksHTML(fullSong._links || [])}
+    </article>
+  `;
+
+  updateSongLyricsDisplay();
+}
