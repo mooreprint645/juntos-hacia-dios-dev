@@ -3036,3 +3036,35 @@ button.danger {
     padding: 14px !important;
   }
 }
+/* =========================================================
+   FIX: listado de cantos en perfil de artista
+========================================================= */
+
+.artist-song-row {
+  grid-template-columns: 1fr auto !important;
+  align-items: center !important;
+  padding: 16px 18px !important;
+}
+
+.artist-song-row > div {
+  min-width: 0 !important;
+}
+
+.artist-song-row h3 {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.25 !important;
+}
+
+.artist-song-row p {
+  white-space: normal !important;
+  word-break: normal !important;
+  line-height: 1.35 !important;
+}
+
+@media (max-width: 768px) {
+  .artist-song-row {
+    grid-template-columns: 1fr auto !important;
+  }
+}
