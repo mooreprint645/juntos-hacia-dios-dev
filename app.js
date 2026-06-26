@@ -1966,7 +1966,8 @@ async function loadDonationPage() {
     </div>
   `;
 
-  const result = await fetchDonationSettings();
+  const result = { data: null, error: null };
+// const result = await fetchDonationSettings();
 
   if (result.error) {
     box.innerHTML = `
