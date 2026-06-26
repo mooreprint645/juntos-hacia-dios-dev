@@ -2160,3 +2160,166 @@ button.danger {
     padding-left: 10px !important;
   }
 }
+/* =========================================================
+   CATEGORÍAS ACORDEÓN / DESPLEGABLE
+========================================================= */
+
+.category-accordion {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.category-accordion-item {
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,0.025) !important;
+  overflow: hidden !important;
+}
+
+.category-accordion-toggle {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 14px 16px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+
+.category-accordion-toggle:hover {
+  background: rgba(250, 204, 21, 0.06) !important;
+}
+
+.category-accordion-toggle h3 {
+  margin: 0 !important;
+  color: var(--accent) !important;
+}
+
+.category-accordion-toggle p {
+  margin: 4px 0 0 !important;
+  color: var(--muted) !important;
+  font-size: 0.88rem !important;
+}
+
+.category-accordion-arrow {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(250, 204, 21, 0.12) !important;
+  color: var(--accent) !important;
+  font-weight: 950 !important;
+  transition: transform 0.18s ease !important;
+}
+
+.category-accordion-item.open > .category-accordion-toggle .category-accordion-arrow {
+  transform: rotate(90deg) !important;
+}
+
+.category-accordion-content {
+  display: none !important;
+  padding: 0 14px 14px !important;
+}
+
+.category-accordion-item.open > .category-accordion-content {
+  display: block !important;
+}
+
+.category-accordion-children {
+  display: grid !important;
+  gap: 10px !important;
+  margin-top: 10px !important;
+  padding-left: 14px !important;
+  border-left: 2px solid rgba(250, 204, 21, 0.22) !important;
+}
+
+.category-song-open-btn {
+  margin-top: 10px !important;
+  width: max-content !important;
+}
+
+.admin-category-tree-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.admin-category-tree-item {
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,0.025) !important;
+  overflow: hidden !important;
+}
+
+.admin-category-tree-toggle {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 12px 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  text-align: left !important;
+}
+
+.admin-category-tree-toggle strong {
+  color: var(--accent) !important;
+}
+
+.admin-category-tree-toggle p {
+  margin: 4px 0 0 !important;
+  color: var(--muted) !important;
+  font-size: 0.84rem !important;
+}
+
+.admin-category-tree-actions {
+  display: flex !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+}
+
+.admin-category-tree-content {
+  display: none !important;
+  padding: 0 12px 12px !important;
+}
+
+.admin-category-tree-item.open > .admin-category-tree-content {
+  display: block !important;
+}
+
+.admin-category-tree-children {
+  display: grid !important;
+  gap: 10px !important;
+  margin-top: 10px !important;
+  padding-left: 14px !important;
+  border-left: 2px solid rgba(250, 204, 21, 0.22) !important;
+}
+
+@media (max-width: 768px) {
+  .category-accordion-toggle,
+  .admin-category-tree-toggle {
+    grid-template-columns: 1fr !important;
+  }
+
+  .category-accordion-arrow {
+    display: none !important;
+  }
+
+  .admin-category-tree-actions {
+    justify-content: flex-start !important;
+  }
+
+  .category-accordion-children,
+  .admin-category-tree-children {
+    padding-left: 8px !important;
+    margin-left: 0 !important;
+  }
+}
