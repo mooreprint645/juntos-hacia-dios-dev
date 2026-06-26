@@ -1122,3 +1122,98 @@ body.light-mode .shimmer-block {
     padding: 16px;
   }
 }
+/* =========================================================
+   ESTILO VISUAL: SECCIONES + ACORDES DESTACADOS
+========================================================= */
+
+.lyrics-block {
+  background: #10131c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 28px;
+  white-space: normal;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: auto;
+}
+
+.song-section-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 18px 0 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 207, 83, 0.16);
+  color: var(--accent);
+  border: 1px solid rgba(255, 207, 83, 0.35);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.song-section-label:first-child {
+  margin-top: 0;
+}
+
+.song-line {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.chord-line {
+  display: block;
+  min-height: 1.15em;
+  color: var(--accent);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: pre;
+  text-shadow: 0 0 14px rgba(255, 207, 83, 0.22);
+}
+
+.lyric-line {
+  display: block;
+  color: var(--text);
+  font-size: 1.08rem;
+  font-weight: 500;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.song-plain-line {
+  display: block;
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
+
+.song-empty-line {
+  display: block;
+  height: 10px;
+}
+
+@media (max-width: 768px) {
+  .lyrics-block {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .song-section-label {
+    font-size: 0.72rem;
+    padding: 5px 10px;
+    margin: 16px 0 12px;
+  }
+
+  .chord-line {
+    font-size: 0.88rem;
+  }
+
+  .lyric-line,
+  .song-plain-line {
+    font-size: 0.98rem;
+  }
+}
