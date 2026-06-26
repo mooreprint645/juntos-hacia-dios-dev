@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Categorías | Juntos Hacia Dios</title>
+
+  <meta
+    name="description"
+    content="Explora cantos por categorías: adoración, alabanza, entrada, comunión, oración y más."
+  />
+
+  <link rel="stylesheet" href="style.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="app.js" defer></script>
+</head>
+
+<body>
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios">
+        <span class="brand-icon">✝</span>
+        <span>Juntos Hacia Dios</span>
+      </a>
+
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">
+        ☰
+      </button>
+
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Inicio</a>
+        <a href="canciones.html">Canciones</a>
+        <a href="artistas.html">Artistas</a>
+        <a href="categorias.html" class="active">Categorías</a>
+        <a href="donaciones.html">Donaciones</a>
+        <a href="admin.html">Admin</a>
+
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">
+          🌙
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero compact-hero">
+      <div class="hero-content">
+        <p class="hero-kicker">Organiza tu repertorio</p>
+
+        <h1>Categorías</h1>
+
+        <p>
+          Encuentra cantos por momento, intención o estilo para preparar mejor tu servicio.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="toolbar">
+        <div class="search-box">
+          <label for="categoriesSearchInput">Buscar categoría</label>
+          <input
+            type="search"
+            id="categoriesSearchInput"
+            placeholder="Ej. Adoración, Comunión, Entrada..."
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <p class="muted-text" id="categoryCountText">Cargando categorías...</p>
+
+      <div class="categories-grid" id="categoriesGrid">
+        <div class="category-card shimmer-card">
+          <h3>Cargando categorías...</h3>
+          <p>Un momento por favor.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="categorySongsSection" style="display: none;">
+      <div class="section-heading">
+        <p class="hero-kicker">Cantos encontrados</p>
+        <h2 id="selectedCategoryTitle">Categoría</h2>
+        <p id="selectedCategoryDescription">Cantos dentro de esta categoría.</p>
+      </div>
+
+      <div class="songs-grid" id="categorySongsGrid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
+    <p>
+      <a href="index.html">Inicio</a>
+      ·
+      <a href="canciones.html">Canciones</a>
+      ·
+      <a href="artistas.html">Artistas</a>
+    </p>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
