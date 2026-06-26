@@ -1217,3 +1217,69 @@ body.light-mode .shimmer-block {
     font-size: 0.98rem;
   }
 }
+/* Ajuste final móvil para controles del canto */
+@media (max-width: 768px) {
+  .transpose-box {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+
+  .transpose-box span {
+    grid-column: 1 / -1 !important;
+    order: 1 !important;
+    width: 100% !important;
+    text-align: center !important;
+    font-size: 0.9rem !important;
+    margin: 0 !important;
+  }
+
+  .transpose-box button {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 40px !important;
+    padding: 9px 10px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .transpose-box button:nth-of-type(1) {
+    grid-column: 1 / 2 !important;
+    order: 2 !important;
+  }
+
+  .transpose-box button:nth-of-type(2) {
+    grid-column: 2 / 3 !important;
+    order: 3 !important;
+  }
+
+  .transpose-box button:nth-of-type(3) {
+    grid-column: 1 / -1 !important;
+    order: 4 !important;
+  }
+
+  .capo-box {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+
+  .capo-box span {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    text-align: center !important;
+    font-size: 0.9rem !important;
+    margin: 0 !important;
+  }
+
+  .capo-box button {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 40px !important;
+    padding: 9px 10px !important;
+    font-size: 0.85rem !important;
+  }
+}
