@@ -6,25 +6,13 @@
 
   <title>Donaciones | Juntos Hacia Dios</title>
 
-  <meta
-    name="description"
-    content="Apoya el proyecto Juntos Hacia Dios para seguir compartiendo cantos, letras, acordes y recursos cristianos."
-  />
-
-  <link rel="stylesheet" href="style.css" />
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=600" />
 </head>
 
 <body>
   <header>
     <nav class="navbar">
-      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios">
-        <span class="brand-icon">✝</span>
-        <span>Juntos Hacia Dios</span>
-      </a>
+      <a href="index.html" class="brand">Juntos Hacia Dios</a>
 
       <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">
         ☰
@@ -37,82 +25,41 @@
         <a href="categorias.html">Categorías</a>
         <a href="donaciones.html" class="active">Donaciones</a>
         <a href="admin.html">Admin</a>
-
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">
-          🌙
-        </button>
+        <button id="themeToggle" class="theme-toggle" type="button">🌙</button>
       </div>
     </nav>
   </header>
 
-  <main>
-    <section class="hero compact-hero">
-      <div class="hero-content">
-        <p class="hero-kicker">Apoya este proyecto</p>
-
-        <h1>Donaciones</h1>
-
-        <p>
-          Tu apoyo ayuda a mantener y mejorar este cancionero para ministerios,
-          comunidades y personas que buscan servir a Dios con la música.
-        </p>
-      </div>
+  <main class="page-shell">
+    <section class="hero-section">
+      <p class="hero-kicker">Apoya este proyecto</p>
+      <h1>Donaciones</h1>
+      <p>
+        Tu apoyo ayuda a mantener y mejorar este cancionero para ministerios,
+        comunidades y personas que buscan servir a Dios con la música.
+      </p>
     </section>
 
-    <section class="section donation-section">
-      <article class="donation-card">
-        <div class="donation-icon">🤍</div>
-
-        <h2>Gracias por apoyar Juntos Hacia Dios</h2>
-
-        <p>
-          Cada donación nos ayuda a seguir organizando cantos, mejorando la página
-          y compartiendo recursos para la oración y la alabanza.
-        </p>
-
-        <div class="donation-info">
-          <p class="muted-text">Número para donar</p>
-
-          <strong id="donationNumber">829-000-0000</strong>
-
-          <button class="song-btn" type="button" onclick="copyDonationNumber()">
-            Copiar número
-          </button>
-
-          <p class="muted-text" id="copyDonationMessage"></p>
-        </div>
-
-        <div class="donation-actions">
-          <a
-            class="song-btn secondary"
-            href="https://www.mercadopago.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Abrir Mercado Pago
-          </a>
-        </div>
-
-        <p class="muted-text">
-          Reemplaza este número por tu número real de donación cuando estés listo.
-        </p>
-      </article>
+    <section id="donationPage" class="donation-page">
+      <section class="song-detail-card">
+        <h1>Cargando donaciones...</h1>
+        <p>Un momento, estamos cargando la información.</p>
+      </section>
     </section>
   </main>
 
-  <footer>
-    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
-    <p>
+  <footer class="site-footer">
+    <p>© 2026 Juntos Hacia Dios</p>
+
+    <div>
       <a href="index.html">Inicio</a>
-      ·
       <a href="canciones.html">Canciones</a>
-      ·
       <a href="artistas.html">Artistas</a>
-    </p>
+    </div>
   </footer>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js?v=1"></script>
+  <script src="app.js?v=1100"></script>
 </body>
 </html>
