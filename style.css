@@ -2340,3 +2340,165 @@ button.danger {
     font-size: 0.9rem !important;
   }
 }
+/* =========================================================
+   ADMIN: NAVEGADOR DE CATEGORÍAS TIPO CARPETAS
+========================================================= */
+
+.admin-category-browser {
+  display: grid !important;
+  gap: 14px !important;
+}
+
+.admin-category-browser-top {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 12px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,0.025) !important;
+}
+
+.admin-category-tabs {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.admin-category-tab {
+  min-height: 34px !important;
+  padding: 7px 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--border) !important;
+  background: rgba(255,255,255,0.03) !important;
+  color: var(--text) !important;
+  font-weight: 850 !important;
+  font-size: 0.82rem !important;
+}
+
+.admin-category-tab.active {
+  background: var(--accent) !important;
+  color: #111827 !important;
+  border-color: var(--accent) !important;
+}
+
+.admin-category-path {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 10px 12px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,0.025) !important;
+  color: var(--muted) !important;
+  font-size: 0.88rem !important;
+}
+
+.admin-category-path button {
+  width: auto !important;
+  min-height: 30px !important;
+  padding: 5px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(250,204,21,0.12) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(250,204,21,0.22) !important;
+  font-weight: 850 !important;
+}
+
+.admin-category-current-box {
+  padding: 14px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  background: rgba(250,204,21,0.06) !important;
+}
+
+.admin-category-current-box h3 {
+  margin: 0 0 4px !important;
+  color: var(--accent) !important;
+}
+
+.admin-category-current-box p {
+  margin: 0 !important;
+  color: var(--muted) !important;
+}
+
+.admin-category-folder-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.admin-category-folder-card {
+  display: grid !important;
+  gap: 10px !important;
+  padding: 14px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,0.025) !important;
+}
+
+.admin-category-folder-card:hover {
+  background: rgba(250,204,21,0.055) !important;
+}
+
+.admin-category-folder-card h3 {
+  margin: 0 !important;
+  color: var(--accent) !important;
+}
+
+.admin-category-folder-card p {
+  margin: 0 !important;
+  color: var(--muted) !important;
+  font-size: 0.86rem !important;
+}
+
+.admin-category-folder-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 4px !important;
+}
+
+.admin-category-folder-actions button {
+  width: auto !important;
+}
+
+.admin-category-empty {
+  padding: 18px !important;
+  border: 1px dashed var(--border) !important;
+  border-radius: 18px !important;
+  color: var(--muted) !important;
+  text-align: center !important;
+}
+
+@media (max-width: 768px) {
+  .admin-category-browser-top {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-category-tabs {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .admin-category-tab {
+    width: 100% !important;
+  }
+
+  .admin-category-folder-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-category-folder-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .admin-category-folder-actions button {
+    width: 100% !important;
+  }
+}
