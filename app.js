@@ -3097,3 +3097,63 @@ async function loadSongPage() {
 
   updateSongLyricsDisplay();
 }
+/* =========================================================
+   FIX FINAL: CAPO CORRECTO
+   Sin capo = acordes escritos / tono original
+   Con capo = acordes bajados según el capo
+========================================================= */
+
+function getTotalTransposeSteps() {
+  if (!currentSongForPage) return currentTransposeSteps;
+
+  const capoPosition = getCapoPosition(currentSongForPage);
+
+  if (currentCapoMode === "capo" && capoPosition > 0) {
+    return currentTransposeSteps - capoPosition;
+  }
+
+  return currentTransposeSteps;
+}
+
+function setCapoMode(mode) {
+  currentCapoMode = mode === "capo" ? "capo" : "original";
+  currentTransposeSteps = 0;
+  updateSongLyricsDisplay();
+}
+
+function updateSongLyricsDisplay() {
+  const lyricsBox = $("lyricsContent");
+  const label = $("transposeLabel");
+  const modeLabel = $("capoModeLabel");
+
+  if (!lyricsBox || !currentSongForPage) return;
+
+  const totalSteps = getTotalTransposeSteps();
+
+  lyricsBox.innerHTML = renderChordedLyrics(currentSongForPage.lyrics || "", totalSteps);
+
+  if (label) {
+    if (currentTransposeSteps === 0) {
+      label.innerText = "Tono original";
+    } else if (currentTransposeSteps > 0) {
+      label.innerText = "+" + currentTransposeSteps;
+    } else {
+      label.innerText = String(currentTransposeSteps);
+    }
+  }
+
+  if (modeLabel) {
+    const capo = getCapoPosition(currentSongForPage);
+    const capoKey = currentSongForPage.capo_key || "";
+
+    if (currentCapoMode === "capo" && capo > 0) {
+      modeLabel.innerText = "Con capo " + capo + (capoKey ? " · Figuras en " + capoKey : "");
+    } else {
+      modeLabel.innerText = "Sin capo / tono original";
+    }
+  }
+}
+
+window.getTotalTransposeSteps = getTotalTransposeSteps;
+window.setCapoMode = setCapoMode;
+window.updateSongLyricsDisplay = updateSongLyricsDisplay;
