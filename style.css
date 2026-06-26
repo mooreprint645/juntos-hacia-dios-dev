@@ -2001,3 +2001,67 @@ button.danger {
     height: 32px !important;
   }
 }
+/* =========================================================
+   FIX MÓVIL: botones del perfil de artista
+========================================================= */
+
+@media (max-width: 768px) {
+  .artist-hero-card {
+    overflow: hidden !important;
+  }
+
+  .artist-profile-actions {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding: 4px 2px 8px !important;
+    margin-top: 18px !important;
+    scrollbar-width: thin !important;
+  }
+
+  .artist-profile-actions a {
+    flex: 0 0 auto !important;
+    min-height: 34px !important;
+    padding: 7px 12px !important;
+    font-size: 0.82rem !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+  }
+
+  .artist-profile-actions a:first-child {
+    margin-left: 0 !important;
+  }
+
+  .artist-avatar-public.big {
+    width: 150px !important;
+    height: 150px !important;
+    min-width: 150px !important;
+    font-size: 2.7rem !important;
+  }
+
+  .artist-hero-card h1 {
+    font-size: 2.1rem !important;
+  }
+
+  .artist-hero-card p {
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .artist-profile-actions a {
+    padding: 7px 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .artist-avatar-public.big {
+    width: 135px !important;
+    height: 135px !important;
+    min-width: 135px !important;
+    font-size: 2.4rem !important;
+  }
+}
