@@ -4902,3 +4902,211 @@ document.addEventListener("DOMContentLoaded", function () {
 
 window.ensureAdminJumpMenu = ensureAdminJumpMenu;
 window.updateActiveAdminJumpLink = updateActiveAdminJumpLink;
+
+/* =========================================================
+   PATCH: PERFIL DE ARTISTA MEJORADO
+========================================================= */
+
+function renderArtistSongRow(song, index) {
+  const slug = song.slug || slugify(song.title);
+  const meta = [
+    artistsText(song),
+    song.tone ? "Tono " + song.tone : "",
+    song.difficulty || ""
+  ].filter(Boolean).join(" · ");
+
+  return `
+    <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(slug)}">
+      <span class="artist-song-number">${index + 1}</span>
+
+      <div>
+        <h3>${escapeHTML(song.title || "Sin título")}</h3>
+        <p>${escapeHTML(meta)}</p>
+      </div>
+
+      <span class="artist-song-arrow">›</span>
+    </a>
+  `;
+}
+
+function renderArtistSection(title, subtitle, id, content) {
+  return `
+    <section class="artist-profile-section" id="${escapeHTML(id)}">
+      <div class="artist-profile-section-header">
+        <div>
+          <h2>${escapeHTML(title)}</h2>
+          ${subtitle ? `<p>${escapeHTML(subtitle)}</p>` : ""}
+        </div>
+      </div>
+
+      ${content}
+    </section>
+  `;
+}
+
+async function loadArtistProfile() {
+  const box = $("artistProfile") || $("artistProfileContent") || $("artistDetail");
+
+  if (!box) return;
+
+  const slug = getUrlParam("slug");
+  const client = getSupabase();
+
+  if (!client || !slug) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>Artista no encontrado</h3>
+        <p>Vuelve a la lista de artistas e intenta de nuevo.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const { data: artist, error } = await client
+    .from("artists")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error || !artist) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>Artista no encontrado</h3>
+        <p>Este artista no existe o fue eliminado.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const relationResult = await client
+    .from("song_artists")
+    .select("song_id")
+    .eq("artist_id", artist.id);
+
+  const directResult = await client
+    .from("songs")
+    .select("id")
+    .eq("artist_id", artist.id);
+
+  const songIds = Array.from(new Set([
+    ...((relationResult.data || []).map(function (row) {
+      return row.song_id;
+    })),
+    ...((directResult.data || []).map(function (row) {
+      return row.id;
+    }))
+  ].filter(Boolean)));
+
+  const songsResult = await fetchSongsWithRelations(songIds);
+  const songs = (songsResult.data || []).slice();
+
+  const albumsResult = await client
+    .from("albums")
+    .select("*")
+    .eq("artist_id", artist.id)
+    .order("sort_order", { ascending: true })
+    .order("title", { ascending: true });
+
+  const albums = albumsResult.data || [];
+
+  const recentSongs = songs
+    .slice()
+    .sort(function (a, b) {
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    })
+    .slice(0, 10);
+
+  const allArtistSongs = songs
+    .slice()
+    .sort(function (a, b) {
+      return String(a.title || "").localeCompare(String(b.title || ""));
+    });
+
+  const collaborationSongs = songs
+    .filter(function (song) {
+      return (song._artists || []).length > 1;
+    })
+    .sort(function (a, b) {
+      return String(a.title || "").localeCompare(String(b.title || ""));
+    });
+
+  const albumSections = albums.map(function (album) {
+    const albumSongs = songs.filter(function (song) {
+      return (song._albums || []).some(function (songAlbum) {
+        return String(songAlbum.id) === String(album.id);
+      });
+    });
+
+    return `
+      <article class="artist-album-card">
+        <h3>📁 ${escapeHTML(album.title || "Álbum")}</h3>
+        ${album.description ? `<p>${escapeHTML(album.description)}</p>` : ""}
+
+        ${albumSongs.length ? `
+          <div class="artist-song-list">
+            ${albumSongs.map(renderArtistSongRow).join("")}
+          </div>
+        ` : `
+          <p class="muted-text">Este álbum todavía no tiene cantos agregados.</p>
+        `}
+      </article>
+    `;
+  }).join("");
+
+  box.innerHTML = `
+    <section class="artist-hero-card">
+      <div class="artist-avatar-public big">
+        ${escapeHTML(getInitials(artist.name))}
+      </div>
+
+      <div>
+        <p class="hero-kicker">Artista / Ministerio</p>
+        <h1>${escapeHTML(artist.name || "Sin nombre")}</h1>
+        <p>${escapeHTML(artist.description || "Ministerio o artista registrado.")}</p>
+
+        <div class="artist-profile-actions">
+          <a href="#artistRecentSongs">Recientes</a>
+          <a href="#artistAllSongs">Cantos</a>
+          <a href="#artistAlbums">Álbumes</a>
+          <a href="#artistCollaborations">Colaboraciones</a>
+        </div>
+      </div>
+    </section>
+
+    ${recentSongs.length ? renderArtistSection(
+      "Canciones recientes",
+      "Los cantos agregados más recientemente de este artista.",
+      "artistRecentSongs",
+      `<div class="artist-song-list">${recentSongs.map(renderArtistSongRow).join("")}</div>`
+    ) : ""}
+
+    ${renderArtistSection(
+      "Cantos",
+      "Todos los cantos relacionados con este artista.",
+      "artistAllSongs",
+      allArtistSongs.length
+        ? `<div class="artist-song-list">${allArtistSongs.map(renderArtistSongRow).join("")}</div>`
+        : `<div class="song-card"><h3>Este artista aún no tiene cantos</h3><p>Agrega canciones desde el panel de administración.</p></div>`
+    )}
+
+    ${renderArtistSection(
+      "Álbumes",
+      "Álbumes o carpetas creadas para este artista.",
+      "artistAlbums",
+      albums.length
+        ? albumSections
+        : `<div class="song-card"><h3>Sin álbumes todavía</h3><p>Puedes crear álbumes desde el panel de administración.</p></div>`
+    )}
+
+    ${renderArtistSection(
+      "Colaboraciones",
+      "Cantos donde este artista aparece junto a otros artistas.",
+      "artistCollaborations",
+      collaborationSongs.length
+        ? `<div class="artist-song-list">${collaborationSongs.map(renderArtistSongRow).join("")}</div>`
+        : `<div class="song-card"><h3>Sin colaboraciones todavía</h3><p>No hay cantos colaborativos registrados para este artista.</p></div>`
+    )}
+  `;
+}
+
+window.loadArtistProfile = loadArtistProfile;
