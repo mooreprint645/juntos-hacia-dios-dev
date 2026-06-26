@@ -7001,3 +7001,81 @@ async function saveAdminCategoryOrder() {
 
 window.moveAdminCategoryInOrder = moveAdminCategoryInOrder;
 window.saveAdminCategoryOrder = saveAdminCategoryOrder;
+
+
+/* =========================================================
+   FIX: agregar categoría dentro de carpeta actual
+========================================================= */
+
+function setCategoryParentSingleOption(parentId) {
+  const select = $("categoryParentInput");
+
+  if (!select) return;
+
+  if (!parentId) {
+    select.innerHTML = `
+      <option value="">Sin padre / categoría principal</option>
+    `;
+    select.value = "";
+    return;
+  }
+
+  const parentCategory = getCategoryByIdFromBrowser(parentId);
+
+  if (!parentCategory) return;
+
+  const path = getCategoryPathFromBrowser(parentId)
+    .map(function (category) {
+      return category.name || "";
+    })
+    .filter(Boolean)
+    .join(" > ");
+
+  select.innerHTML = `
+    <option value="${escapeHTML(parentCategory.id)}">
+      Dentro de: ${escapeHTML(path || parentCategory.name || "Categoría")}
+    </option>
+  `;
+
+  select.value = parentCategory.id;
+}
+
+function prepareAddCategoryInsideCurrentFolder() {
+  ensureCategoryTreeFields();
+
+  currentEditingCategoryId = null;
+
+  const title = $("categoryFormTitle");
+
+  if (title) {
+    title.textContent = adminCategoryBrowserParentId
+      ? "Agregar subcategoría"
+      : "Agregar categoría principal";
+  }
+
+  const parentCategory = adminCategoryBrowserParentId
+    ? getCategoryByIdFromBrowser(adminCategoryBrowserParentId)
+    : null;
+
+  setInputValue("categoryNameInput", "");
+  setInputValue(
+    "categoryTypeInput",
+    parentCategory ? parentCategory.song_type || "" : adminCategoryBrowserType || ""
+  );
+  setInputValue("categorySortInput", "10");
+  setInputValue("categoryDescriptionInput", "");
+
+  setCategoryParentSingleOption(adminCategoryBrowserParentId);
+
+  const form = $("categoryFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+window.prepareAddCategoryInsideCurrentFolder = prepareAddCategoryInsideCurrentFolder;
+window.setCategoryParentSingleOption = setCategoryParentSingleOption;
