@@ -4816,3 +4816,89 @@ document.addEventListener("DOMContentLoaded", async function () {
 window.loadDonationPage = loadDonationPage;
 window.loadAdminDonations = loadAdminDonations;
 window.saveDonationSettings = saveDonationSettings;
+
+/* =========================================================
+   PATCH: MENÚ INTERNO DEL ADMIN
+========================================================= */
+
+function ensureAdminJumpMenu() {
+  const adminPanel = $("adminPanel");
+
+  if (!adminPanel) return;
+  if ($("adminJumpMenu")) return;
+
+  const menu = document.createElement("nav");
+  menu.id = "adminJumpMenu";
+  menu.className = "admin-jump-menu";
+
+  menu.innerHTML = `
+    <a href="#artistsAdminSection">Artistas</a>
+    <a href="#categoriesAdminSection">Categorías</a>
+    <a href="#albumsAdminSection">Álbumes</a>
+    <a href="#songsAdminSection">Canciones</a>
+    <a href="#donationsAdminSection">Donaciones</a>
+  `;
+
+  adminPanel.insertBefore(menu, adminPanel.firstChild);
+
+  menu.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", function (event) {
+      event.preventDefault();
+
+      const targetId = link.getAttribute("href").replace("#", "");
+      const target = $(targetId);
+
+      if (!target) return;
+
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+  });
+}
+
+function updateActiveAdminJumpLink() {
+  const menu = $("adminJumpMenu");
+
+  if (!menu) return;
+
+  const sections = [
+    "artistsAdminSection",
+    "categoriesAdminSection",
+    "albumsAdminSection",
+    "songsAdminSection",
+    "donationsAdminSection"
+  ];
+
+  let activeId = sections[0];
+
+  sections.forEach(function (id) {
+    const section = $(id);
+
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+
+    if (rect.top <= 180) {
+      activeId = id;
+    }
+  });
+
+  menu.querySelectorAll("a").forEach(function (link) {
+    const href = link.getAttribute("href") || "";
+    link.classList.toggle("active-admin-jump", href === "#" + activeId);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(function () {
+    ensureAdminJumpMenu();
+    updateActiveAdminJumpLink();
+
+    window.addEventListener("scroll", updateActiveAdminJumpLink);
+  }, 800);
+});
+
+window.ensureAdminJumpMenu = ensureAdminJumpMenu;
+window.updateActiveAdminJumpLink = updateActiveAdminJumpLink;
