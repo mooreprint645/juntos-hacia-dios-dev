@@ -1851,3 +1851,153 @@ button.danger {
 .admin-jump-menu a.active-admin-jump:hover {
   color: #111827 !important;
 }
+/* =========================================================
+   PERFIL DE ARTISTA MEJORADO
+========================================================= */
+
+.artist-profile-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin: 18px 0 10px !important;
+}
+
+.artist-profile-actions a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 38px !important;
+  padding: 9px 14px !important;
+  border-radius: 999px !important;
+  background: rgba(250, 204, 21, 0.12) !important;
+  border: 1px solid rgba(250, 204, 21, 0.28) !important;
+  color: var(--accent) !important;
+  text-decoration: none !important;
+  font-weight: 900 !important;
+  font-size: 0.88rem !important;
+}
+
+.artist-profile-actions a:hover {
+  background: var(--accent) !important;
+  color: #111827 !important;
+}
+
+.artist-profile-section {
+  margin: 28px 0 !important;
+}
+
+.artist-profile-section-header {
+  display: flex !important;
+  align-items: end !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  margin-bottom: 14px !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.artist-profile-section-header h2 {
+  margin: 0 !important;
+}
+
+.artist-profile-section-header p {
+  margin: 4px 0 0 !important;
+  color: var(--muted) !important;
+}
+
+.artist-popular-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.artist-song-row {
+  display: grid !important;
+  grid-template-columns: 44px 1fr auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,0.03) !important;
+  text-decoration: none !important;
+  color: var(--text) !important;
+}
+
+.artist-song-row:hover {
+  transform: translateY(-1px) !important;
+  background: rgba(250, 204, 21, 0.08) !important;
+}
+
+.artist-song-number {
+  width: 36px !important;
+  height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 12px !important;
+  background: rgba(250, 204, 21, 0.12) !important;
+  color: var(--accent) !important;
+  font-weight: 950 !important;
+}
+
+.artist-song-row h3,
+.artist-song-row h4 {
+  margin: 0 !important;
+  font-size: 1rem !important;
+}
+
+.artist-song-row p {
+  margin: 3px 0 0 !important;
+  color: var(--muted) !important;
+  font-size: 0.85rem !important;
+}
+
+.artist-song-arrow {
+  color: var(--accent) !important;
+  font-weight: 950 !important;
+}
+
+.artist-album-card {
+  margin-bottom: 16px !important;
+  padding: 16px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,0.025) !important;
+}
+
+.artist-album-card h3 {
+  margin-top: 0 !important;
+}
+
+.artist-song-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+@media (max-width: 768px) {
+  .artist-profile-actions {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px !important;
+  }
+
+  .artist-profile-actions a {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  .artist-profile-section-header {
+    display: block !important;
+  }
+
+  .artist-song-row {
+    grid-template-columns: 38px 1fr auto !important;
+    gap: 10px !important;
+  }
+
+  .artist-song-number {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
