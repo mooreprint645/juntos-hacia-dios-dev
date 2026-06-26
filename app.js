@@ -4466,3 +4466,353 @@ window.updateAdminCapoVersionField = updateAdminCapoVersionField;
 window.deleteAdminCapoVersion = deleteAdminCapoVersion;
 window.resetAdminCapoVersionItems = resetAdminCapoVersionItems;
 window.loadAdminCapoVersionsForSong = loadAdminCapoVersionsForSong;
+
+/* =========================================================
+   PATCH: DONACIONES EDITABLES
+   Pegar al final de app.js
+========================================================= */
+
+let currentDonationSettingsId = null;
+
+/* =========================================================
+   DONACIONES: HELPERS
+========================================================= */
+
+async function fetchDonationSettings() {
+  const client = getSupabase();
+
+  if (!client) {
+    return {
+      data: null,
+      error: { message: "Sin conexión a Supabase" }
+    };
+  }
+
+  const { data, error } = await client
+    .from("donation_settings")
+    .select("*")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  return {
+    data: data,
+    error: error
+  };
+}
+
+function donationSafeValue(value, fallback) {
+  const clean = String(value || "").trim();
+  return clean || fallback || "";
+}
+
+/* =========================================================
+   ADMIN: CREAR SECCIÓN DE DONACIONES AUTOMÁTICAMENTE
+========================================================= */
+
+function ensureAdminDonationSection() {
+  const adminPanel = $("adminPanel");
+
+  if (!adminPanel) return;
+
+  if ($("donationsAdminSection")) return;
+
+  const section = document.createElement("section");
+  section.className = "admin-section";
+  section.id = "donationsAdminSection";
+
+  section.innerHTML = `
+    <div class="section-heading">
+      <p class="hero-kicker">Donaciones</p>
+      <h2>Editar donaciones</h2>
+      <p class="muted-text">
+        Cambia aquí la información que aparece en la página de donaciones.
+      </p>
+    </div>
+
+    <article class="admin-form-card" id="donationFormCard">
+      <h3>Información de donación</h3>
+
+      <label for="donationTitleInput">Título</label>
+      <input
+        type="text"
+        id="donationTitleInput"
+        placeholder="Ejemplo: Apoya este proyecto"
+      />
+
+      <label for="donationSubtitleInput">Subtítulo / descripción</label>
+      <textarea
+        id="donationSubtitleInput"
+        rows="3"
+        placeholder="Mensaje breve para explicar la donación"
+      ></textarea>
+
+      <label for="donationBankNameInput">Banco / Plataforma</label>
+      <input
+        type="text"
+        id="donationBankNameInput"
+        placeholder="Ejemplo: Banco Popular, PayPal, ATH Móvil"
+      />
+
+      <label for="donationAccountHolderInput">Titular</label>
+      <input
+        type="text"
+        id="donationAccountHolderInput"
+        placeholder="Nombre del titular"
+      />
+
+      <label for="donationAccountNumberInput">Número / Cuenta / Usuario</label>
+      <input
+        type="text"
+        id="donationAccountNumberInput"
+        placeholder="Número de cuenta, teléfono, usuario o enlace"
+      />
+
+      <label for="donationAccountTypeInput">Tipo de cuenta</label>
+      <input
+        type="text"
+        id="donationAccountTypeInput"
+        placeholder="Ejemplo: Cuenta corriente, Ahorro, ATH Móvil"
+      />
+
+      <label for="donationNoteInput">Nota final</label>
+      <textarea
+        id="donationNoteInput"
+        rows="3"
+        placeholder="Ejemplo: Gracias por apoyar Juntos Hacia Dios."
+      ></textarea>
+
+      <label for="donationButtonTextInput">Texto del botón copiar</label>
+      <input
+        type="text"
+        id="donationButtonTextInput"
+        placeholder="Ejemplo: Copiar número"
+      />
+
+      <div class="admin-actions">
+        <button type="button" class="song-btn" onclick="saveDonationSettings()">
+          Guardar donaciones
+        </button>
+
+        <button type="button" class="song-btn secondary" onclick="loadAdminDonations()">
+          Recargar
+        </button>
+      </div>
+
+      <p id="donationAdminMessage" class="muted-text"></p>
+    </article>
+  `;
+
+  adminPanel.appendChild(section);
+}
+
+function fillDonationAdminForm(data) {
+  currentDonationSettingsId = data && data.id ? data.id : null;
+
+  setInputValue("donationTitleInput", data ? data.title : "");
+  setInputValue("donationSubtitleInput", data ? data.subtitle : "");
+  setInputValue("donationBankNameInput", data ? data.bank_name : "");
+  setInputValue("donationAccountHolderInput", data ? data.account_holder : "");
+  setInputValue("donationAccountNumberInput", data ? data.account_number : "");
+  setInputValue("donationAccountTypeInput", data ? data.account_type : "");
+  setInputValue("donationNoteInput", data ? data.note : "");
+  setInputValue("donationButtonTextInput", data ? data.button_text : "Copiar número");
+}
+
+async function loadAdminDonations() {
+  ensureAdminDonationSection();
+
+  if (!$("donationsAdminSection")) return;
+
+  showMessage("donationAdminMessage", "Cargando donaciones...");
+
+  const { data, error } = await fetchDonationSettings();
+
+  if (error) {
+    showMessage("donationAdminMessage", "Error cargando donaciones: " + error.message);
+    return;
+  }
+
+  fillDonationAdminForm(data || {
+    title: "Apoya este proyecto",
+    subtitle: "Tu ayuda nos permite seguir compartiendo cantos, acordes y recursos para la oración.",
+    bank_name: "",
+    account_holder: "",
+    account_number: "",
+    account_type: "",
+    note: "Gracias por apoyar Juntos Hacia Dios.",
+    button_text: "Copiar número"
+  });
+
+  showMessage("donationAdminMessage", "Donaciones cargadas.");
+}
+
+async function saveDonationSettings() {
+  const client = getSupabase();
+
+  if (!client) {
+    showMessage("donationAdminMessage", "No se pudo conectar con Supabase.");
+    return;
+  }
+
+  const payload = {
+    title: getInputValue("donationTitleInput") || "Apoya este proyecto",
+    subtitle: getInputValue("donationSubtitleInput"),
+    bank_name: getInputValue("donationBankNameInput"),
+    account_holder: getInputValue("donationAccountHolderInput"),
+    account_number: getInputValue("donationAccountNumberInput"),
+    account_type: getInputValue("donationAccountTypeInput"),
+    note: getInputValue("donationNoteInput"),
+    button_text: getInputValue("donationButtonTextInput") || "Copiar número"
+  };
+
+  showMessage("donationAdminMessage", "Guardando...");
+
+  let result;
+
+  if (currentDonationSettingsId) {
+    result = await client
+      .from("donation_settings")
+      .update(payload)
+      .eq("id", currentDonationSettingsId)
+      .select("*")
+      .single();
+  } else {
+    result = await client
+      .from("donation_settings")
+      .insert(payload)
+      .select("*")
+      .single();
+  }
+
+  if (result.error) {
+    showMessage("donationAdminMessage", "No se pudo guardar: " + result.error.message);
+    return;
+  }
+
+  fillDonationAdminForm(result.data);
+  showMessage("donationAdminMessage", "Donaciones guardadas correctamente.");
+}
+/* =========================================================
+   PÚBLICO: PÁGINA DE DONACIONES
+========================================================= */
+
+async function loadDonationPage() {
+  const donationPage =
+    $("donationPage") ||
+    $("donationsPage") ||
+    $("donationContent") ||
+    $("donationsContent") ||
+    document.querySelector(".donation-page") ||
+    document.querySelector(".donations-page");
+
+  if (!donationPage) return;
+
+  const { data, error } = await fetchDonationSettings();
+
+  if (error) {
+    donationPage.innerHTML = `
+      <section class="song-detail-card">
+        <h1>Donaciones</h1>
+        <p>No se pudo cargar la información de donaciones.</p>
+        <p class="muted-text">${escapeHTML(error.message)}</p>
+      </section>
+    `;
+    return;
+  }
+
+  const settings = data || {
+    title: "Apoya este proyecto",
+    subtitle: "Tu ayuda nos permite seguir compartiendo cantos, acordes y recursos para la oración.",
+    bank_name: "",
+    account_holder: "",
+    account_number: "",
+    account_type: "",
+    note: "Gracias por apoyar Juntos Hacia Dios.",
+    button_text: "Copiar número"
+  };
+
+  donationPage.innerHTML = `
+    <section class="song-detail-card donation-detail-card">
+      <p class="hero-kicker">Donaciones</p>
+
+      <h1>${escapeHTML(donationSafeValue(settings.title, "Apoya este proyecto"))}</h1>
+
+      <p>
+        ${escapeHTML(donationSafeValue(
+          settings.subtitle,
+          "Tu ayuda nos permite seguir compartiendo cantos, acordes y recursos para la oración."
+        ))}
+      </p>
+
+      <div class="donation-info-box">
+        ${settings.bank_name ? `
+          <p>
+            <strong>Banco / Plataforma:</strong><br>
+            ${escapeHTML(settings.bank_name)}
+          </p>
+        ` : ""}
+
+        ${settings.account_holder ? `
+          <p>
+            <strong>Titular:</strong><br>
+            ${escapeHTML(settings.account_holder)}
+          </p>
+        ` : ""}
+
+        ${settings.account_type ? `
+          <p>
+            <strong>Tipo:</strong><br>
+            ${escapeHTML(settings.account_type)}
+          </p>
+        ` : ""}
+
+        ${settings.account_number ? `
+          <p>
+            <strong>Número / Cuenta / Usuario:</strong><br>
+            <span id="donationNumber">${escapeHTML(settings.account_number)}</span>
+          </p>
+
+          <button type="button" class="song-btn" onclick="copyDonationNumber()">
+            ${escapeHTML(donationSafeValue(settings.button_text, "Copiar número"))}
+          </button>
+
+          <p id="copyDonationMessage" class="muted-text"></p>
+        ` : `
+          <p class="muted-text">
+            Aún no se ha configurado un número o cuenta de donación.
+          </p>
+        `}
+      </div>
+
+      ${settings.note ? `
+        <p class="donation-note">
+          ${escapeHTML(settings.note)}
+        </p>
+      ` : ""}
+    </section>
+  `;
+}
+
+/* =========================================================
+   PATCH INIT DONACIONES
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", async function () {
+  try {
+    ensureAdminDonationSection();
+
+    if ($("adminPanel")) {
+      await loadAdminDonations();
+    }
+
+    await loadDonationPage();
+  } catch (error) {
+    console.error("Error cargando donaciones:", error);
+  }
+});
+
+/* Exponer funciones de donaciones */
+window.loadDonationPage = loadDonationPage;
+window.loadAdminDonations = loadAdminDonations;
+window.saveDonationSettings = saveDonationSettings;
