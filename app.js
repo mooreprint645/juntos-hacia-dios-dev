@@ -7979,3 +7979,355 @@ window.openPublicCompactFolder = openPublicCompactFolder;
 window.renderPublicCompactCategories = renderPublicCompactCategories;
 window.renderPublicCompactSearchResults = renderPublicCompactSearchResults;
 window.loadCategoriesPage = loadCategoriesPage;
+
+/* =========================================================
+   FIX RESCATE: categorías públicas compactas funcionando
+========================================================= */
+
+let publicCategoriesSafeData = [];
+let publicCategoriesSafeType = "catolico";
+let publicCategoriesSafeParentId = null;
+
+function getPublicCategoriesRoot() {
+  return (
+    document.getElementById("categoriesPage") ||
+    document.getElementById("categoriesList") ||
+    document.querySelector("[data-categories-page]") ||
+    document.querySelector("main .container") ||
+    document.querySelector("main")
+  );
+}
+
+function getPublicCategorySearch() {
+  return (
+    document.getElementById("categorySearchInput") ||
+    document.getElementById("categoriesSearchInput") ||
+    document.querySelector('input[type="search"]') ||
+    Array.from(document.querySelectorAll("input")).find(function (input) {
+      return String(input.placeholder || "").toLowerCase().includes("ador");
+    })
+  );
+}
+
+function publicSafeTypeName(type) {
+  if (type === "catolico") return "Católico";
+  if (type === "cristiano") return "Cristiano";
+  return "General";
+}
+
+function publicSafeCategoryById(id) {
+  return publicCategoriesSafeData.find(function (category) {
+    return String(category.id) === String(id);
+  });
+}
+
+function publicSafeChildren(parentId) {
+  return publicCategoriesSafeData
+    .filter(function (category) {
+      if (publicCategoriesSafeType) {
+        if (category.song_type !== publicCategoriesSafeType) return false;
+      } else {
+        if (category.song_type) return false;
+      }
+
+      return String(category.parent_id || "") === String(parentId || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+}
+
+function publicSafePath(parentId) {
+  const path = [];
+  let currentId = parentId;
+
+  while (currentId) {
+    const category = publicSafeCategoryById(currentId);
+
+    if (!category) break;
+
+    path.unshift(category);
+    currentId = category.parent_id || null;
+  }
+
+  return path;
+}
+
+function setPublicSafeType(type) {
+  publicCategoriesSafeType = type || "";
+  publicCategoriesSafeParentId = null;
+  renderPublicCategoriesSafe();
+}
+
+function openPublicSafeFolder(categoryId) {
+  publicCategoriesSafeParentId = categoryId || null;
+  renderPublicCategoriesSafe();
+
+  const root = getPublicCategoriesRoot();
+
+  if (root) {
+    root.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function renderPublicSafePath() {
+  const path = publicSafePath(publicCategoriesSafeParentId);
+
+  let html = `
+    <div class="public-category-path">
+      <span>Ruta:</span>
+      <button type="button" class="song-btn small-btn" onclick="openPublicSafeFolder(null)">
+        Inicio
+      </button>
+  `;
+
+  path.forEach(function (category) {
+    html += `
+      <span>›</span>
+      <button
+        type="button"
+        class="song-btn small-btn"
+        onclick="openPublicSafeFolder('${escapeHTML(category.id)}')"
+      >
+        ${escapeHTML(category.name || "Categoría")}
+      </button>
+    `;
+  });
+
+  html += `</div>`;
+
+  return html;
+}
+
+function renderPublicCategoriesSafe() {
+  const root = getPublicCategoriesRoot();
+
+  if (!root) return;
+
+  const children = publicSafeChildren(publicCategoriesSafeParentId);
+
+  root.innerHTML = `
+    <div class="public-category-explorer">
+      <p class="muted">${publicCategoriesSafeData.length} categorías disponibles</p>
+
+      <div class="public-category-tabs">
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${publicCategoriesSafeType === "catolico" ? "active" : ""}"
+          onclick="setPublicSafeType('catolico')"
+        >
+          Católico
+        </button>
+
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${publicCategoriesSafeType === "cristiano" ? "active" : ""}"
+          onclick="setPublicSafeType('cristiano')"
+        >
+          Cristiano
+        </button>
+
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${publicCategoriesSafeType === "" ? "active" : ""}"
+          onclick="setPublicSafeType('')"
+        >
+          General
+        </button>
+      </div>
+
+      ${renderPublicSafePath()}
+
+      ${children.length ? `
+        <div class="public-category-grid">
+          ${children.map(function (category) {
+            const childCount = publicCategoriesSafeData.filter(function (child) {
+              return String(child.parent_id || "") === String(category.id || "");
+            }).length;
+
+            return `
+              <article class="public-category-card">
+                <h3>📁 ${escapeHTML(category.name || "Categoría")}</h3>
+                <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+                <p>${childCount} subcategoría(s)</p>
+
+                <div class="public-category-card-actions">
+                  ${childCount ? `
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="openPublicSafeFolder('${escapeHTML(category.id)}')"
+                    >
+                      Abrir carpeta
+                    </button>
+                  ` : ""}
+
+                  <a
+                    class="song-btn small-btn secondary"
+                    href="categoria.html?slug=${encodeURIComponent(category.slug || "")}"
+                  >
+                    Ver cantos
+                  </a>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : `
+        <div class="public-category-empty">
+          <p>No hay subcategorías aquí.</p>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function renderPublicCategoriesSearchSafe(query) {
+  const root = getPublicCategoriesRoot();
+
+  if (!root) return;
+
+  const cleanQuery = String(query || "").trim().toLowerCase();
+
+  if (!cleanQuery) {
+    renderPublicCategoriesSafe();
+    return;
+  }
+
+  const results = publicCategoriesSafeData
+    .filter(function (category) {
+      return (
+        String(category.name || "").toLowerCase().includes(cleanQuery) ||
+        String(category.description || "").toLowerCase().includes(cleanQuery)
+      );
+    })
+    .sort(function (a, b) {
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+
+  root.innerHTML = `
+    <div class="public-category-explorer">
+      <p class="muted">${results.length} categoría(s) encontrada(s)</p>
+
+      ${results.length ? `
+        <div class="public-category-grid">
+          ${results.map(function (category) {
+            const childCount = publicCategoriesSafeData.filter(function (child) {
+              return String(child.parent_id || "") === String(category.id || "");
+            }).length;
+
+            return `
+              <article class="public-category-card">
+                <p class="eyebrow">${escapeHTML(publicSafeTypeName(category.song_type || ""))}</p>
+                <h3>${escapeHTML(category.name || "Categoría")}</h3>
+                <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+                <p>${childCount} subcategoría(s)</p>
+
+                <div class="public-category-card-actions">
+                  ${childCount ? `
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="
+                        publicCategoriesSafeType='${escapeHTML(category.song_type || "")}';
+                        openPublicSafeFolder('${escapeHTML(category.id)}');
+                      "
+                    >
+                      Abrir carpeta
+                    </button>
+                  ` : ""}
+
+                  <a
+                    class="song-btn small-btn secondary"
+                    href="categoria.html?slug=${encodeURIComponent(category.slug || "")}"
+                  >
+                    Ver cantos
+                  </a>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : `
+        <div class="public-category-empty">
+          <p>No encontramos categorías con ese texto.</p>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+async function loadCategoriesPageSafe() {
+  const root = getPublicCategoriesRoot();
+
+  if (!root) return;
+
+  root.innerHTML = `
+    <div class="public-category-empty">
+      <h3>Cargando categorías...</h3>
+      <p>Un momento por favor.</p>
+    </div>
+  `;
+
+  try {
+    const result = await fetchCategories();
+    const data = result && result.data ? result.data : [];
+    const error = result && result.error ? result.error : null;
+
+    if (error) {
+      root.innerHTML = `
+        <div class="public-category-empty">
+          <h3>No se pudieron cargar las categorías</h3>
+          <p>${escapeHTML(error.message || "Error desconocido.")}</p>
+        </div>
+      `;
+      return;
+    }
+
+    publicCategoriesSafeData = data || [];
+
+    const search = getPublicCategorySearch();
+
+    if (search && !search.dataset.safeCategoriesReady) {
+      search.dataset.safeCategoriesReady = "true";
+
+      search.addEventListener("input", function () {
+        renderPublicCategoriesSearchSafe(search.value);
+      });
+    }
+
+    if (search && String(search.value || "").trim()) {
+      renderPublicCategoriesSearchSafe(search.value);
+    } else {
+      renderPublicCategoriesSafe();
+    }
+  } catch (error) {
+    root.innerHTML = `
+      <div class="public-category-empty">
+        <h3>Error cargando categorías</h3>
+        <p>${escapeHTML(error.message || "Revisa la conexión.")}</p>
+      </div>
+    `;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(function () {
+    loadCategoriesPageSafe();
+  }, 1800);
+});
+
+window.loadCategoriesPage = loadCategoriesPageSafe;
+window.loadCategoriesPageSafe = loadCategoriesPageSafe;
+window.setPublicSafeType = setPublicSafeType;
+window.openPublicSafeFolder = openPublicSafeFolder;
+window.renderPublicCategoriesSafe = renderPublicCategoriesSafe;
+window.renderPublicCategoriesSearchSafe = renderPublicCategoriesSearchSafe;
