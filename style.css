@@ -3153,3 +3153,58 @@ body:has(#artistDetail) footer div {
   flex-wrap: wrap !important;
   gap: 10px !important;
 }
+
+/* =========================================================
+   FIX: header móvil más compacto
+========================================================= */
+
+@media (max-width: 768px) {
+  header {
+    padding: 18px 14px 8px !important;
+  }
+
+  .navbar {
+    width: 100% !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .brand,
+  .navbar .brand,
+  .navbar h2,
+  .navbar > a:first-child {
+    max-width: 72% !important;
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .menu-toggle {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    font-size: 1.5rem !important;
+  }
+
+  .hero,
+  .small-hero {
+    padding-top: 34px !important;
+  }
+
+  .hero-content {
+    padding-top: 26px !important;
+  }
+
+  .section {
+    padding-top: 28px !important;
+  }
+}
