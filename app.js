@@ -1,7 +1,6 @@
 /* =========================================================
    JUNTOS HACIA DIOS
-   app.js limpio
-   Supabase + público + admin + acordes + capo
+   app.js limpio y corregido
 ========================================================= */
 
 const ADMIN_EMAIL = "mooreprint645@gmail.com";
@@ -29,7 +28,7 @@ let allCategorySongsForPage = [];
 let adminLinkItems = [];
 
 /* =========================================================
-   HELPERS GENERALES
+   HELPERS
 ========================================================= */
 
 function $(id) {
@@ -247,20 +246,27 @@ function initMenu() {
 
   if (!button || !menu) return;
 
-  button.setAttribute("aria-expanded", "false");
-  button.setAttribute("aria-controls", "navMenu");
+  const newButton = button.cloneNode(true);
+  button.parentNode.replaceChild(newButton, button);
 
-  button.addEventListener("click", function () {
+  newButton.setAttribute("aria-expanded", "false");
+  newButton.setAttribute("aria-controls", "navMenu");
+
+  newButton.addEventListener("click", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
     const isOpen = menu.classList.toggle("show-menu");
     menu.classList.toggle("open", isOpen);
-    button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+    newButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
   });
 
   menu.querySelectorAll("a").forEach(function (link) {
     link.addEventListener("click", function () {
       menu.classList.remove("show-menu");
       menu.classList.remove("open");
-      button.setAttribute("aria-expanded", "false");
+      newButton.setAttribute("aria-expanded", "false");
     });
   });
 }
@@ -274,11 +280,304 @@ function hideAdminLinkOnPublicPages() {
     link.remove();
   });
 }
+/* =========================================================
+   ESTILOS DINÁMICOS LIMPIOS
+========================================================= */
 
+function injectAppStyles() {
+  const old = document.getElementById("jhd-clean-app-styles");
+
+  if (old) {
+    old.remove();
+  }
+
+  const style = document.createElement("style");
+  style.id = "jhd-clean-app-styles";
+
+  style.textContent = `
+    .lyrics-block {
+      background: #070a12 !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 16px !important;
+      padding: 22px !important;
+      white-space: normal !important;
+      overflow-x: auto !important;
+      font-family: "Courier New", Courier, monospace !important;
+    }
+
+    .song-section-label {
+      display: inline-flex !important;
+      width: auto !important;
+      max-width: max-content !important;
+      margin: 14px 0 10px !important;
+      padding: 5px 10px !important;
+      border-radius: 999px !important;
+      font-size: 0.68rem !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.05em !important;
+      text-transform: uppercase !important;
+      color: #071016 !important;
+    }
+
+    .section-intro {
+      background: #7dd3fc !important;
+    }
+
+    .section-verso {
+      background: #86efac !important;
+    }
+
+    .section-coro {
+      background: #facc15 !important;
+    }
+
+    .section-puente {
+      background: #c084fc !important;
+    }
+
+    .section-pre {
+      background: #f9a8d4 !important;
+    }
+
+    .section-final,
+    .section-default {
+      background: #d1d5db !important;
+    }
+
+    .song-line {
+      display: block !important;
+      margin-bottom: 12px !important;
+    }
+
+    .chord-line {
+      display: block !important;
+      min-height: 1.05em !important;
+      color: #ffcf53 !important;
+      -webkit-text-fill-color: #ffcf53 !important;
+      font-family: "Courier New", Courier, monospace !important;
+      font-size: 1rem !important;
+      font-weight: 950 !important;
+      line-height: 1.05 !important;
+      white-space: pre !important;
+      text-shadow: 0 0 8px rgba(255,207,83,0.75) !important;
+    }
+
+    .lyric-line,
+    .song-plain-line {
+      display: block !important;
+      color: #f8fafc !important;
+      font-family: "Courier New", Courier, monospace !important;
+      font-size: 1rem !important;
+      font-weight: 650 !important;
+      line-height: 1.42 !important;
+      white-space: pre !important;
+      letter-spacing: 0 !important;
+    }
+
+    .song-plain-line {
+      margin-bottom: 8px !important;
+      white-space: pre-wrap !important;
+    }
+
+    .song-empty-line {
+      display: block !important;
+      height: 6px !important;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        overflow-x: hidden !important;
+      }
+
+      header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 999 !important;
+        background: var(--bg) !important;
+        border-bottom: 1px solid var(--border) !important;
+      }
+
+      .navbar {
+        min-height: auto !important;
+        padding: 12px 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+      }
+
+      .brand {
+        font-size: 1rem !important;
+        font-weight: 800 !important;
+        max-width: 78% !important;
+        color: var(--text) !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+
+      .menu-toggle {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        border-radius: 14px !important;
+        border: 1px solid var(--border) !important;
+        background: var(--card) !important;
+        color: var(--text) !important;
+        font-size: 1.3rem !important;
+        padding: 0 !important;
+      }
+
+      .nav-menu {
+        display: none !important;
+        position: absolute !important;
+        top: 58px !important;
+        left: 14px !important;
+        right: 14px !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 14px !important;
+        border-radius: 18px !important;
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        box-shadow: 0 22px 55px rgba(0,0,0,0.45) !important;
+      }
+
+      .nav-menu.show-menu,
+      .nav-menu.open {
+        display: flex !important;
+      }
+
+      .nav-menu a,
+      .nav-menu button {
+        display: block !important;
+        width: 100% !important;
+        padding: 11px 12px !important;
+        border-radius: 12px !important;
+        color: var(--text) !important;
+        background: transparent !important;
+        font-size: 0.95rem !important;
+        text-align: left !important;
+        text-decoration: none !important;
+      }
+
+      .nav-menu a:hover,
+      .nav-menu a.active {
+        background: rgba(255, 207, 83, 0.13) !important;
+        color: var(--accent) !important;
+      }
+
+      .song-page-section {
+        padding: 10px 10px 24px !important;
+      }
+
+      .song-detail-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 14px !important;
+        border-radius: 16px !important;
+        margin: 0 auto !important;
+        overflow: hidden !important;
+      }
+
+      .artists-line {
+        margin-bottom: 8px !important;
+        font-size: 0.82rem !important;
+      }
+
+      .song-detail-card h1 {
+        font-size: 1.55rem !important;
+        line-height: 1.1 !important;
+        margin: 4px 0 10px !important;
+        letter-spacing: 0 !important;
+        overflow-wrap: anywhere !important;
+      }
+
+      .song-meta-line {
+        font-size: 0.85rem !important;
+        margin: 0 0 10px !important;
+      }
+
+      .capo-box,
+      .transpose-box {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        padding: 10px !important;
+        margin: 10px 0 !important;
+        border-radius: 14px !important;
+      }
+
+      .capo-box span,
+      .transpose-box span {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        text-align: center !important;
+        font-size: 0.82rem !important;
+        line-height: 1.2 !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        color: var(--muted) !important;
+      }
+
+      .song-btn.small-btn,
+      .capo-box .song-btn,
+      .transpose-box .song-btn {
+        width: auto !important;
+        flex: 1 1 auto !important;
+        min-width: 88px !important;
+        max-width: 160px !important;
+        min-height: 36px !important;
+        padding: 8px 10px !important;
+        font-size: 0.76rem !important;
+        line-height: 1.1 !important;
+        border-radius: 999px !important;
+      }
+
+      .transpose-box button:last-child {
+        flex: 0 1 120px !important;
+      }
+
+      .lyrics-block {
+        margin-top: 12px !important;
+        padding: 13px !important;
+        border-radius: 14px !important;
+      }
+
+      .song-section-label {
+        margin: 8px 0 8px !important;
+        padding: 4px 9px !important;
+        font-size: 0.58rem !important;
+        line-height: 1 !important;
+      }
+
+      .song-line {
+        margin-bottom: 8px !important;
+      }
+
+      .chord-line {
+        font-size: 0.86rem !important;
+      }
+
+      .lyric-line,
+      .song-plain-line {
+        font-size: 0.88rem !important;
+        line-height: 1.32 !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
 /* =========================================================
    LINKS DE CANCIONES
-   Formato:
-   Título | Tipo | Plataforma | URL
 ========================================================= */
 
 function parseSongLinksText(text) {
@@ -387,7 +686,8 @@ function renderSongLinksHTML(links) {
       </div>
     </section>
   `;
-                      }
+}
+
 /* =========================================================
    ACORDES, TRANSPOSICIÓN Y CAPO
 ========================================================= */
@@ -455,24 +755,8 @@ function transposeChordGroup(chordGroup, steps) {
 
 function getCapoPosition(song) {
   const value = Number(song && song.capo_position ? song.capo_position : 0);
-
-  if (Number.isNaN(value)) return 0;
-
-  return value;
+  return Number.isNaN(value) ? 0 : value;
 }
-
-/*
-  Regla limpia:
-  - La letra debe escribirse en el TONO ORIGINAL real.
-  - Sin capo = muestra los acordes escritos.
-  - Con capo = muestra las figuras del campo capo_key.
-  Ejemplo:
-  tone: A
-  capo_position: 2
-  capo_key: G
-  letra escrita: (A) (E) (F#m) (D)
-  Con capo: (G) (D) (Em) (C)
-*/
 
 function getCapoTransposeSteps(song) {
   if (!song) return 0;
@@ -494,11 +778,7 @@ function getCapoTransposeSteps(song) {
 
   const capoPosition = getCapoPosition(song);
 
-  if (capoPosition > 0) {
-    return -capoPosition;
-  }
-
-  return 0;
+  return capoPosition > 0 ? -capoPosition : 0;
 }
 
 function getTotalTransposeSteps() {
@@ -511,13 +791,49 @@ function getTotalTransposeSteps() {
   return currentTransposeSteps;
 }
 
+function getSectionClass(sectionName) {
+  const name = String(sectionName || "").toLowerCase();
+
+  if (name.includes("coro") || name.includes("estribillo")) return "section-coro";
+  if (name.includes("verso") || name.includes("estrofa")) return "section-verso";
+  if (name.includes("intro")) return "section-intro";
+  if (name.includes("puente")) return "section-puente";
+  if (name.includes("pre")) return "section-pre";
+  if (name.includes("final") || name.includes("outro")) return "section-final";
+
+  return "section-default";
+}
+
 function renderChordedLyrics(lyrics, transposeSteps) {
   const steps = Number(transposeSteps || 0);
   const lines = String(lyrics || "").split("\n");
 
   return lines.map(function (line) {
-    if (!line.includes("(")) {
-      return escapeHTML(line);
+    const rawLine = String(line || "");
+    const trimmed = rawLine.trim();
+
+    if (!trimmed) {
+      return `<span class="song-empty-line"></span>`;
+    }
+
+    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
+
+    if (sectionMatch) {
+      const sectionName = sectionMatch[1];
+
+      return `
+        <span class="song-section-label ${getSectionClass(sectionName)}">
+          ${escapeHTML(sectionName)}
+        </span>
+      `;
+    }
+
+    if (!rawLine.includes("(")) {
+      return `
+        <span class="song-plain-line">
+          ${escapeHTML(rawLine)}
+        </span>
+      `;
     }
 
     let chordLine = "";
@@ -528,8 +844,8 @@ function renderChordedLyrics(lyrics, transposeSteps) {
     let lastIndex = 0;
     let match;
 
-    while ((match = regex.exec(line)) !== null) {
-      const textBeforeChord = line.slice(lastIndex, match.index);
+    while ((match = regex.exec(rawLine)) !== null) {
+      const textBeforeChord = rawLine.slice(lastIndex, match.index);
 
       lyricLine += textBeforeChord;
       lyricPosition += textBeforeChord.length;
@@ -545,12 +861,15 @@ function renderChordedLyrics(lyrics, transposeSteps) {
       lastIndex = regex.lastIndex;
     }
 
-    const textAfterLastChord = line.slice(lastIndex);
-    lyricLine += textAfterLastChord;
+    lyricLine += rawLine.slice(lastIndex);
 
-    return `<span class="chord-line">${escapeHTML(chordLine)}</span>
-<span class="lyric-line">${escapeHTML(lyricLine)}</span>`;
-  }).join("\n");
+    return `
+      <span class="song-line">
+        <span class="chord-line">${escapeHTML(chordLine)}</span>
+        <span class="lyric-line">${escapeHTML(lyricLine)}</span>
+      </span>
+    `;
+  }).join("");
 }
 
 function changeTranspose(amount) {
@@ -576,9 +895,10 @@ function updateSongLyricsDisplay() {
 
   if (!lyricsBox || !currentSongForPage) return;
 
-  const totalSteps = getTotalTransposeSteps();
-
-  lyricsBox.innerHTML = renderChordedLyrics(currentSongForPage.lyrics || "", totalSteps);
+  lyricsBox.innerHTML = renderChordedLyrics(
+    currentSongForPage.lyrics || "",
+    getTotalTransposeSteps()
+  );
 
   if (label) {
     if (currentTransposeSteps === 0) {
@@ -594,14 +914,11 @@ function updateSongLyricsDisplay() {
     const capo = getCapoPosition(currentSongForPage);
     const capoKey = currentSongForPage.capo_key || "";
 
-    if (currentCapoMode === "capo" && capo > 0) {
-      modeLabel.textContent = "Con capo " + capo + (capoKey ? " · Figuras en " + capoKey : "");
-    } else {
-      modeLabel.textContent = "Sin capo / tono original";
-    }
+    modeLabel.textContent = currentCapoMode === "capo" && capo > 0
+      ? "Con capo " + capo + (capoKey ? " · Figuras en " + capoKey : "")
+      : "Sin capo / tono original";
   }
-}
-
+       }
 /* =========================================================
    SUPABASE: LECTURA DE DATOS
 ========================================================= */
@@ -655,7 +972,10 @@ async function fetchAlbums() {
     .order("title", { ascending: true });
 
   if (error) {
-    return { data: [], error: error };
+    return {
+      data: [],
+      error: error
+    };
   }
 
   const { data: artists } = await fetchArtists();
@@ -832,7 +1152,7 @@ async function fetchSongsWithRelations(ids) {
     data: merged,
     error: null
   };
-         }
+     }
 /* =========================================================
    PÚBLICO: HOME
 ========================================================= */
@@ -1052,7 +1372,6 @@ function setupSongsSearch() {
 
   input.addEventListener("input", renderSongsPage);
 }
-
 /* =========================================================
    PÚBLICO: ARTISTAS
 ========================================================= */
@@ -1206,6 +1525,7 @@ function selectCategoryById(categoryId) {
 
   renderCategorySongs(category);
 }
+
 function renderCategoriesPage(items) {
   const grid = $("categoriesGrid") || $("categoryList");
   const countText = $("categoryCountText");
@@ -1291,8 +1611,7 @@ function setupCategoriesSearch() {
 
     renderCategoriesPage(filtered);
   });
-}
-
+     }
 /* =========================================================
    PÚBLICO: PERFIL DE ARTISTA
 ========================================================= */
@@ -1515,7 +1834,11 @@ async function loadSongPage() {
 
   box.innerHTML = `
     <article class="song-detail-card">
-      <p class="artists-line">
+      <a class="song-btn small-btn" href="canciones.html">
+        ← Volver a canciones
+      </a>
+
+      <p class="artists-line" style="margin-top:14px;">
         ${artistLinksHTML(fullSong._artists)}
       </p>
 
@@ -1861,6 +2184,7 @@ async function loadArtistOptions() {
   setOptions("albumArtistInput", data || [], "Selecciona artista", "id", "name");
   setMultiOptions("songArtistsInput", data || [], "name");
 }
+
 /* =========================================================
    ADMIN: CATEGORÍAS
 ========================================================= */
@@ -2025,7 +2349,6 @@ async function loadCategoryOptions() {
 
   setOptions("songCategoryInput", data || [], "Selecciona categoría", "id", "name");
 }
-
 /* =========================================================
    ADMIN: ÁLBUMES
 ========================================================= */
@@ -2207,6 +2530,7 @@ async function loadAlbumOptions() {
     `;
   });
 }
+
 /* =========================================================
    ADMIN: EDITOR DE LETRA
 ========================================================= */
@@ -2227,6 +2551,7 @@ function insertAtCursor(textareaId, text) {
 
   textarea.focus();
   textarea.setSelectionRange(newPosition, newPosition);
+  updateAdminPreview();
 }
 
 function insertSongSection(sectionName) {
@@ -2276,7 +2601,7 @@ async function saveSong() {
   const songType = getInputValue("songTypeInput") || "catolico";
   const tone = getInputValue("songToneInput");
   const difficulty = getInputValue("songDifficultyInput");
-  const lyrics = getInputValue("songLyricsInput");
+  const lyrics = $("songLyricsInput") ? $("songLyricsInput").value : "";
   const categoryId = getInputValue("songCategoryInput");
   const albumId = getInputValue("songAlbumInput");
   const artistIds = getSelectedValues("songArtistsInput");
@@ -2352,15 +2677,10 @@ async function saveSong() {
 
   savedSongId = result.data ? result.data.id : savedSongId;
 
-  const clearArtists = await client
-    .from("song_artists")
-    .delete()
-    .eq("song_id", savedSongId);
-
-  if (clearArtists.error) {
-    alert("La canción se guardó, pero no se pudieron limpiar artistas anteriores: " + clearArtists.error.message);
-    return;
-  }
+  await client.from("song_artists").delete().eq("song_id", savedSongId);
+  await client.from("song_categories").delete().eq("song_id", savedSongId);
+  await client.from("album_songs").delete().eq("song_id", savedSongId);
+  await client.from("song_links").delete().eq("song_id", savedSongId);
 
   const artistRows = artistIds.map(function (artistId, index) {
     return {
@@ -2372,9 +2692,7 @@ async function saveSong() {
   });
 
   if (artistRows.length) {
-    const artistResult = await client
-      .from("song_artists")
-      .insert(artistRows);
+    const artistResult = await client.from("song_artists").insert(artistRows);
 
     if (artistResult.error) {
       alert("La canción se guardó, pero falló la relación con artistas: " + artistResult.error.message);
@@ -2382,23 +2700,11 @@ async function saveSong() {
     }
   }
 
-  const clearCategories = await client
-    .from("song_categories")
-    .delete()
-    .eq("song_id", savedSongId);
-
-  if (clearCategories.error) {
-    alert("La canción se guardó, pero no se pudieron limpiar categorías anteriores: " + clearCategories.error.message);
-    return;
-  }
-
   if (categoryId) {
-    const categoryResult = await client
-      .from("song_categories")
-      .insert({
-        song_id: savedSongId,
-        category_id: categoryId
-      });
+    const categoryResult = await client.from("song_categories").insert({
+      song_id: savedSongId,
+      category_id: categoryId
+    });
 
     if (categoryResult.error) {
       alert("La canción se guardó, pero falló la categoría: " + categoryResult.error.message);
@@ -2406,38 +2712,16 @@ async function saveSong() {
     }
   }
 
-  const clearAlbums = await client
-    .from("album_songs")
-    .delete()
-    .eq("song_id", savedSongId);
-
-  if (clearAlbums.error) {
-    alert("La canción se guardó, pero no se pudieron limpiar álbumes anteriores: " + clearAlbums.error.message);
-    return;
-  }
-
   if (albumId) {
-    const albumResult = await client
-      .from("album_songs")
-      .insert({
-        song_id: savedSongId,
-        album_id: albumId
-      });
+    const albumResult = await client.from("album_songs").insert({
+      song_id: savedSongId,
+      album_id: albumId
+    });
 
     if (albumResult.error) {
       alert("La canción se guardó, pero falló el álbum: " + albumResult.error.message);
       return;
     }
-  }
-
-  const clearLinks = await client
-    .from("song_links")
-    .delete()
-    .eq("song_id", savedSongId);
-
-  if (clearLinks.error) {
-    alert("La canción se guardó, pero no se pudieron limpiar links anteriores: " + clearLinks.error.message);
-    return;
   }
 
   if (links.length) {
@@ -2452,9 +2736,7 @@ async function saveSong() {
       };
     });
 
-    const linksResult = await client
-      .from("song_links")
-      .insert(linkRows);
+    const linksResult = await client.from("song_links").insert(linkRows);
 
     if (linksResult.error) {
       alert("La canción se guardó, pero fallaron los links: " + linksResult.error.message);
@@ -2473,7 +2755,8 @@ async function saveSong() {
   ]);
 
   alert(wasEditing ? "Canción actualizada." : "Canción guardada.");
-     }
+}
+
 async function editSong(id) {
   const { data: songs, error } = await fetchSongsWithRelations([id]);
 
@@ -2608,10 +2891,9 @@ async function loadAdminSongs() {
       </div>
     `;
   }).join("");
-}
-
+     }
 /* =========================================================
-   ADMIN: LINKS Y PREVIEW
+   ADMIN: LINKS
 ========================================================= */
 
 function adminGetSelectedTexts(selectId) {
@@ -2795,7 +3077,12 @@ function loadAdminLinksFromTextarea() {
 function resetAdminLinkItems() {
   adminLinkItems = [];
   renderAdminLinksRows();
-       }
+}
+
+/* =========================================================
+   ADMIN: VISTA PREVIA
+========================================================= */
+
 function updateAdminPreview() {
   const box = $("adminPreviewBox");
 
@@ -2946,6 +3233,7 @@ function copyDonationNumber() {
 
 document.addEventListener("DOMContentLoaded", async function () {
   try {
+    injectAppStyles();
     initTheme();
     initMenu();
     hideAdminLinkOnPublicPages();
@@ -2980,7 +3268,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 /* =========================================================
-   FUNCIONES EXPUESTAS PARA HTML
+   FUNCIONES EXPUESTAS
 ========================================================= */
 
 window.loginAdmin = loginAdmin;
@@ -3031,1069 +3319,3 @@ window.loadArtistsPage = loadArtistsPage;
 window.loadCategoriesPage = loadCategoriesPage;
 window.loadArtistProfile = loadArtistProfile;
 window.loadSongPage = loadSongPage;
-
-/* =========================================================
-   FIX VISUAL: SECCIONES BONITAS + ACORDES DESTACADOS
-   En admin se escribe [Intro], [Verso 1], [Coro]
-   En público se muestra como etiqueta visual
-========================================================= */
-
-function renderChordedLyrics(lyrics, transposeSteps) {
-  const steps = Number(transposeSteps || 0);
-  const lines = String(lyrics || "").split("\n");
-
-  return lines.map(function (line) {
-    const rawLine = String(line || "");
-    const trimmed = rawLine.trim();
-
-    if (!trimmed) {
-      return `<span class="song-empty-line"></span>`;
-    }
-
-    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
-
-    if (sectionMatch) {
-      return `
-        <span class="song-section-label">
-          ${escapeHTML(sectionMatch[1])}
-        </span>
-      `;
-    }
-
-    if (!rawLine.includes("(")) {
-      return `
-        <span class="song-plain-line">
-          ${escapeHTML(rawLine)}
-        </span>
-      `;
-    }
-
-    let chordLine = "";
-    let lyricLine = "";
-    let lyricPosition = 0;
-
-    const regex = /\(([^)]+)\)/g;
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(rawLine)) !== null) {
-      const textBeforeChord = rawLine.slice(lastIndex, match.index);
-
-      lyricLine += textBeforeChord;
-      lyricPosition += textBeforeChord.length;
-
-      const chord = transposeChordGroup(match[1], steps);
-
-      while (chordLine.length < lyricPosition) {
-        chordLine += " ";
-      }
-
-      chordLine += chord;
-
-      lastIndex = regex.lastIndex;
-    }
-
-    const textAfterLastChord = rawLine.slice(lastIndex);
-    lyricLine += textAfterLastChord;
-
-    return `
-      <span class="song-line">
-        <span class="chord-line">${escapeHTML(chordLine)}</span>
-        <span class="lyric-line">${escapeHTML(lyricLine)}</span>
-      </span>
-    `;
-  }).join("");
-}
-/* =========================================================
-   FIX VISUAL FINAL: COLORES POR SECCIÓN + ACORDES MÁS VIVOS
-========================================================= */
-
-function getSectionClass(sectionName) {
-  const name = String(sectionName || "").toLowerCase();
-
-  if (name.includes("coro") || name.includes("estribillo")) return "section-coro";
-  if (name.includes("verso") || name.includes("estrofa")) return "section-verso";
-  if (name.includes("intro")) return "section-intro";
-  if (name.includes("puente")) return "section-puente";
-  if (name.includes("final") || name.includes("outro")) return "section-final";
-  if (name.includes("pre")) return "section-pre";
-
-  return "section-default";
-}
-
-function renderChordedLyrics(lyrics, transposeSteps) {
-  const steps = Number(transposeSteps || 0);
-  const lines = String(lyrics || "").split("\n");
-
-  return lines.map(function (line) {
-    const rawLine = String(line || "");
-    const trimmed = rawLine.trim();
-
-    if (!trimmed) {
-      return `<span class="song-empty-line"></span>`;
-    }
-
-    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
-
-    if (sectionMatch) {
-      const sectionName = sectionMatch[1];
-      const sectionClass = getSectionClass(sectionName);
-
-      return `
-        <span class="song-section-label ${sectionClass}">
-          ${escapeHTML(sectionName)}
-        </span>
-      `;
-    }
-
-    if (!rawLine.includes("(")) {
-      return `
-        <span class="song-plain-line">
-          ${escapeHTML(rawLine)}
-        </span>
-      `;
-    }
-
-    let chordLine = "";
-    let lyricLine = "";
-    let lyricPosition = 0;
-
-    const regex = /\(([^)]+)\)/g;
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(rawLine)) !== null) {
-      const textBeforeChord = rawLine.slice(lastIndex, match.index);
-
-      lyricLine += textBeforeChord;
-      lyricPosition += textBeforeChord.length;
-
-      const chord = transposeChordGroup(match[1], steps);
-
-      while (chordLine.length < lyricPosition) {
-        chordLine += " ";
-      }
-
-      chordLine += chord;
-
-      lastIndex = regex.lastIndex;
-    }
-
-    const textAfterLastChord = rawLine.slice(lastIndex);
-    lyricLine += textAfterLastChord;
-
-    return `
-      <span class="song-line">
-        <span class="chord-line">${escapeHTML(chordLine)}</span>
-        <span class="lyric-line">${escapeHTML(lyricLine)}</span>
-      </span>
-    `;
-  }).join("");
-}
-
-function injectFinalSongVisualStyles() {
-  if (document.getElementById("jhd-final-song-visual-styles")) return;
-
-  const style = document.createElement("style");
-  style.id = "jhd-final-song-visual-styles";
-
-  style.textContent = `
-    .lyrics-block {
-      background: #070a12 !important;
-      border: 1px solid rgba(255, 255, 255, 0.09) !important;
-      border-radius: 18px !important;
-      padding: 24px !important;
-      white-space: normal !important;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-      overflow-x: auto !important;
-    }
-
-    .song-section-label {
-      display: inline-flex !important;
-      align-items: center !important;
-      width: fit-content !important;
-      margin: 18px 0 12px !important;
-      padding: 7px 13px !important;
-      border-radius: 999px !important;
-      color: #10131c !important;
-      font-size: 0.72rem !important;
-      font-weight: 950 !important;
-      letter-spacing: 0.06em !important;
-      text-transform: uppercase !important;
-      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28) !important;
-    }
-
-    .song-section-label:first-child {
-      margin-top: 0 !important;
-    }
-
-    .section-intro {
-      background: linear-gradient(135deg, #9be7ff, #5cc8ff) !important;
-    }
-
-    .section-verso {
-      background: linear-gradient(135deg, #b8ffbf, #5bea76) !important;
-    }
-
-    .section-coro {
-      background: linear-gradient(135deg, #ffd76a, #ffb703) !important;
-    }
-
-    .section-puente {
-      background: linear-gradient(135deg, #d7b6ff, #a66cff) !important;
-    }
-
-    .section-pre {
-      background: linear-gradient(135deg, #ffb3d9, #ff6fb1) !important;
-    }
-
-    .section-final,
-    .section-default {
-      background: linear-gradient(135deg, #e7e7e7, #bdbdbd) !important;
-    }
-
-    .song-line {
-      display: block !important;
-      margin-bottom: 15px !important;
-    }
-
-    .chord-line {
-      display: block !important;
-      min-height: 1.2em !important;
-      color: #ffcf53 !important;
-      font-family: "Courier New", Courier, monospace !important;
-      font-size: 1.05rem !important;
-      font-weight: 950 !important;
-      line-height: 1.05 !important;
-      white-space: pre !important;
-      text-shadow:
-        0 0 10px rgba(255, 207, 83, 0.55),
-        0 0 22px rgba(255, 207, 83, 0.28) !important;
-    }
-
-    .lyric-line {
-      display: block !important;
-      color: #f4f6fb !important;
-      font-size: 1.08rem !important;
-      font-weight: 650 !important;
-      line-height: 1.5 !important;
-      white-space: pre !important;
-    }
-
-    .song-plain-line {
-      display: block !important;
-      color: #f4f6fb !important;
-      font-size: 1.05rem !important;
-      font-weight: 600 !important;
-      line-height: 1.5 !important;
-      margin-bottom: 10px !important;
-      white-space: pre-wrap !important;
-    }
-
-    .song-empty-line {
-      display: block !important;
-      height: 10px !important;
-    }
-
-    @media (max-width: 768px) {
-      .lyrics-block {
-        padding: 20px !important;
-      }
-
-      .song-section-label {
-        font-size: 0.66rem !important;
-        padding: 6px 11px !important;
-      }
-
-      .chord-line {
-        font-size: 1rem !important;
-      }
-
-      .lyric-line,
-      .song-plain-line {
-        font-size: 1rem !important;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  injectFinalSongVisualStyles();
-
-  setTimeout(function () {
-    if (currentSongForPage) {
-      updateSongLyricsDisplay();
-    }
-  }, 500);
-});
-/* =========================================================
-   FIX FINAL MÓVIL: MENÚ + LETRA + ACORDES DESTACADOS
-========================================================= */
-
-function injectMobileSongFixStyles() {
-  let oldStyle = document.getElementById("jhd-mobile-song-fix-styles");
-
-  if (oldStyle) {
-    oldStyle.remove();
-  }
-
-  const style = document.createElement("style");
-  style.id = "jhd-mobile-song-fix-styles";
-
-  style.textContent = `
-    @media (max-width: 768px) {
-      header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 999 !important;
-      }
-
-      .navbar {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 12px !important;
-        padding: 18px 28px !important;
-      }
-
-      .brand {
-        font-size: 1.35rem !important;
-        max-width: 75% !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-      }
-
-      .menu-toggle {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 58px !important;
-        height: 58px !important;
-        border-radius: 999px !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        background: rgba(255,255,255,0.08) !important;
-        color: #ffffff !important;
-        font-size: 1.6rem !important;
-        cursor: pointer !important;
-      }
-
-      .nav-menu {
-        display: none !important;
-        position: absolute !important;
-        top: 86px !important;
-        left: 22px !important;
-        right: 22px !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-        padding: 18px !important;
-        border-radius: 22px !important;
-        background: #181b25 !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        box-shadow: 0 22px 60px rgba(0,0,0,0.45) !important;
-      }
-
-      .nav-menu.show-menu,
-      .nav-menu.open {
-        display: flex !important;
-      }
-
-      .nav-menu a,
-      .nav-menu button {
-        width: 100% !important;
-        text-align: left !important;
-        padding: 13px 14px !important;
-        border-radius: 14px !important;
-        font-size: 1rem !important;
-      }
-
-      .song-page-section {
-        padding: 24px 14px !important;
-      }
-
-      .song-detail-card {
-        padding: 22px !important;
-        border-radius: 22px !important;
-        max-width: 100% !important;
-        overflow: hidden !important;
-      }
-
-      .song-detail-card h1 {
-        font-size: 2.15rem !important;
-        line-height: 1.08 !important;
-        word-break: normal !important;
-        overflow-wrap: anywhere !important;
-      }
-
-      .capo-box,
-      .transpose-box {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 12px !important;
-        padding: 18px !important;
-      }
-
-      .capo-box span,
-      .transpose-box span {
-        width: 100% !important;
-        text-align: center !important;
-        font-size: 1.1rem !important;
-        font-weight: 800 !important;
-      }
-
-      .song-btn.small-btn {
-        width: 100% !important;
-        padding: 14px 18px !important;
-        font-size: 1rem !important;
-      }
-
-      .lyrics-block {
-        background: #070a12 !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        border-radius: 18px !important;
-        padding: 18px !important;
-        white-space: normal !important;
-        overflow-x: auto !important;
-        font-family: "Courier New", Courier, monospace !important;
-      }
-
-      .song-section-label {
-        display: inline-flex !important;
-        width: auto !important;
-        max-width: max-content !important;
-        margin: 12px 0 10px !important;
-        padding: 5px 10px !important;
-        border-radius: 999px !important;
-        font-size: 0.68rem !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.04em !important;
-        text-transform: uppercase !important;
-        color: #0b0d12 !important;
-        box-shadow: none !important;
-      }
-
-      .section-intro {
-        background: #7dd3fc !important;
-        border: 1px solid #38bdf8 !important;
-      }
-
-      .section-verso {
-        background: #86efac !important;
-        border: 1px solid #22c55e !important;
-      }
-
-      .section-coro {
-        background: #facc15 !important;
-        border: 1px solid #eab308 !important;
-      }
-
-      .section-puente {
-        background: #c084fc !important;
-        border: 1px solid #a855f7 !important;
-      }
-
-      .section-pre {
-        background: #f9a8d4 !important;
-        border: 1px solid #ec4899 !important;
-      }
-
-      .section-final,
-      .section-default {
-        background: #d1d5db !important;
-        border: 1px solid #9ca3af !important;
-      }
-
-      .song-line {
-        display: block !important;
-        margin-bottom: 12px !important;
-      }
-
-      .chord-line {
-        display: block !important;
-        min-height: 1.1em !important;
-        color: #ffd54a !important;
-        -webkit-text-fill-color: #ffd54a !important;
-        font-family: "Courier New", Courier, monospace !important;
-        font-size: 1rem !important;
-        font-weight: 900 !important;
-        line-height: 1.05 !important;
-        white-space: pre !important;
-        text-shadow:
-          0 0 8px rgba(255, 213, 74, 0.75),
-          0 0 18px rgba(255, 213, 74, 0.35) !important;
-      }
-
-      .lyric-line {
-        display: block !important;
-        color: #f8fafc !important;
-        font-family: "Courier New", Courier, monospace !important;
-        font-size: 1.02rem !important;
-        font-weight: 700 !important;
-        line-height: 1.45 !important;
-        white-space: pre !important;
-        letter-spacing: 0 !important;
-      }
-
-      .song-plain-line {
-        display: block !important;
-        color: #f8fafc !important;
-        font-family: "Courier New", Courier, monospace !important;
-        font-size: 1.02rem !important;
-        font-weight: 700 !important;
-        line-height: 1.45 !important;
-        margin-bottom: 8px !important;
-        white-space: pre-wrap !important;
-        letter-spacing: 0 !important;
-      }
-
-      .song-empty-line {
-        display: block !important;
-        height: 8px !important;
-      }
-    }
-
-    @media (max-width: 420px) {
-      .song-detail-card h1 {
-        font-size: 1.8rem !important;
-      }
-
-      .lyrics-block {
-        padding: 16px !important;
-      }
-
-      .chord-line {
-        font-size: 0.95rem !important;
-      }
-
-      .lyric-line,
-      .song-plain-line {
-        font-size: 0.96rem !important;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-function fixMobileMenuButton() {
-  const oldButton = document.getElementById("menuToggle");
-  const menu = document.getElementById("navMenu");
-
-  if (!oldButton || !menu) return;
-
-  const newButton = oldButton.cloneNode(true);
-  oldButton.parentNode.replaceChild(newButton, oldButton);
-
-  newButton.addEventListener("click", function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const isOpen = menu.classList.toggle("show-menu");
-    menu.classList.toggle("open", isOpen);
-    newButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
-  });
-
-  menu.querySelectorAll("a").forEach(function (link) {
-    link.addEventListener("click", function () {
-      menu.classList.remove("show-menu");
-      menu.classList.remove("open");
-      newButton.setAttribute("aria-expanded", "false");
-    });
-  });
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  injectMobileSongFixStyles();
-
-  setTimeout(function () {
-    injectMobileSongFixStyles();
-    fixMobileMenuButton();
-
-    if (currentSongForPage) {
-      updateSongLyricsDisplay();
-    }
-  }, 700);
-});
-/* =========================================================
-   FIX FINAL LIMPIO: TELÉFONO COMPACTO + MENÚ LEGIBLE
-========================================================= */
-
-function injectCleanMobileFinalStyles() {
-  const old1 = document.getElementById("jhd-mobile-song-fix-styles");
-  const old2 = document.getElementById("jhd-final-song-visual-styles");
-  const old3 = document.getElementById("jhd-clean-mobile-final-styles");
-
-  if (old1) old1.remove();
-  if (old2) old2.remove();
-  if (old3) old3.remove();
-
-  const style = document.createElement("style");
-  style.id = "jhd-clean-mobile-final-styles";
-
-  style.textContent = `
-    @media (max-width: 768px) {
-      body {
-        overflow-x: hidden !important;
-      }
-
-      header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 999 !important;
-        background: var(--bg) !important;
-        border-bottom: 1px solid var(--border) !important;
-      }
-
-      .navbar {
-        min-height: auto !important;
-        padding: 14px 18px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 12px !important;
-      }
-
-      .brand {
-        font-size: 1.05rem !important;
-        font-weight: 800 !important;
-        max-width: 78% !important;
-        color: var(--text) !important;
-        text-decoration: none !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-      }
-
-      .menu-toggle {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        border-radius: 14px !important;
-        border: 1px solid var(--border) !important;
-        background: var(--card) !important;
-        color: var(--text) !important;
-        font-size: 1.35rem !important;
-        padding: 0 !important;
-      }
-
-      .nav-menu {
-        display: none !important;
-        position: absolute !important;
-        top: 64px !important;
-        left: 16px !important;
-        right: 16px !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-        padding: 14px !important;
-        border-radius: 18px !important;
-        background: var(--card) !important;
-        border: 1px solid var(--border) !important;
-        box-shadow: 0 22px 55px rgba(0,0,0,0.45) !important;
-      }
-
-      .nav-menu.show-menu,
-      .nav-menu.open {
-        display: flex !important;
-      }
-
-      .nav-menu a,
-      .nav-menu button {
-        display: block !important;
-        width: 100% !important;
-        padding: 11px 12px !important;
-        border-radius: 12px !important;
-        color: var(--text) !important;
-        background: transparent !important;
-        font-size: 0.95rem !important;
-        text-align: left !important;
-        text-decoration: none !important;
-      }
-
-      .nav-menu a:hover,
-      .nav-menu a.active {
-        background: rgba(255, 207, 83, 0.13) !important;
-        color: var(--accent) !important;
-      }
-
-      .song-page-section {
-        padding: 18px 12px !important;
-      }
-
-      .song-detail-card {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 18px !important;
-        border-radius: 18px !important;
-        overflow: hidden !important;
-      }
-
-      .song-detail-card h1 {
-        font-size: 1.85rem !important;
-        line-height: 1.12 !important;
-        margin-bottom: 10px !important;
-        word-break: normal !important;
-        overflow-wrap: anywhere !important;
-      }
-
-      .artists-line {
-        font-size: 0.9rem !important;
-      }
-
-      .song-meta-line {
-        font-size: 0.95rem !important;
-        margin-bottom: 16px !important;
-      }
-
-      .capo-box,
-      .transpose-box {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 10px !important;
-        padding: 12px !important;
-        border-radius: 16px !important;
-        margin: 14px 0 !important;
-      }
-
-      .capo-box span,
-      .transpose-box span {
-        grid-column: 1 / -1 !important;
-        text-align: center !important;
-        font-size: 0.95rem !important;
-        font-weight: 800 !important;
-        color: var(--muted) !important;
-      }
-
-      .song-btn.small-btn {
-        width: 100% !important;
-        padding: 11px 10px !important;
-        min-height: 42px !important;
-        font-size: 0.88rem !important;
-        border-radius: 999px !important;
-      }
-
-      .transpose-box button:last-child {
-        grid-column: 1 / -1 !important;
-      }
-
-      .lyrics-block {
-        background: #070a12 !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        border-radius: 16px !important;
-        padding: 16px !important;
-        margin-top: 16px !important;
-        white-space: normal !important;
-        overflow-x: auto !important;
-        font-family: "Courier New", Courier, monospace !important;
-      }
-
-      .song-section-label {
-        display: inline-flex !important;
-        width: auto !important;
-        max-width: max-content !important;
-        margin: 12px 0 10px !important;
-        padding: 5px 10px !important;
-        border-radius: 999px !important;
-        font-size: 0.65rem !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.05em !important;
-        text-transform: uppercase !important;
-        color: #071016 !important;
-      }
-
-      .section-intro {
-        background: #7dd3fc !important;
-      }
-
-      .section-verso {
-        background: #86efac !important;
-      }
-
-      .section-coro {
-        background: #facc15 !important;
-      }
-
-      .section-puente {
-        background: #c084fc !important;
-      }
-
-      .section-pre {
-        background: #f9a8d4 !important;
-      }
-
-      .section-final,
-      .section-default {
-        background: #d1d5db !important;
-      }
-
-      .song-line {
-        display: block !important;
-        margin-bottom: 11px !important;
-      }
-
-      .chord-line {
-        display: block !important;
-        min-height: 1.05em !important;
-        color: #ffcf53 !important;
-        -webkit-text-fill-color: #ffcf53 !important;
-        font-family: "Courier New", Courier, monospace !important;
-        font-size: 0.96rem !important;
-        font-weight: 950 !important;
-        line-height: 1.05 !important;
-        white-space: pre !important;
-        text-shadow: 0 0 8px rgba(255,207,83,0.7) !important;
-      }
-
-      .lyric-line {
-        display: block !important;
-        color: #f8fafc !important;
-        font-family: "Courier New", Courier, monospace !important;
-        font-size: 0.98rem !important;
-        font-weight: 650 !important;
-        line-height: 1.42 !important;
-        white-space: pre !important;
-        letter-spacing: 0 !important;
-      }
-
-      .song-plain-line {
-        display: block !important;
-        color: #f8fafc !important;
-        font-family: "Courier New", Courier, monospace !important;
-        font-size: 0.98rem !important;
-        font-weight: 650 !important;
-        line-height: 1.42 !important;
-        margin-bottom: 8px !important;
-        white-space: pre-wrap !important;
-      }
-
-      .song-empty-line {
-        display: block !important;
-        height: 6px !important;
-      }
-
-      footer {
-        padding: 28px 16px !important;
-        font-size: 0.9rem !important;
-      }
-    }
-
-    @media (max-width: 420px) {
-      .song-detail-card h1 {
-        font-size: 1.65rem !important;
-      }
-
-      .song-btn.small-btn {
-        font-size: 0.82rem !important;
-        padding: 10px 8px !important;
-      }
-
-      .chord-line {
-        font-size: 0.9rem !important;
-      }
-
-      .lyric-line,
-      .song-plain-line {
-        font-size: 0.92rem !important;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-function fixCleanMobileMenu() {
-  const oldButton = document.getElementById("menuToggle");
-  const menu = document.getElementById("navMenu");
-
-  if (!oldButton || !menu) return;
-
-  const newButton = oldButton.cloneNode(true);
-  oldButton.parentNode.replaceChild(newButton, oldButton);
-
-  newButton.addEventListener("click", function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const isOpen = menu.classList.toggle("show-menu");
-    menu.classList.toggle("open", isOpen);
-    newButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
-  });
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  setTimeout(function () {
-    injectCleanMobileFinalStyles();
-    fixCleanMobileMenu();
-
-    if (currentSongForPage) {
-      updateSongLyricsDisplay();
-    }
-  }, 1200);
-});
-/* =========================================================
-   FIX ULTRA COMPACTO MÓVIL PARA CANTO
-========================================================= */
-
-function injectUltraCompactSongMobile() {
-  const old = document.getElementById("jhd-ultra-compact-song-mobile");
-  if (old) old.remove();
-
-  const style = document.createElement("style");
-  style.id = "jhd-ultra-compact-song-mobile";
-
-  style.textContent = `
-    @media (max-width: 900px) {
-      .song-page-section {
-        padding: 10px 10px 24px !important;
-      }
-
-      .song-detail-card {
-        padding: 14px !important;
-        border-radius: 16px !important;
-        margin: 0 auto !important;
-      }
-
-      .artists-line {
-        margin-bottom: 8px !important;
-        font-size: 0.82rem !important;
-      }
-
-      .song-detail-card h1 {
-        font-size: 1.65rem !important;
-        line-height: 1.08 !important;
-        margin: 4px 0 10px !important;
-        letter-spacing: 0 !important;
-      }
-
-      .song-meta-line {
-        font-size: 0.85rem !important;
-        margin: 0 0 10px !important;
-      }
-
-      .capo-box,
-      .transpose-box {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 7px !important;
-        padding: 10px !important;
-        margin: 10px 0 !important;
-        border-radius: 14px !important;
-      }
-
-      .capo-box span,
-      .transpose-box span {
-        width: 100% !important;
-        flex: 0 0 100% !important;
-        text-align: center !important;
-        font-size: 0.82rem !important;
-        line-height: 1.2 !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
-      }
-
-      .song-btn.small-btn,
-      .capo-box .song-btn,
-      .transpose-box .song-btn {
-        width: auto !important;
-        flex: 1 1 auto !important;
-        min-width: 96px !important;
-        max-width: 170px !important;
-        min-height: 36px !important;
-        padding: 8px 12px !important;
-        font-size: 0.78rem !important;
-        line-height: 1.1 !important;
-        border-radius: 999px !important;
-      }
-
-      .transpose-box button:last-child {
-        flex: 0 1 130px !important;
-      }
-
-      .lyrics-block {
-        margin-top: 12px !important;
-        padding: 14px !important;
-        border-radius: 14px !important;
-        font-size: 0.9rem !important;
-      }
-
-      .song-section-label {
-        margin: 8px 0 8px !important;
-        padding: 4px 9px !important;
-        font-size: 0.58rem !important;
-        line-height: 1 !important;
-      }
-
-      .song-line {
-        margin-bottom: 8px !important;
-      }
-
-      .chord-line {
-        font-size: 0.88rem !important;
-        line-height: 1 !important;
-        min-height: 1em !important;
-        color: #ffd447 !important;
-        -webkit-text-fill-color: #ffd447 !important;
-        text-shadow: 0 0 7px rgba(255, 212, 71, 0.75) !important;
-      }
-
-      .lyric-line,
-      .song-plain-line {
-        font-size: 0.9rem !important;
-        line-height: 1.32 !important;
-        font-weight: 650 !important;
-      }
-
-      .song-empty-line {
-        height: 4px !important;
-      }
-    }
-
-    @media (max-width: 420px) {
-      .song-detail-card h1 {
-        font-size: 1.45rem !important;
-      }
-
-      .song-btn.small-btn,
-      .capo-box .song-btn,
-      .transpose-box .song-btn {
-        min-width: 88px !important;
-        padding: 8px 10px !important;
-        font-size: 0.74rem !important;
-      }
-
-      .lyrics-block {
-        padding: 12px !important;
-      }
-
-      .chord-line {
-        font-size: 0.82rem !important;
-      }
-
-      .lyric-line,
-      .song-plain-line {
-        font-size: 0.84rem !important;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  setTimeout(function () {
-    injectUltraCompactSongMobile();
-
-    if (currentSongForPage) {
-      updateSongLyricsDisplay();
-    }
-  }, 1800);
-});
