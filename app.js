@@ -6722,3 +6722,145 @@ function renderAdminCategoryBrowser() {
 
 window.moveAdminCategoryInOrder = moveAdminCategoryInOrder;
 window.saveAdminCategoryOrder = saveAdminCategoryOrder;
+
+/* =========================================================
+   FIX: artistas sin canciones no deben mostrar todas
+========================================================= */
+
+async function fetchSongsWithRelations(ids) {
+  const client = getSupabase();
+
+  if (!client) {
+    return {
+      data: [],
+      error: { message: "Sin conexión a Supabase" }
+    };
+  }
+
+  if (Array.isArray(ids) && ids.length === 0) {
+    return {
+      data: [],
+      error: null
+    };
+  }
+
+  const { data: songs, error } = await fetchSongsBase(ids);
+
+  if (error) {
+    return {
+      data: [],
+      error: error
+    };
+  }
+
+  const safeSongs = songs || [];
+
+  const songIds = safeSongs
+    .map(function (song) {
+      return song.id;
+    })
+    .filter(Boolean);
+
+  if (!songIds.length) {
+    return {
+      data: [],
+      error: null
+    };
+  }
+
+  const [artistRes, categoryRes, albumRes, linksRes, capoRes] = await Promise.all([
+    client
+      .from("song_artists")
+      .select("song_id, role, sort_order, artists(id, name, slug, description, artist_type)")
+      .in("song_id", songIds)
+      .order("sort_order", { ascending: true }),
+
+    client
+      .from("song_categories")
+      .select("song_id, categories(id, name, slug, description, song_type, parent_id, sort_order)")
+      .in("song_id", songIds),
+
+    client
+      .from("album_songs")
+      .select("song_id, albums(id, title, slug, description, artist_id)")
+      .in("song_id", songIds),
+
+    fetchSongLinksBySongIds(songIds),
+
+    fetchCapoVersionsBySongIds(songIds)
+  ]);
+
+  if (artistRes.error) return { data: [], error: artistRes.error };
+  if (categoryRes.error) return { data: [], error: categoryRes.error };
+  if (albumRes.error) return { data: [], error: albumRes.error };
+  if (linksRes.error) return { data: [], error: linksRes.error };
+  if (capoRes.error) return { data: [], error: capoRes.error };
+
+  const artistsBySong = new Map();
+  const categoriesBySong = new Map();
+  const albumsBySong = new Map();
+  const linksBySong = new Map();
+  const capoBySong = new Map();
+
+  (artistRes.data || []).forEach(function (row) {
+    if (!artistsBySong.has(row.song_id)) {
+      artistsBySong.set(row.song_id, []);
+    }
+
+    if (row.artists) {
+      artistsBySong.get(row.song_id).push(row.artists);
+    }
+  });
+
+  (categoryRes.data || []).forEach(function (row) {
+    if (!categoriesBySong.has(row.song_id)) {
+      categoriesBySong.set(row.song_id, []);
+    }
+
+    if (row.categories) {
+      categoriesBySong.get(row.song_id).push(row.categories);
+    }
+  });
+
+  (albumRes.data || []).forEach(function (row) {
+    if (!albumsBySong.has(row.song_id)) {
+      albumsBySong.set(row.song_id, []);
+    }
+
+    if (row.albums) {
+      albumsBySong.get(row.song_id).push(row.albums);
+    }
+  });
+
+  (linksRes.data || []).forEach(function (row) {
+    if (!linksBySong.has(row.song_id)) {
+      linksBySong.set(row.song_id, []);
+    }
+
+    linksBySong.get(row.song_id).push(row);
+  });
+
+  (capoRes.data || []).forEach(function (row) {
+    if (!capoBySong.has(row.song_id)) {
+      capoBySong.set(row.song_id, []);
+    }
+
+    capoBySong.get(row.song_id).push(row);
+  });
+
+  const merged = safeSongs.map(function (song) {
+    return Object.assign({}, song, {
+      _artists: artistsBySong.get(song.id) || [],
+      _categories: categoriesBySong.get(song.id) || [],
+      _albums: albumsBySong.get(song.id) || [],
+      _links: linksBySong.get(song.id) || [],
+      _capoVersions: capoBySong.get(song.id) || [],
+      _selectedCapoVersionIndex: -1
+    });
+  });
+
+  return {
+    data: merged,
+    error: null
+  };
+}
