@@ -2805,3 +2805,123 @@ button.danger {
 #adminCollapseHelper {
   display: none !important;
 }
+/* =========================================================
+   PÁGINA CATEGORÍAS: EXPLORADOR SIMPLE
+========================================================= */
+
+.public-category-explorer {
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+}
+
+.public-category-tabs {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  justify-content: center !important;
+  margin: 18px 0 !important;
+}
+
+.public-category-tab {
+  width: auto !important;
+  min-height: 34px !important;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+  font-size: 0.85rem !important;
+}
+
+.public-category-tab.active {
+  background: var(--accent) !important;
+  color: #111827 !important;
+  border-color: var(--accent) !important;
+}
+
+.public-category-path {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 12px 0 20px !important;
+  color: var(--muted) !important;
+}
+
+.public-category-path button {
+  width: auto !important;
+  min-height: 32px !important;
+  padding: 6px 12px !important;
+  border-radius: 999px !important;
+  font-size: 0.82rem !important;
+}
+
+.public-category-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 18px !important;
+}
+
+.public-category-card {
+  background: rgba(17, 24, 39, 0.88) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  padding: 16px !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18) !important;
+}
+
+.public-category-card h3 {
+  margin: 0 0 8px !important;
+  font-size: 1.05rem !important;
+  color: var(--text) !important;
+}
+
+.public-category-card p {
+  margin: 4px 0 !important;
+  color: var(--muted) !important;
+  font-size: 0.88rem !important;
+  line-height: 1.35 !important;
+}
+
+.public-category-card-actions {
+  margin-top: 12px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+.public-category-card-actions button,
+.public-category-card-actions a {
+  width: 100% !important;
+  text-align: center !important;
+  min-height: 36px !important;
+  padding: 8px 10px !important;
+  border-radius: 999px !important;
+  font-size: 0.82rem !important;
+}
+
+.public-category-empty {
+  margin-top: 20px !important;
+  padding: 20px !important;
+  border-radius: 18px !important;
+  background: rgba(17, 24, 39, 0.72) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--muted) !important;
+  text-align: center !important;
+}
+
+@media (max-width: 768px) {
+  .public-category-tabs {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+
+  .public-category-tab {
+    width: 100% !important;
+    padding: 8px 8px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .public-category-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
