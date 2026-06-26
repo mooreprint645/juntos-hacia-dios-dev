@@ -6463,3 +6463,262 @@ window.setAdminCategoryBrowserType = setAdminCategoryBrowserType;
 window.openAdminCategoryFolder = openAdminCategoryFolder;
 window.prepareAddCategoryInsideCurrentFolder = prepareAddCategoryInsideCurrentFolder;
 window.renderAdminCategoryBrowser = renderAdminCategoryBrowser;
+
+/* =========================================================
+   PATCH: ORDEN INTERACTIVO DE CATEGORÍAS
+========================================================= */
+
+let adminCategoryCurrentChildrenOrder = [];
+
+function moveAdminCategoryInOrder(categoryId, direction) {
+  const index = adminCategoryCurrentChildrenOrder.findIndex(function (category) {
+    return String(category.id) === String(categoryId);
+  });
+
+  if (index === -1) return;
+
+  const newIndex = index + direction;
+
+  if (newIndex < 0 || newIndex >= adminCategoryCurrentChildrenOrder.length) {
+    return;
+  }
+
+  const item = adminCategoryCurrentChildrenOrder[index];
+
+  adminCategoryCurrentChildrenOrder.splice(index, 1);
+  adminCategoryCurrentChildrenOrder.splice(newIndex, 0, item);
+
+  renderAdminCategoryBrowser();
+  showMessage("adminCategoryOrderMessage", "Orden cambiado. Toca Guardar orden.");
+}
+
+async function saveAdminCategoryOrder() {
+  const client = getSupabase();
+
+  if (!client) {
+    showMessage("adminCategoryOrderMessage", "No se pudo conectar con Supabase.");
+    return;
+  }
+
+  if (!adminCategoryCurrentChildrenOrder.length) {
+    showMessage("adminCategoryOrderMessage", "No hay categorías para ordenar.");
+    return;
+  }
+
+  showMessage("adminCategoryOrderMessage", "Guardando orden...");
+
+  for (let index = 0; index < adminCategoryCurrentChildrenOrder.length; index++) {
+    const category = adminCategoryCurrentChildrenOrder[index];
+    const newOrder = (index + 1) * 10;
+
+    const { error } = await client
+      .from("categories")
+      .update({
+        sort_order: newOrder
+      })
+      .eq("id", category.id);
+
+    if (error) {
+      showMessage("adminCategoryOrderMessage", "Error guardando orden: " + error.message);
+      return;
+    }
+
+    category.sort_order = newOrder;
+
+    const originalCategory = adminCategoryBrowserCategories.find(function (item) {
+      return String(item.id) === String(category.id);
+    });
+
+    if (originalCategory) {
+      originalCategory.sort_order = newOrder;
+    }
+  }
+
+  showMessage("adminCategoryOrderMessage", "Orden guardado correctamente.");
+
+  await Promise.all([
+    loadAdminCategories(),
+    loadCategoryOptions(),
+    loadCategoryParentOptions(),
+    loadCategoriesPage()
+  ]);
+}
+
+function renderAdminCategoryBrowser() {
+  const list = $("adminCategoryList");
+
+  if (!list) return;
+
+  const visibleCategories = adminCategoryBrowserCategories.filter(function (category) {
+    if (!adminCategoryBrowserType) return !category.song_type;
+    return category.song_type === adminCategoryBrowserType;
+  });
+
+  const currentCategory = adminCategoryBrowserParentId
+    ? getCategoryByIdFromBrowser(adminCategoryBrowserParentId)
+    : null;
+
+  const children = visibleCategories
+    .filter(function (category) {
+      return String(category.parent_id || "") === String(adminCategoryBrowserParentId || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+
+  adminCategoryCurrentChildrenOrder = children.slice();
+
+  list.innerHTML = `
+    <div class="admin-category-browser">
+      <div class="admin-category-browser-top">
+        <div class="admin-category-tabs">
+          <button
+            type="button"
+            class="admin-category-tab ${adminCategoryBrowserType === "catolico" ? "active" : ""}"
+            onclick="setAdminCategoryBrowserType('catolico')"
+          >
+            Católico
+          </button>
+
+          <button
+            type="button"
+            class="admin-category-tab ${adminCategoryBrowserType === "cristiano" ? "active" : ""}"
+            onclick="setAdminCategoryBrowserType('cristiano')"
+          >
+            Cristiano
+          </button>
+
+          <button
+            type="button"
+            class="admin-category-tab ${adminCategoryBrowserType === "" ? "active" : ""}"
+            onclick="setAdminCategoryBrowserType('')"
+          >
+            General
+          </button>
+        </div>
+
+        <button type="button" class="song-btn small-btn" onclick="prepareAddCategoryInsideCurrentFolder()">
+          + Agregar aquí
+        </button>
+      </div>
+
+      ${renderAdminCategoryPath()}
+
+      ${currentCategory ? `
+        <div class="admin-category-current-box">
+          <h3>${escapeHTML(currentCategory.name || "Categoría")}</h3>
+          <p>
+            ${escapeHTML(categoryTypeLabel(currentCategory.song_type || ""))}
+            · Orden ${escapeHTML(currentCategory.sort_order || 0)}
+            ${currentCategory.description ? " · " + escapeHTML(currentCategory.description) : ""}
+          </p>
+
+          <div class="admin-category-folder-actions" style="margin-top:10px;">
+            <button type="button" class="song-btn small-btn" onclick="editCategory('${escapeHTML(currentCategory.id)}')">
+              Editar esta categoría
+            </button>
+
+            <button type="button" class="song-btn small-btn danger" onclick="deleteCategory('${escapeHTML(currentCategory.id)}')">
+              Eliminar esta categoría
+            </button>
+          </div>
+        </div>
+      ` : ""}
+
+      ${children.length ? `
+        <div class="admin-category-folder-grid">
+          ${children.map(function (category, index) {
+            const childCount = getCategoryChildrenFromBrowser(category.id).length;
+
+            return `
+              <article class="admin-category-folder-card reorder-card">
+                <div class="admin-category-order-row">
+                  <span class="admin-category-drag-handle">☰</span>
+
+                  <div>
+                    <h3>📁 ${escapeHTML(category.name || "Categoría")}</h3>
+                    <p>
+                      ${escapeHTML(categoryTypeLabel(category.song_type || ""))}
+                      · Orden ${escapeHTML(category.sort_order || 0)}
+                    </p>
+                    <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+                    <p>${childCount} subcategoría(s)</p>
+                  </div>
+
+                  <div class="admin-category-order-actions">
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="moveAdminCategoryInOrder('${escapeHTML(category.id)}', -1)"
+                      ${index === 0 ? "disabled" : ""}
+                      title="Subir"
+                    >
+                      ↑
+                    </button>
+
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="moveAdminCategoryInOrder('${escapeHTML(category.id)}', 1)"
+                      ${index === children.length - 1 ? "disabled" : ""}
+                      title="Bajar"
+                    >
+                      ↓
+                    </button>
+
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="openAdminCategoryFolder('${escapeHTML(category.id)}')"
+                    >
+                      Abrir
+                    </button>
+
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="editCategory('${escapeHTML(category.id)}')"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      class="song-btn small-btn danger"
+                      onclick="deleteCategory('${escapeHTML(category.id)}')"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+
+        <div class="admin-category-order-save">
+          <button type="button" class="song-btn small-btn" onclick="saveAdminCategoryOrder()">
+            Guardar orden
+          </button>
+        </div>
+
+        <p id="adminCategoryOrderMessage" class="admin-category-order-message"></p>
+      ` : `
+        <div class="admin-category-empty">
+          <p>No hay subcategorías aquí.</p>
+          <button type="button" class="song-btn small-btn" onclick="prepareAddCategoryInsideCurrentFolder()">
+            + Agregar primera categoría aquí
+          </button>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+window.moveAdminCategoryInOrder = moveAdminCategoryInOrder;
+window.saveAdminCategoryOrder = saveAdminCategoryOrder;
