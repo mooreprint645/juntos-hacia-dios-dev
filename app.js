@@ -1,10 +1,14 @@
 /* =========================================================
    JUNTOS HACIA DIOS
-   App principal
-   Canciones + artistas + categorías + álbumes + admin
+   app.js limpio
+   Supabase + público + admin + acordes + capo
 ========================================================= */
 
 const ADMIN_EMAIL = "mooreprint645@gmail.com";
+
+/* =========================================================
+   ESTADO GLOBAL
+========================================================= */
 
 let currentEditingArtistId = null;
 let currentEditingCategoryId = null;
@@ -14,6 +18,15 @@ let currentEditingSongId = null;
 let currentSongForPage = null;
 let currentTransposeSteps = 0;
 let currentCapoMode = "original";
+
+let allSongsForPage = [];
+let currentSongsFilter = "all";
+
+let allArtistsForPage = [];
+let allCategoriesForPage = [];
+let allCategorySongsForPage = [];
+
+let adminLinkItems = [];
 
 /* =========================================================
    HELPERS GENERALES
@@ -45,25 +58,8 @@ function slugify(value) {
     .replace(/(^-|-$)+/g, "");
 }
 
-function getInitials(name) {
-  const clean = String(name || "")
-    .trim()
-    .replace(/\s+/g, " ");
-
-  if (!clean) return "JHD";
-
-  const words = clean.split(" ");
-
-  if (words.length === 1) {
-    return words[0].substring(0, 2).toUpperCase();
-  }
-
-  return words
-    .slice(0, 2)
-    .map(function (word) {
-      return word.charAt(0).toUpperCase();
-    })
-    .join("") || "JHD";
+function safeUrlParam(value) {
+  return encodeURIComponent(String(value || ""));
 }
 
 function getInputValue(id) {
@@ -83,12 +79,31 @@ function showMessage(id, text) {
   const element = $(id);
 
   if (element) {
-    element.innerText = text || "";
+    element.textContent = text || "";
   }
 }
 
 function getUrlParam(name) {
   return new URLSearchParams(window.location.search).get(name) || "";
+}
+
+function getInitials(name) {
+  const clean = String(name || "").trim().replace(/\s+/g, " ");
+
+  if (!clean) return "JHD";
+
+  const words = clean.split(" ");
+
+  if (words.length === 1) {
+    return words[0].substring(0, 2).toUpperCase();
+  }
+
+  return words
+    .slice(0, 2)
+    .map(function (word) {
+      return word.charAt(0).toUpperCase();
+    })
+    .join("");
 }
 
 function getSelectedValues(selectId) {
@@ -108,10 +123,10 @@ function setSelectedValues(selectId, values) {
 
   if (!select) return;
 
-  const selectedValues = new Set((values || []).map(String));
+  const selected = new Set((values || []).map(String));
 
   Array.from(select.options || []).forEach(function (option) {
-    option.selected = selectedValues.has(String(option.value));
+    option.selected = selected.has(String(option.value));
   });
 }
 
@@ -126,10 +141,11 @@ function setOptions(selectId, items, placeholder, valueKey, labelKey) {
   select.innerHTML = `<option value="">${escapeHTML(placeholder || "Selecciona")}</option>`;
 
   (items || []).forEach(function (item) {
-    const value = item[valueField] || "";
-    const label = item[labelField] || "Sin nombre";
-
-    select.innerHTML += `<option value="${escapeHTML(value)}">${escapeHTML(label)}</option>`;
+    select.innerHTML += `
+      <option value="${escapeHTML(item[valueField] || "")}">
+        ${escapeHTML(item[labelField] || "Sin nombre")}
+      </option>
+    `;
   });
 }
 
@@ -143,15 +159,22 @@ function setMultiOptions(selectId, items, labelKey) {
   select.innerHTML = "";
 
   (items || []).forEach(function (item) {
-    const value = item.id || "";
-    const label = item[labelField] || "Sin nombre";
-
-    select.innerHTML += `<option value="${escapeHTML(value)}">${escapeHTML(label)}</option>`;
+    select.innerHTML += `
+      <option value="${escapeHTML(item.id || "")}">
+        ${escapeHTML(item[labelField] || "Sin nombre")}
+      </option>
+    `;
   });
 }
 
-function safeUrlParam(value) {
-  return encodeURIComponent(String(value || ""));
+function artistsText(song) {
+  if (song && song._artists && song._artists.length) {
+    return song._artists.map(function (artist) {
+      return artist.name;
+    }).join(" · ");
+  }
+
+  return "Sin artista";
 }
 
 function artistLinksHTML(artists) {
@@ -164,18 +187,12 @@ function artistLinksHTML(artists) {
   return safeArtists.map(function (artist) {
     const slug = artist.slug || slugify(artist.name || "");
 
-    return `<a href="artista.html?slug=${safeUrlParam(slug)}">${escapeHTML(artist.name || "Sin artista")}</a>`;
+    return `
+      <a href="artista.html?slug=${safeUrlParam(slug)}">
+        ${escapeHTML(artist.name || "Sin artista")}
+      </a>
+    `;
   }).join(`<span class="artist-dot"> · </span>`);
-}
-
-function artistsText(song) {
-  if (song && song._artists && song._artists.length) {
-    return song._artists.map(function (artist) {
-      return artist.name;
-    }).join(" · ");
-  }
-
-  return "Sin artista";
 }
 
 function songMetaText(song) {
@@ -192,7 +209,7 @@ function songTypeLabel(type) {
 }
 
 /* =========================================================
-   TEMA / MENÚ
+   TEMA Y MENÚ
 ========================================================= */
 
 function initTheme() {
@@ -210,7 +227,7 @@ function updateThemeButton() {
 
   if (!button) return;
 
-  button.innerText = document.body.classList.contains("light-mode") ? "☀️" : "🌙";
+  button.textContent = document.body.classList.contains("light-mode") ? "☀️" : "🌙";
 }
 
 function toggleTheme() {
@@ -235,15 +252,26 @@ function initMenu() {
 
   button.addEventListener("click", function () {
     const isOpen = menu.classList.toggle("show-menu");
-
+    menu.classList.toggle("open", isOpen);
     button.setAttribute("aria-expanded", isOpen ? "true" : "false");
   });
 
   menu.querySelectorAll("a").forEach(function (link) {
     link.addEventListener("click", function () {
       menu.classList.remove("show-menu");
+      menu.classList.remove("open");
       button.setAttribute("aria-expanded", "false");
     });
+  });
+}
+
+function hideAdminLinkOnPublicPages() {
+  const isAdminPage = window.location.pathname.includes("admin.html");
+
+  if (isAdminPage) return;
+
+  document.querySelectorAll('a[href="admin.html"]').forEach(function (link) {
+    link.remove();
   });
 }
 
@@ -359,28 +387,41 @@ function renderSongLinksHTML(links) {
       </div>
     </section>
   `;
-}
+                      }
 /* =========================================================
-   TRANSPOSICIÓN / CAPO
+   ACORDES, TRANSPOSICIÓN Y CAPO
 ========================================================= */
 
 const CHORD_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 const FLAT_TO_SHARP = {
-  "Db": "C#",
-  "Eb": "D#",
-  "Gb": "F#",
-  "Ab": "G#",
-  "Bb": "A#"
+  Db: "C#",
+  Eb: "D#",
+  Gb: "F#",
+  Ab: "G#",
+  Bb: "A#"
 };
 
 function normalizeNote(note) {
-  return FLAT_TO_SHARP[note] || note;
+  const clean = String(note || "")
+    .trim()
+    .replace("♯", "#")
+    .replace("♭", "b");
+
+  return FLAT_TO_SHARP[clean] || clean;
+}
+
+function getRootNote(value) {
+  const match = String(value || "").trim().match(/[A-G](?:#|b|♯|♭)?/);
+  return match ? normalizeNote(match[0]) : "";
+}
+
+function noteIndex(note) {
+  return CHORD_NOTES.indexOf(normalizeNote(note));
 }
 
 function transposeNote(note, steps) {
-  const normalized = normalizeNote(note);
-  const index = CHORD_NOTES.indexOf(normalized);
+  const index = noteIndex(note);
 
   if (index === -1) return note;
 
@@ -390,7 +431,7 @@ function transposeNote(note, steps) {
 }
 
 function transposeSingleChord(chord, steps) {
-  const match = String(chord || "").match(/^([A-G](?:#|b)?)(.*)$/);
+  const match = String(chord || "").match(/^([A-G](?:#|b|♯|♭)?)(.*)$/);
 
   if (!match) return chord;
 
@@ -399,7 +440,7 @@ function transposeSingleChord(chord, steps) {
 
   const transposedRoot = transposeNote(root, steps);
 
-  rest = rest.replace(/\/([A-G](?:#|b)?)/g, function (_, bassNote) {
+  rest = rest.replace(/\/([A-G](?:#|b|♯|♭)?)/g, function (_, bassNote) {
     return "/" + transposeNote(bassNote, steps);
   });
 
@@ -407,19 +448,8 @@ function transposeSingleChord(chord, steps) {
 }
 
 function transposeChordGroup(chordGroup, steps) {
-  return String(chordGroup || "").replace(/[A-G](?:#|b)?[a-zA-Z0-9#b°+\-susmajdimaug/()]*/g, function (chord) {
+  return String(chordGroup || "").replace(/[A-G](?:#|b|♯|♭)?[a-zA-Z0-9#b♯♭°+\-susmajdimaug/()]*/g, function (chord) {
     return transposeSingleChord(chord, steps);
-  });
-}
-
-function renderChordedLyrics(lyrics, transposeSteps) {
-  const escaped = escapeHTML(lyrics || "");
-  const steps = Number(transposeSteps || 0);
-
-  return escaped.replace(/\(([^)]+)\)/g, function (_, chordGroup) {
-    const transposed = transposeChordGroup(chordGroup, steps);
-
-    return `<span class="chord-token">${escapeHTML(transposed)}</span>`;
   });
 }
 
@@ -431,16 +461,96 @@ function getCapoPosition(song) {
   return value;
 }
 
+/*
+  Regla limpia:
+  - La letra debe escribirse en el TONO ORIGINAL real.
+  - Sin capo = muestra los acordes escritos.
+  - Con capo = muestra las figuras del campo capo_key.
+  Ejemplo:
+  tone: A
+  capo_position: 2
+  capo_key: G
+  letra escrita: (A) (E) (F#m) (D)
+  Con capo: (G) (D) (Em) (C)
+*/
+
+function getCapoTransposeSteps(song) {
+  if (!song) return 0;
+
+  const originalTone = getRootNote(song.tone || "");
+  const capoTone = getRootNote(song.capo_key || "");
+
+  const originalIndex = noteIndex(originalTone);
+  const capoIndex = noteIndex(capoTone);
+
+  if (originalIndex !== -1 && capoIndex !== -1) {
+    let diff = capoIndex - originalIndex;
+
+    if (diff > 6) diff -= 12;
+    if (diff < -6) diff += 12;
+
+    return diff;
+  }
+
+  const capoPosition = getCapoPosition(song);
+
+  if (capoPosition > 0) {
+    return -capoPosition;
+  }
+
+  return 0;
+}
+
 function getTotalTransposeSteps() {
   if (!currentSongForPage) return currentTransposeSteps;
 
-  const capoPosition = getCapoPosition(currentSongForPage);
-
-  if (currentCapoMode === "capo" && capoPosition > 0) {
-    return currentTransposeSteps - capoPosition;
+  if (currentCapoMode === "capo") {
+    return currentTransposeSteps + getCapoTransposeSteps(currentSongForPage);
   }
 
   return currentTransposeSteps;
+}
+
+function renderChordedLyrics(lyrics, transposeSteps) {
+  const steps = Number(transposeSteps || 0);
+  const lines = String(lyrics || "").split("\n");
+
+  return lines.map(function (line) {
+    if (!line.includes("(")) {
+      return escapeHTML(line);
+    }
+
+    let chordLine = "";
+    let lyricLine = "";
+    let lyricPosition = 0;
+
+    const regex = /\(([^)]+)\)/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(line)) !== null) {
+      const textBeforeChord = line.slice(lastIndex, match.index);
+
+      lyricLine += textBeforeChord;
+      lyricPosition += textBeforeChord.length;
+
+      const chord = transposeChordGroup(match[1], steps);
+
+      while (chordLine.length < lyricPosition) {
+        chordLine += " ";
+      }
+
+      chordLine += chord;
+
+      lastIndex = regex.lastIndex;
+    }
+
+    const textAfterLastChord = line.slice(lastIndex);
+    lyricLine += textAfterLastChord;
+
+    return `<span class="chord-line">${escapeHTML(chordLine)}</span>
+<span class="lyric-line">${escapeHTML(lyricLine)}</span>`;
+  }).join("\n");
 }
 
 function changeTranspose(amount) {
@@ -456,7 +566,6 @@ function resetTranspose() {
 function setCapoMode(mode) {
   currentCapoMode = mode === "capo" ? "capo" : "original";
   currentTransposeSteps = 0;
-
   updateSongLyricsDisplay();
 }
 
@@ -473,27 +582,28 @@ function updateSongLyricsDisplay() {
 
   if (label) {
     if (currentTransposeSteps === 0) {
-      label.innerText = "Tono original";
+      label.textContent = "Tono original";
     } else if (currentTransposeSteps > 0) {
-      label.innerText = "+" + currentTransposeSteps;
+      label.textContent = "+" + currentTransposeSteps;
     } else {
-      label.innerText = String(currentTransposeSteps);
+      label.textContent = String(currentTransposeSteps);
     }
   }
 
   if (modeLabel) {
-    if (currentCapoMode === "capo") {
-      const capo = getCapoPosition(currentSongForPage);
-      const capoKey = currentSongForPage.capo_key || "";
-      modeLabel.innerText = "Con capo " + capo + (capoKey ? " · Figuras en " + capoKey : "");
+    const capo = getCapoPosition(currentSongForPage);
+    const capoKey = currentSongForPage.capo_key || "";
+
+    if (currentCapoMode === "capo" && capo > 0) {
+      modeLabel.textContent = "Con capo " + capo + (capoKey ? " · Figuras en " + capoKey : "");
     } else {
-      modeLabel.innerText = "Sin capo";
+      modeLabel.textContent = "Sin capo / tono original";
     }
   }
 }
 
 /* =========================================================
-   DATA HELPERS
+   SUPABASE: LECTURA DE DATOS
 ========================================================= */
 
 async function fetchArtists() {
@@ -545,10 +655,7 @@ async function fetchAlbums() {
     .order("title", { ascending: true });
 
   if (error) {
-    return {
-      data: [],
-      error: error
-    };
+    return { data: [], error: error };
   }
 
   const { data: artists } = await fetchArtists();
@@ -664,21 +771,10 @@ async function fetchSongsWithRelations(ids) {
     fetchSongLinksBySongIds(songIds)
   ]);
 
-  if (artistRes.error) {
-    return { data: [], error: artistRes.error };
-  }
-
-  if (categoryRes.error) {
-    return { data: [], error: categoryRes.error };
-  }
-
-  if (albumRes.error) {
-    return { data: [], error: albumRes.error };
-  }
-
-  if (linksRes.error) {
-    return { data: [], error: linksRes.error };
-  }
+  if (artistRes.error) return { data: [], error: artistRes.error };
+  if (categoryRes.error) return { data: [], error: categoryRes.error };
+  if (albumRes.error) return { data: [], error: albumRes.error };
+  if (linksRes.error) return { data: [], error: linksRes.error };
 
   const artistsBySong = new Map();
   const categoriesBySong = new Map();
@@ -736,7 +832,7 @@ async function fetchSongsWithRelations(ids) {
     data: merged,
     error: null
   };
-}
+         }
 /* =========================================================
    PÚBLICO: HOME
 ========================================================= */
@@ -834,9 +930,6 @@ async function loadHomeArtists() {
 /* =========================================================
    PÚBLICO: CANCIONES
 ========================================================= */
-
-let allSongsForPage = [];
-let currentSongsFilter = "all";
 
 function renderSongsPage() {
   const grid = $("songsGrid") || $("songList") || $("songsList") || $("publicSongList");
@@ -964,8 +1057,6 @@ function setupSongsSearch() {
    PÚBLICO: ARTISTAS
 ========================================================= */
 
-let allArtistsForPage = [];
-
 function renderArtistsPage(items) {
   const grid = $("artistsGrid") || $("artistList") || $("artistsList") || $("publicArtistList");
   const countText = $("artistCountText");
@@ -1048,12 +1139,10 @@ function setupArtistsSearch() {
     renderArtistsPage(filtered);
   });
 }
+
 /* =========================================================
    PÚBLICO: CATEGORÍAS
 ========================================================= */
-
-let allCategoriesForPage = [];
-let allCategorySongsForPage = [];
 
 function renderCategorySongs(category) {
   const section = $("categorySongsSection");
@@ -1117,7 +1206,6 @@ function selectCategoryById(categoryId) {
 
   renderCategorySongs(category);
 }
-
 function renderCategoriesPage(items) {
   const grid = $("categoriesGrid") || $("categoryList");
   const countText = $("categoryCountText");
@@ -1439,7 +1527,7 @@ async function loadSongPage() {
 
       ${capoPosition > 0 ? `
         <div class="capo-box">
-          <span id="capoModeLabel">Sin capo</span>
+          <span id="capoModeLabel">Sin capo / tono original</span>
 
           <button type="button" class="song-btn small-btn" onclick="setCapoMode('original')">
             Sin capo
@@ -1467,11 +1555,13 @@ async function loadSongPage() {
         </button>
       </div>
 
-      <pre class="lyrics-block" id="lyricsContent">${renderChordedLyrics(fullSong.lyrics || "", 0)}</pre>
+      <pre class="lyrics-block" id="lyricsContent"></pre>
 
       ${renderSongLinksHTML(fullSong._links || [])}
     </article>
   `;
+
+  updateSongLyricsDisplay();
 }
 /* =========================================================
    ADMIN: LOGIN
@@ -1507,7 +1597,6 @@ async function loginAdmin() {
   }
 
   showMessage("adminLoginMessage", "Sesión iniciada.");
-
   await checkAdminSession();
 }
 
@@ -1575,7 +1664,7 @@ async function checkAdminSession() {
   adminPanel.style.display = "block";
 
   if (userText) {
-    userText.innerText = "Sesión iniciada como: " + email;
+    userText.textContent = "Sesión iniciada como: " + email;
   }
 
   await loadAdminData();
@@ -1603,7 +1692,7 @@ function resetArtistForm() {
   const title = $("artistFormTitle");
 
   if (title) {
-    title.innerText = "Agregar artista";
+    title.textContent = "Agregar artista";
   }
 
   setInputValue("artistNameInput", "");
@@ -1678,7 +1767,7 @@ async function editArtist(id) {
   const title = $("artistFormTitle");
 
   if (title) {
-    title.innerText = "Editar artista";
+    title.textContent = "Editar artista";
   }
 
   setInputValue("artistNameInput", data.name || "");
@@ -1782,7 +1871,7 @@ function resetCategoryForm() {
   const title = $("categoryFormTitle");
 
   if (title) {
-    title.innerText = "Agregar categoría";
+    title.textContent = "Agregar categoría";
   }
 
   setInputValue("categoryNameInput", "");
@@ -1854,7 +1943,7 @@ async function editCategory(id) {
   const title = $("categoryFormTitle");
 
   if (title) {
-    title.innerText = "Editar categoría";
+    title.textContent = "Editar categoría";
   }
 
   setInputValue("categoryNameInput", data.name || "");
@@ -1947,7 +2036,7 @@ function resetAlbumForm() {
   const title = $("albumFormTitle");
 
   if (title) {
-    title.innerText = "Agregar álbum / carpeta";
+    title.textContent = "Agregar álbum / carpeta";
   }
 
   setInputValue("albumArtistInput", "");
@@ -2021,7 +2110,7 @@ async function editAlbum(id) {
   const title = $("albumFormTitle");
 
   if (title) {
-    title.innerText = "Editar álbum / carpeta";
+    title.textContent = "Editar álbum / carpeta";
   }
 
   setInputValue("albumArtistInput", data.artist_id || "");
@@ -2158,29 +2247,28 @@ function resetSongForm() {
   const title = $("songFormTitle");
 
   if (title) {
-    title.innerText = "Agregar canción";
+    title.textContent = "Agregar canción";
   }
 
   [
     "songTitleInput",
     "songToneInput",
-    "songDifficultyInput",
     "songLyricsInput",
     "songLinksInput",
-    "songCapoInput",
     "songCapoKeyInput"
   ].forEach(function (id) {
     setInputValue(id, "");
   });
 
   setInputValue("songTypeInput", "catolico");
+  setInputValue("songDifficultyInput", "");
+  setInputValue("songCapoInput", "0");
   setInputValue("songCategoryInput", "");
   setInputValue("songAlbumInput", "");
   setSelectedValues("songArtistsInput", []);
 
-  if (typeof window.resetAdminLinkItems === "function") {
-    window.resetAdminLinkItems();
-  }
+  resetAdminLinkItems();
+  updateAdminPreview();
 }
 
 async function saveSong() {
@@ -2204,8 +2292,18 @@ async function saveSong() {
     return;
   }
 
+  if (!tone) {
+    alert("Escribe el tono original de la canción.");
+    return;
+  }
+
   if (!artistIds.length) {
     alert("Selecciona al menos un artista.");
+    return;
+  }
+
+  if (capoPosition > 0 && !capoKey) {
+    alert("Si seleccionas capo, escribe las figuras que se tocan con capo. Ejemplo: G.");
     return;
   }
 
@@ -2226,7 +2324,7 @@ async function saveSong() {
     artist_id: artistIds[0],
     category_id: categoryId || null,
     capo_position: Number.isNaN(capoPosition) ? 0 : capoPosition,
-    capo_key: capoKey
+    capo_key: capoPosition > 0 ? capoKey : ""
   };
 
   let savedSongId = currentEditingSongId;
@@ -2375,7 +2473,7 @@ async function saveSong() {
   ]);
 
   alert(wasEditing ? "Canción actualizada." : "Canción guardada.");
-}
+     }
 async function editSong(id) {
   const { data: songs, error } = await fetchSongsWithRelations([id]);
 
@@ -2391,7 +2489,7 @@ async function editSong(id) {
   const title = $("songFormTitle");
 
   if (title) {
-    title.innerText = "Editar canción";
+    title.textContent = "Editar canción";
   }
 
   setInputValue("songTitleInput", song.title || "");
@@ -2400,7 +2498,7 @@ async function editSong(id) {
   setInputValue("songDifficultyInput", song.difficulty || "");
   setInputValue("songLyricsInput", song.lyrics || "");
   setInputValue("songLinksInput", linksToText(song._links || []));
-  setInputValue("songCapoInput", song.capo_position || "");
+  setInputValue("songCapoInput", String(song.capo_position || 0));
   setInputValue("songCapoKeyInput", song.capo_key || "");
 
   setSelectedValues(
@@ -2420,13 +2518,8 @@ async function editSong(id) {
     song._albums && song._albums[0] ? song._albums[0].id : ""
   );
 
-  if (typeof window.loadAdminLinksFromTextarea === "function") {
-    window.loadAdminLinksFromTextarea();
-  }
-
-  if (typeof window.updateAdminPreview === "function") {
-    window.updateAdminPreview();
-  }
+  loadAdminLinksFromTextarea();
+  updateAdminPreview();
 
   const form = $("songFormCard");
 
@@ -2481,9 +2574,15 @@ async function loadAdminSongs() {
 
   list.innerHTML = data.map(function (song) {
     const linkCount = (song._links || []).length;
+    const capoText = getCapoPosition(song) > 0
+      ? "Capo " + getCapoPosition(song) + (song.capo_key ? " · " + song.capo_key : "")
+      : "";
+
     const meta = [
       song.song_type || "",
-      song.tone || "",
+      song.tone ? "Tono " + song.tone : "",
+      song.difficulty || "",
+      capoText,
       linkCount ? linkCount + " link(s)" : ""
     ].filter(Boolean).join(" · ");
 
@@ -2514,8 +2613,6 @@ async function loadAdminSongs() {
 /* =========================================================
    ADMIN: LINKS Y PREVIEW
 ========================================================= */
-
-let adminLinkItems = [];
 
 function adminGetSelectedTexts(selectId) {
   const select = $(selectId);
@@ -2698,13 +2795,7 @@ function loadAdminLinksFromTextarea() {
 function resetAdminLinkItems() {
   adminLinkItems = [];
   renderAdminLinksRows();
-}
-function adminRenderLyricsPreview(lyrics) {
-  return escapeHTML(lyrics || "").replace(/\(([^)]+)\)/g, function (_, chord) {
-    return `<span class="chord-token">${escapeHTML(chord)}</span>`;
-  });
-}
-
+       }
 function updateAdminPreview() {
   const box = $("adminPreviewBox");
 
@@ -2713,7 +2804,7 @@ function updateAdminPreview() {
   const title = getInputValue("songTitleInput") || "Título del canto";
   const tone = getInputValue("songToneInput");
   const difficulty = getInputValue("songDifficultyInput");
-  const capo = getInputValue("songCapoInput");
+  const capo = Number(getInputValue("songCapoInput") || 0);
   const capoKey = getInputValue("songCapoKeyInput");
   const lyrics = $("songLyricsInput") ? $("songLyricsInput").value : "";
   const linksText = $("songLinksInput") ? $("songLinksInput").value : "";
@@ -2721,9 +2812,14 @@ function updateAdminPreview() {
   const artists = adminGetSelectedTexts("songArtistsInput");
   const links = adminLinkItems.length ? adminLinkItems : adminParseLinksText(linksText);
 
-  const capoText = Number(capo) > 0
-    ? "Capo " + capo + (capoKey ? " · Figuras en " + capoKey : "")
-    : "";
+  const previewSong = {
+    tone: tone,
+    capo_position: capo,
+    capo_key: capoKey,
+    lyrics: lyrics
+  };
+
+  const capoSteps = capo > 0 ? getCapoTransposeSteps(previewSong) : 0;
 
   box.innerHTML = `
     <article class="song-detail-card preview-card">
@@ -2734,17 +2830,23 @@ function updateAdminPreview() {
       <h1>${escapeHTML(title)}</h1>
 
       <p class="song-meta-line">
-        ${escapeHTML([tone, difficulty].filter(Boolean).join(" · "))}
+        ${escapeHTML([tone ? "Tono " + tone : "", difficulty].filter(Boolean).join(" · "))}
       </p>
 
-      ${capoText ? `
+      ${capo > 0 ? `
         <div class="capo-box">
-          <span>Sin capo: ${escapeHTML(tone || "Tono original")}</span>
-          <span>Con ${escapeHTML(capoText)}</span>
+          <span>Sin capo / tono original: ${escapeHTML(tone || "Tono original")}</span>
+          <span>Con capo ${capo}${capoKey ? " · Figuras en " + escapeHTML(capoKey) : ""}</span>
         </div>
       ` : ""}
 
-      <pre class="lyrics-block">${adminRenderLyricsPreview(lyrics || "La letra aparecerá aquí...")}</pre>
+      <h4>Vista sin capo</h4>
+      <pre class="lyrics-block">${renderChordedLyrics(lyrics || "La letra aparecerá aquí...", 0)}</pre>
+
+      ${capo > 0 ? `
+        <h4>Vista con capo</h4>
+        <pre class="lyrics-block">${renderChordedLyrics(lyrics || "La letra aparecerá aquí...", capoSteps)}</pre>
+      ` : ""}
 
       ${links.length ? `
         <section class="song-links-box">
@@ -2846,6 +2948,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   try {
     initTheme();
     initMenu();
+    hideAdminLinkOnPublicPages();
 
     const themeButton = $("themeToggle");
 
@@ -2875,6 +2978,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     console.error("Error iniciando Juntos Hacia Dios:", error);
   }
 });
+
 /* =========================================================
    FUNCIONES EXPUESTAS PARA HTML
 ========================================================= */
@@ -2927,247 +3031,3 @@ window.loadArtistsPage = loadArtistsPage;
 window.loadCategoriesPage = loadCategoriesPage;
 window.loadArtistProfile = loadArtistProfile;
 window.loadSongPage = loadSongPage;
-/* =========================================================
-   FIX: ACORDES ARRIBA DE LA LETRA + CAPO CORRECTO
-   Este bloque corrige la forma de mostrar acordes y capo.
-========================================================= */
-
-function getTotalTransposeSteps() {
-  if (!currentSongForPage) return currentTransposeSteps;
-
-  const capoPosition = getCapoPosition(currentSongForPage);
-
-  if (capoPosition > 0) {
-    if (currentCapoMode === "capo") {
-      return currentTransposeSteps;
-    }
-
-    return currentTransposeSteps + capoPosition;
-  }
-
-  return currentTransposeSteps;
-}
-
-function renderChordedLyrics(lyrics, transposeSteps) {
-  const steps = Number(transposeSteps || 0);
-  const lines = String(lyrics || "").split("\n");
-
-  return lines.map(function (line) {
-    if (!line.includes("(")) {
-      return escapeHTML(line);
-    }
-
-    let chordLine = "";
-    let lyricLine = "";
-    let lyricPosition = 0;
-
-    const regex = /\(([^)]+)\)/g;
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(line)) !== null) {
-      const textBeforeChord = line.slice(lastIndex, match.index);
-
-      lyricLine += textBeforeChord;
-      lyricPosition += textBeforeChord.length;
-
-      const chord = transposeChordGroup(match[1], steps);
-
-      while (chordLine.length < lyricPosition) {
-        chordLine += " ";
-      }
-
-      chordLine += chord;
-
-      lastIndex = regex.lastIndex;
-    }
-
-    const textAfterLastChord = line.slice(lastIndex);
-    lyricLine += textAfterLastChord;
-
-    return `<span class="chord-line">${escapeHTML(chordLine)}</span>
-<span class="lyric-line">${escapeHTML(lyricLine)}</span>`;
-  }).join("\n");
-}
-
-function adminRenderLyricsPreview(lyrics) {
-  return renderChordedLyrics(lyrics || "", 0);
-}
-
-async function loadSongPage() {
-  const box = $("songPage") || $("songDetail") || $("cantoContent");
-
-  if (!box) return;
-
-  const slug = getUrlParam("slug");
-  const client = getSupabase();
-
-  if (!client || !slug) {
-    box.innerHTML = `
-      <div class="song-card">
-        <h3>Canto no encontrado</h3>
-        <p>Vuelve al cancionero e intenta de nuevo.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const { data: song, error } = await client
-    .from("songs")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  if (error || !song) {
-    box.innerHTML = `
-      <div class="song-card">
-        <h3>Canto no encontrado</h3>
-        <p>Este canto no existe o fue eliminado.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const { data: songs } = await fetchSongsWithRelations([song.id]);
-
-  const fullSong = songs && songs[0]
-    ? songs[0]
-    : Object.assign({}, song, {
-        _artists: [],
-        _categories: [],
-        _albums: [],
-        _links: []
-      });
-
-  currentSongForPage = fullSong;
-  currentTransposeSteps = 0;
-  currentCapoMode = "original";
-
-  const capoPosition = getCapoPosition(fullSong);
-  const capoKey = fullSong.capo_key || "";
-  const meta = songMetaText(fullSong);
-
-  box.innerHTML = `
-    <article class="song-detail-card">
-      <p class="artists-line">
-        ${artistLinksHTML(fullSong._artists)}
-      </p>
-
-      <h1>${escapeHTML(fullSong.title || "Sin título")}</h1>
-
-      <p class="song-meta-line">
-        ${escapeHTML(meta)}
-      </p>
-
-      ${capoPosition > 0 ? `
-        <div class="capo-box">
-          <span id="capoModeLabel">Sin capo</span>
-
-          <button type="button" class="song-btn small-btn" onclick="setCapoMode('original')">
-            Sin capo
-          </button>
-
-          <button type="button" class="song-btn small-btn" onclick="setCapoMode('capo')">
-            Con capo ${capoPosition}${capoKey ? " · " + escapeHTML(capoKey) : ""}
-          </button>
-        </div>
-      ` : ""}
-
-      <div class="transpose-box">
-        <button type="button" class="song-btn small-btn" onclick="changeTranspose(-1)">
-          Bajar tono
-        </button>
-
-        <span id="transposeLabel">Tono original</span>
-
-        <button type="button" class="song-btn small-btn" onclick="changeTranspose(1)">
-          Subir tono
-        </button>
-
-        <button type="button" class="song-btn small-btn" onclick="resetTranspose()">
-          Original
-        </button>
-      </div>
-
-      <pre class="lyrics-block" id="lyricsContent"></pre>
-
-      ${renderSongLinksHTML(fullSong._links || [])}
-    </article>
-  `;
-
-  updateSongLyricsDisplay();
-}
-/* =========================================================
-   FIX FINAL: CAPO CORRECTO
-   Sin capo = acordes escritos / tono original
-   Con capo = acordes bajados según el capo
-========================================================= */
-
-function getTotalTransposeSteps() {
-  if (!currentSongForPage) return currentTransposeSteps;
-
-  const capoPosition = getCapoPosition(currentSongForPage);
-
-  if (currentCapoMode === "capo" && capoPosition > 0) {
-    return currentTransposeSteps - capoPosition;
-  }
-
-  return currentTransposeSteps;
-}
-
-function setCapoMode(mode) {
-  currentCapoMode = mode === "capo" ? "capo" : "original";
-  currentTransposeSteps = 0;
-  updateSongLyricsDisplay();
-}
-
-function updateSongLyricsDisplay() {
-  const lyricsBox = $("lyricsContent");
-  const label = $("transposeLabel");
-  const modeLabel = $("capoModeLabel");
-
-  if (!lyricsBox || !currentSongForPage) return;
-
-  const totalSteps = getTotalTransposeSteps();
-
-  lyricsBox.innerHTML = renderChordedLyrics(currentSongForPage.lyrics || "", totalSteps);
-
-  if (label) {
-    if (currentTransposeSteps === 0) {
-      label.innerText = "Tono original";
-    } else if (currentTransposeSteps > 0) {
-      label.innerText = "+" + currentTransposeSteps;
-    } else {
-      label.innerText = String(currentTransposeSteps);
-    }
-  }
-
-  if (modeLabel) {
-    const capo = getCapoPosition(currentSongForPage);
-    const capoKey = currentSongForPage.capo_key || "";
-
-    if (currentCapoMode === "capo" && capo > 0) {
-      modeLabel.innerText = "Con capo " + capo + (capoKey ? " · Figuras en " + capoKey : "");
-    } else {
-      modeLabel.innerText = "Sin capo / tono original";
-    }
-  }
-}
-
-window.getTotalTransposeSteps = getTotalTransposeSteps;
-window.setCapoMode = setCapoMode;
-window.updateSongLyricsDisplay = updateSongLyricsDisplay;
-
-/* =========================================================
-   FIX FINAL: OCULTAR ADMIN EN PÁGINAS PÚBLICAS
-========================================================= */
-
-document.addEventListener("DOMContentLoaded", function () {
-  const isAdminPage = window.location.pathname.includes("admin.html");
-
-  if (!isAdminPage) {
-    document.querySelectorAll('a[href="admin.html"]').forEach(function (link) {
-      link.remove();
-    });
-  }
-});
