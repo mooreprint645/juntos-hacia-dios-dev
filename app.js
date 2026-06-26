@@ -7441,3 +7441,211 @@ window.toggleAdminSection = toggleAdminSection;
 window.openAllAdminSections = openAllAdminSections;
 window.closeAllAdminSections = closeAllAdminSections;
 window.setupAdminCollapsibleSections = setupAdminCollapsibleSections;
+
+/* =========================================================
+   PÁGINA PÚBLICA: EXPLORADOR DE CATEGORÍAS
+========================================================= */
+
+let publicCategoryExplorerType = "catolico";
+let publicCategoryExplorerParentId = null;
+let publicCategoryExplorerCategories = [];
+
+function getPublicCategoryById(categoryId) {
+  return publicCategoryExplorerCategories.find(function (category) {
+    return String(category.id) === String(categoryId);
+  });
+}
+
+function getPublicCategoryChildren(parentId) {
+  return publicCategoryExplorerCategories
+    .filter(function (category) {
+      if (!publicCategoryExplorerType) {
+        if (category.song_type) return false;
+      } else if (category.song_type !== publicCategoryExplorerType) {
+        return false;
+      }
+
+      return String(category.parent_id || "") === String(parentId || "");
+    })
+    .sort(function (a, b) {
+      const orderA = Number(a.sort_order || 0);
+      const orderB = Number(b.sort_order || 0);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+}
+
+function getPublicCategoryPath(parentId) {
+  const path = [];
+  let currentId = parentId;
+
+  while (currentId) {
+    const category = getPublicCategoryById(currentId);
+
+    if (!category) break;
+
+    path.unshift(category);
+    currentId = category.parent_id || null;
+  }
+
+  return path;
+}
+
+function setPublicCategoryExplorerType(type) {
+  publicCategoryExplorerType = type || "";
+  publicCategoryExplorerParentId = null;
+  renderPublicCategoryExplorer();
+}
+
+function openPublicCategoryFolder(categoryId) {
+  publicCategoryExplorerParentId = categoryId || null;
+  renderPublicCategoryExplorer();
+
+  const container = $("categoriesPage");
+
+  if (container) {
+    container.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function renderPublicCategoryPath() {
+  const path = getPublicCategoryPath(publicCategoryExplorerParentId);
+
+  let html = `
+    <div class="public-category-path">
+      <span>Ruta:</span>
+      <button type="button" class="song-btn small-btn" onclick="openPublicCategoryFolder(null)">
+        Inicio
+      </button>
+  `;
+
+  path.forEach(function (category) {
+    html += `
+      <span>›</span>
+      <button
+        type="button"
+        class="song-btn small-btn"
+        onclick="openPublicCategoryFolder('${escapeHTML(category.id)}')"
+      >
+        ${escapeHTML(category.name || "Categoría")}
+      </button>
+    `;
+  });
+
+  html += `</div>`;
+
+  return html;
+}
+
+function renderPublicCategoryExplorer() {
+  const container = $("categoriesPage");
+
+  if (!container) return;
+
+  const children = getPublicCategoryChildren(publicCategoryExplorerParentId);
+
+  container.innerHTML = `
+    <div class="public-category-explorer">
+      <div class="public-category-tabs">
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${publicCategoryExplorerType === "catolico" ? "active" : ""}"
+          onclick="setPublicCategoryExplorerType('catolico')"
+        >
+          Católico
+        </button>
+
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${publicCategoryExplorerType === "cristiano" ? "active" : ""}"
+          onclick="setPublicCategoryExplorerType('cristiano')"
+        >
+          Cristiano
+        </button>
+
+        <button
+          type="button"
+          class="song-btn small-btn public-category-tab ${publicCategoryExplorerType === "" ? "active" : ""}"
+          onclick="setPublicCategoryExplorerType('')"
+        >
+          General
+        </button>
+      </div>
+
+      ${renderPublicCategoryPath()}
+
+      ${children.length ? `
+        <div class="public-category-grid">
+          ${children.map(function (category) {
+            const childCount = getPublicCategoryChildren(category.id).length;
+
+            return `
+              <article class="public-category-card">
+                <h3>📁 ${escapeHTML(category.name || "Categoría")}</h3>
+                <p>${escapeHTML(category.description || "Sin descripción.")}</p>
+                <p>${childCount} subcategoría(s)</p>
+
+                <div class="public-category-card-actions">
+                  ${childCount ? `
+                    <button
+                      type="button"
+                      class="song-btn small-btn"
+                      onclick="openPublicCategoryFolder('${escapeHTML(category.id)}')"
+                    >
+                      Abrir carpeta
+                    </button>
+                  ` : ""}
+
+                  <a
+                    class="song-btn small-btn secondary"
+                    href="categoria.html?slug=${encodeURIComponent(category.slug || "")}"
+                  >
+                    Ver cantos
+                  </a>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : `
+        <div class="public-category-empty">
+          <p>No hay subcategorías aquí.</p>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+async function loadCategoriesPage() {
+  const container = $("categoriesPage");
+
+  if (!container) return;
+
+  container.innerHTML = `<p class="muted">Cargando categorías...</p>`;
+
+  const { data, error } = await fetchCategories();
+
+  if (error) {
+    container.innerHTML = `<p class="muted">No se pudieron cargar las categorías.</p>`;
+    return;
+  }
+
+  publicCategoryExplorerCategories = data || [];
+
+  if (!publicCategoryExplorerCategories.length) {
+    container.innerHTML = `<p class="muted">Todavía no hay categorías.</p>`;
+    return;
+  }
+
+  renderPublicCategoryExplorer();
+}
+
+window.setPublicCategoryExplorerType = setPublicCategoryExplorerType;
+window.openPublicCategoryFolder = openPublicCategoryFolder;
+window.renderPublicCategoryExplorer = renderPublicCategoryExplorer;
+window.loadCategoriesPage = loadCategoriesPage;
