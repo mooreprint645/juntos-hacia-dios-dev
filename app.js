@@ -1738,6 +1738,51 @@ async function loadCategoriesPage() {
 
   if (!root) return;
 
+root.innerHTML = `
+    <div class="public-category-empty">
+      <h3>Cargando categorías...</h3>
+      <p>Un momento por favor.</p>
+    </div>
+  `;
+
+  const result = await fetchCategories();
+
+  if (result.error) {
+    root.innerHTML = `
+      <div class="public-category-empty">
+        <h3>Error cargando categorías</h3>
+        <p>${escapeHTML(result.error.message || "No se pudieron cargar.")}</p>
+      </div>
+    `;
+    return;
+  }
+
+  allCategoriesForPage = result.data || [];
+
+  const search = getCategoriesSearchInput();
+
+  if (search && !search.dataset.categoriesReady) {
+    search.dataset.categoriesReady = "true";
+
+    search.addEventListener("input", function () {
+      renderCategorySearchResults(search.value);
+    });
+  }
+
+  const categorySlug = getUrlParam("categoria");
+
+  if (categorySlug) {
+    await showCategorySongsBySlug(categorySlug);
+    return;
+  }
+
+  if (search && String(search.value || "").trim()) {
+    renderCategorySearchResults(search.value);
+  } else {
+    renderCategoriesExplorer();
+  }
+}
+   
    /* =========================================================
    PÚBLICO: PÁGINA DE CANTO
 ========================================================= */
