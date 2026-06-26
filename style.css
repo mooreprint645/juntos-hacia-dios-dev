@@ -2698,3 +2698,103 @@ button.danger {
     width: 100% !important;
   }
 }
+/* =========================================================
+   ADMIN: SECCIONES PRINCIPALES PLEGABLES
+========================================================= */
+
+.admin-section {
+  overflow: hidden !important;
+}
+
+.admin-section .section-heading {
+  cursor: pointer !important;
+  position: relative !important;
+  padding-right: 56px !important;
+}
+
+.admin-section .section-heading::after {
+  content: "Abrir" !important;
+  position: absolute !important;
+  right: 0 !important;
+  top: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 52px !important;
+  min-height: 30px !important;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(250, 204, 21, 0.14) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(250, 204, 21, 0.28) !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+}
+
+.admin-section.admin-section-open .section-heading::after {
+  content: "Cerrar" !important;
+  background: var(--accent) !important;
+  color: #111827 !important;
+  border-color: var(--accent) !important;
+}
+
+.admin-section.admin-section-closed > *:not(.section-heading) {
+  display: none !important;
+}
+
+.admin-section.admin-section-closed {
+  padding-bottom: 18px !important;
+}
+
+.admin-section.admin-section-open {
+  scroll-margin-top: 140px !important;
+}
+
+.admin-section .section-heading:hover {
+  background: rgba(250, 204, 21, 0.04) !important;
+  border-radius: 16px !important;
+  padding-left: 10px !important;
+}
+
+.admin-section .section-heading p,
+.admin-section .section-heading h2 {
+  pointer-events: none !important;
+}
+
+.admin-collapse-helper {
+  max-width: 1180px !important;
+  margin: 0 auto 16px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  justify-content: center !important;
+}
+
+.admin-collapse-helper button {
+  width: auto !important;
+  min-height: 34px !important;
+  padding: 7px 12px !important;
+  border-radius: 999px !important;
+  font-size: 0.82rem !important;
+}
+
+@media (max-width: 768px) {
+  .admin-section .section-heading {
+    padding-right: 70px !important;
+  }
+
+  .admin-section .section-heading::after {
+    right: 0 !important;
+    top: 6px !important;
+  }
+
+  .admin-collapse-helper {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    padding: 0 8px !important;
+  }
+
+  .admin-collapse-helper button {
+    width: 100% !important;
+  }
+}
