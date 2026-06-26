@@ -5772,3 +5772,246 @@ window.ensureAdminTreeFields = ensureAdminTreeFields;
 window.loadCategoryParentOptions = loadCategoryParentOptions;
 window.buildCategoryTree = buildCategoryTree;
 window.flattenCategoryTree = flattenCategoryTree;
+
+/* =========================================================
+   PATCH: CATEGORÍAS ACORDEÓN / DESPLEGABLE
+========================================================= */
+
+function toggleCategoryAccordion(id) {
+  const item = $("categoryAccordionItem-" + id);
+
+  if (!item) return;
+
+  item.classList.toggle("open");
+}
+
+function toggleAdminCategoryAccordion(id) {
+  const item = $("adminCategoryTreeItem-" + id);
+
+  if (!item) return;
+
+  item.classList.toggle("open");
+}
+
+function renderCategoryAccordionTree(categories, level) {
+  const safeLevel = Number(level || 0);
+
+  if (!categories || !categories.length) return "";
+
+  return `
+    <div class="category-accordion ${safeLevel > 0 ? "category-accordion-children" : ""}">
+      ${categories.map(function (category) {
+        const hasChildren = category.children && category.children.length;
+
+        return `
+          <article
+            class="category-accordion-item ${safeLevel === 0 ? "open" : ""}"
+            id="categoryAccordionItem-${escapeHTML(category.id)}"
+          >
+            <button
+              class="category-accordion-toggle"
+              type="button"
+              onclick="${hasChildren ? `toggleCategoryAccordion('${escapeHTML(category.id)}')` : `selectCategoryById('${escapeHTML(category.id)}')`}"
+            >
+              <div>
+                <span class="category-type-pill">
+                  ${escapeHTML(categoryTypeLabel(category.song_type || ""))}
+                </span>
+
+                <h3>${escapeHTML(category.name || "Categoría")}</h3>
+
+                <p>${escapeHTML(category.description || "Ver cantos de esta categoría.")}</p>
+              </div>
+
+              ${hasChildren ? `<span class="category-accordion-arrow">›</span>` : `<span class="category-accordion-arrow">♪</span>`}
+            </button>
+
+            <div class="category-accordion-content">
+              <button
+                type="button"
+                class="song-btn small-btn category-song-open-btn"
+                onclick="selectCategoryById('${escapeHTML(category.id)}')"
+              >
+                Ver cantos en ${escapeHTML(category.name || "esta categoría")}
+              </button>
+
+              ${hasChildren ? renderCategoryAccordionTree(category.children, safeLevel + 1) : ""}
+            </div>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderAdminCategoryAccordionTree(categories, level) {
+  const safeLevel = Number(level || 0);
+
+  if (!categories || !categories.length) return "";
+
+  return `
+    <div class="admin-category-tree-list ${safeLevel > 0 ? "admin-category-tree-children" : ""}">
+      ${categories.map(function (category) {
+        const hasChildren = category.children && category.children.length;
+
+        return `
+          <article
+            class="admin-category-tree-item ${safeLevel === 0 ? "open" : ""}"
+            id="adminCategoryTreeItem-${escapeHTML(category.id)}"
+          >
+            <button
+              class="admin-category-tree-toggle"
+              type="button"
+              onclick="${hasChildren ? `toggleAdminCategoryAccordion('${escapeHTML(category.id)}')` : `editCategory('${escapeHTML(category.id)}')`}"
+            >
+              <div>
+                <strong>${escapeHTML(category.name || "Categoría")}</strong>
+                <p>
+                  ${escapeHTML(categoryTypeLabel(category.song_type || ""))}
+                  · Orden ${escapeHTML(category.sort_order || 0)}
+                  ${category.description ? " · " + escapeHTML(category.description) : ""}
+                </p>
+              </div>
+
+              <div class="admin-category-tree-actions">
+                <button
+                  type="button"
+                  class="song-btn small-btn"
+                  onclick="event.stopPropagation(); editCategory('${escapeHTML(category.id)}')"
+                >
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  class="song-btn small-btn danger"
+                  onclick="event.stopPropagation(); deleteCategory('${escapeHTML(category.id)}')"
+                >
+                  Eliminar
+                </button>
+
+                ${hasChildren ? `<span class="category-accordion-arrow">›</span>` : ""}
+              </div>
+            </button>
+
+            <div class="admin-category-tree-content">
+              ${hasChildren ? renderAdminCategoryAccordionTree(category.children, safeLevel + 1) : ""}
+            </div>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+/* =========================================================
+   REEMPLAZO FINAL: render público y admin como acordeón
+========================================================= */
+
+function renderCategoriesPage(items) {
+  const grid = $("categoriesGrid") || $("categoryList");
+  const countText = $("categoryCountText");
+
+  if (!grid) return;
+
+  const categories = items || [];
+
+  if (countText) {
+    countText.textContent = categories.length === 1
+      ? "1 categoría encontrada"
+      : categories.length + " categorías encontradas";
+  }
+
+  if (!categories.length) {
+    grid.innerHTML = `
+      <div class="song-card">
+        <h3>No se encontraron categorías</h3>
+        <p>Intenta buscar con otro nombre.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const catolicas = categories.filter(function (category) {
+    return category.song_type === "catolico";
+  });
+
+  const cristianas = categories.filter(function (category) {
+    return category.song_type === "cristiano";
+  });
+
+  const generales = categories.filter(function (category) {
+    return !category.song_type;
+  });
+
+  const catolicasTree = buildCategoryTree(catolicas, null);
+  const cristianasTree = buildCategoryTree(cristianas, null);
+  const generalesTree = buildCategoryTree(generales, null);
+
+  grid.innerHTML = `
+    ${catolicasTree.length ? `
+      <section class="category-family-section">
+        <div class="section-heading">
+          <p class="hero-kicker">Católico</p>
+          <h2>Categorías católicas</h2>
+        </div>
+
+        ${renderCategoryAccordionTree(catolicasTree, 0)}
+      </section>
+    ` : ""}
+
+    ${cristianasTree.length ? `
+      <section class="category-family-section">
+        <div class="section-heading">
+          <p class="hero-kicker">Cristiano</p>
+          <h2>Categorías cristianas</h2>
+        </div>
+
+        ${renderCategoryAccordionTree(cristianasTree, 0)}
+      </section>
+    ` : ""}
+
+    ${generalesTree.length ? `
+      <section class="category-family-section">
+        <div class="section-heading">
+          <p class="hero-kicker">General</p>
+          <h2>Otras categorías</h2>
+        </div>
+
+        ${renderCategoryAccordionTree(generalesTree, 0)}
+      </section>
+    ` : ""}
+  `;
+}
+
+async function loadAdminCategories() {
+  ensureCategoryTreeFields();
+
+  const list = $("adminCategoryList");
+
+  if (!list) return;
+
+  const { data, error } = await fetchCategories();
+
+  if (error) {
+    list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
+    return;
+  }
+
+  const categories = data || [];
+
+  if (!categories.length) {
+    list.innerHTML = `<p class="muted-text">No hay categorías todavía.</p>`;
+    return;
+  }
+
+  const tree = buildCategoryTree(categories, null);
+
+  list.innerHTML = renderAdminCategoryAccordionTree(tree, 0);
+
+  await loadCategoryParentOptions();
+}
+
+window.toggleCategoryAccordion = toggleCategoryAccordion;
+window.toggleAdminCategoryAccordion = toggleAdminCategoryAccordion;
+window.renderCategoryAccordionTree = renderCategoryAccordionTree;
+window.renderAdminCategoryAccordionTree = renderAdminCategoryAccordionTree;
