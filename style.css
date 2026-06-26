@@ -2925,3 +2925,110 @@ button.danger {
     grid-template-columns: 1fr !important;
   }
 }
+/* =========================================================
+   FIX: vista de cantos por categoría
+========================================================= */
+
+.category-songs-view {
+  max-width: 980px !important;
+  margin: 0 auto !important;
+  padding: 20px 14px 60px !important;
+}
+
+.category-songs-back {
+  display: flex !important;
+  justify-content: center !important;
+  margin-bottom: 28px !important;
+}
+
+.category-songs-header {
+  margin-bottom: 22px !important;
+  padding-bottom: 16px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.category-songs-header .eyebrow {
+  margin-bottom: 8px !important;
+}
+
+.category-songs-header h2 {
+  color: var(--accent) !important;
+  font-size: clamp(2rem, 5vw, 3.2rem) !important;
+  line-height: 1.05 !important;
+  margin: 0 0 8px !important;
+}
+
+.category-songs-header p {
+  max-width: 720px !important;
+  color: var(--muted) !important;
+  line-height: 1.5 !important;
+}
+
+.category-songs-list {
+  display: grid !important;
+  gap: 12px !important;
+}
+
+.category-song-card {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 14px !important;
+  align-items: center !important;
+  text-decoration: none !important;
+  color: var(--text) !important;
+  padding: 16px !important;
+  border-radius: 18px !important;
+  background: rgba(17, 24, 39, 0.9) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16) !important;
+}
+
+.category-song-card:hover {
+  transform: translateY(-1px) !important;
+  border-color: rgba(250, 204, 21, 0.45) !important;
+}
+
+.category-song-card .eyebrow {
+  margin: 0 0 6px !important;
+  color: var(--accent) !important;
+  font-size: 0.72rem !important;
+}
+
+.category-song-card h3 {
+  margin: 0 0 6px !important;
+  color: var(--text) !important;
+  font-size: 1.15rem !important;
+}
+
+.category-song-card p {
+  margin: 0 !important;
+  color: var(--muted) !important;
+  font-size: 0.92rem !important;
+}
+
+.category-song-arrow {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(250, 204, 21, 0.14) !important;
+  color: var(--accent) !important;
+  font-size: 1.3rem !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 768px) {
+  .category-songs-view {
+    padding: 12px 4px 42px !important;
+  }
+
+  .category-songs-back {
+    justify-content: flex-start !important;
+  }
+
+  .category-song-card {
+    padding: 14px !important;
+  }
+}
