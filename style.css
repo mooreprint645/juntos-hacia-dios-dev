@@ -3208,3 +3208,43 @@ body:has(#artistDetail) footer div {
     padding-top: 28px !important;
   }
 }
+/* =========================================================
+   FIX: donaciones móvil
+========================================================= */
+
+@media (max-width: 768px) {
+  .donation-page,
+  #donationPage,
+  #donationContent,
+  #donacionesContent {
+    width: calc(100% - 32px) !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .donation-page .song-detail-card,
+  #donationPage .song-detail-card,
+  #donationContent .song-detail-card,
+  #donacionesContent .song-detail-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .donation-page h1,
+  #donationPage h1,
+  #donationContent h1,
+  #donacionesContent h1 {
+    font-size: clamp(2rem, 10vw, 3rem) !important;
+    line-height: 1.05 !important;
+    word-break: normal !important;
+  }
+
+  .donation-page p,
+  #donationPage p,
+  #donationContent p,
+  #donacionesContent p {
+    overflow-wrap: break-word !important;
+  }
+}
