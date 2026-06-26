@@ -8331,3 +8331,183 @@ window.setPublicSafeType = setPublicSafeType;
 window.openPublicSafeFolder = openPublicSafeFolder;
 window.renderPublicCategoriesSafe = renderPublicCategoriesSafe;
 window.renderPublicCategoriesSearchSafe = renderPublicCategoriesSearchSafe;
+
+/* =========================================================
+   FIX URGENTE: "Ver cantos" en categorías sin error 404
+   Intercepta categoria.html y muestra los cantos en la misma página
+========================================================= */
+
+function publicCategorySongArtists(song) {
+  const artists = song._artists || [];
+
+  if (!artists.length) {
+    return "Artista no especificado";
+  }
+
+  return artists
+    .map(function (artist) {
+      return artist.name || "";
+    })
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function publicCategorySongCard(song) {
+  return `
+    <a class="song-card" href="canto.html?slug=${encodeURIComponent(song.slug || "")}">
+      <div>
+        <p class="eyebrow">${escapeHTML(publicCategorySongArtists(song))}</p>
+        <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
+        <p>${escapeHTML(song.subtitle || song.key || song.original_key || "")}</p>
+      </div>
+      <span>›</span>
+    </a>
+  `;
+}
+
+async function showPublicCategorySongsBySlug(categorySlug) {
+  const root = getPublicCategoriesRoot();
+
+  if (!root) return;
+
+  const cleanSlug = String(categorySlug || "").trim();
+
+  if (!cleanSlug) {
+    root.innerHTML = `
+      <div class="public-category-empty">
+        <h3>No se encontró la categoría</h3>
+        <p>La categoría no tiene un identificador válido.</p>
+        <button type="button" class="song-btn small-btn" onclick="loadCategoriesPageSafe()">
+          Volver a categorías
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  root.innerHTML = `
+    <div class="public-category-empty">
+      <h3>Cargando cantos...</h3>
+      <p>Buscando cantos de esta categoría.</p>
+    </div>
+  `;
+
+  try {
+    if (!publicCategoriesSafeData || !publicCategoriesSafeData.length) {
+      const categoryResult = await fetchCategories();
+
+      if (categoryResult.error) {
+        root.innerHTML = `
+          <div class="public-category-empty">
+            <h3>Error cargando categorías</h3>
+            <p>${escapeHTML(categoryResult.error.message || "No se pudieron cargar las categorías.")}</p>
+            <button type="button" class="song-btn small-btn" onclick="loadCategoriesPageSafe()">
+              Volver
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      publicCategoriesSafeData = categoryResult.data || [];
+    }
+
+    const category = publicCategoriesSafeData.find(function (item) {
+      return String(item.slug || "") === cleanSlug;
+    });
+
+    if (!category) {
+      root.innerHTML = `
+        <div class="public-category-empty">
+          <h3>Categoría no encontrada</h3>
+          <p>No encontramos una categoría con este enlace.</p>
+          <button type="button" class="song-btn small-btn" onclick="loadCategoriesPageSafe()">
+            Volver a categorías
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    const songsResult = await fetchSongsWithRelations();
+
+    if (songsResult.error) {
+      root.innerHTML = `
+        <div class="public-category-empty">
+          <h3>Error cargando cantos</h3>
+          <p>${escapeHTML(songsResult.error.message || "No se pudieron cargar los cantos.")}</p>
+          <button type="button" class="song-btn small-btn" onclick="loadCategoriesPageSafe()">
+            Volver a categorías
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    const songs = songsResult.data || [];
+
+    const categorySongs = songs.filter(function (song) {
+      const categories = song._categories || [];
+
+      return categories.some(function (songCategory) {
+        return String(songCategory.slug || "") === cleanSlug;
+      });
+    });
+
+    root.innerHTML = `
+      <div class="public-category-explorer">
+        <div class="public-category-path">
+          <button type="button" class="song-btn small-btn" onclick="loadCategoriesPageSafe()">
+            ← Volver a categorías
+          </button>
+        </div>
+
+        <section class="artist-profile-section">
+          <div class="artist-section-heading">
+            <div>
+              <p class="eyebrow">Cantos encontrados</p>
+              <h2>${escapeHTML(category.name || "Categoría")}</h2>
+              <p>${escapeHTML(category.description || "Cantos de esta categoría.")}</p>
+            </div>
+          </div>
+
+          ${categorySongs.length ? `
+            <div class="song-list">
+              ${categorySongs.map(publicCategorySongCard).join("")}
+            </div>
+          ` : `
+            <div class="public-category-empty">
+              <h3>Sin cantos todavía</h3>
+              <p>Esta categoría existe, pero todavía no tiene cantos relacionados.</p>
+            </div>
+          `}
+        </section>
+      </div>
+    `;
+  } catch (error) {
+    root.innerHTML = `
+      <div class="public-category-empty">
+        <h3>Error inesperado</h3>
+        <p>${escapeHTML(error.message || "Ocurrió un problema cargando los cantos.")}</p>
+        <button type="button" class="song-btn small-btn" onclick="loadCategoriesPageSafe()">
+          Volver a categorías
+        </button>
+      </div>
+    `;
+  }
+}
+
+document.addEventListener("click", function (event) {
+  const link = event.target.closest('a[href^="categoria.html"]');
+
+  if (!link) return;
+
+  event.preventDefault();
+
+  const url = new URL(link.getAttribute("href"), window.location.href);
+  const slug = url.searchParams.get("slug");
+
+  showPublicCategorySongsBySlug(slug);
+});
+
+window.showPublicCategorySongsBySlug = showPublicCategorySongsBySlug;
