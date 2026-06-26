@@ -3,6 +3,8 @@
   --card: #1a1d27;
   --card-soft: #202432;
   --gold: #f6c453;
+  --accent: #f6c453;
+  --muted: #b8b8b8;
   --gold-dark: #c9972b;
   --text: #ffffff;
   --secondary: #b8b8b8;
@@ -18,6 +20,8 @@ body.light-mode {
   --card: #ffffff;
   --card-soft: #f4efe6;
   --gold: #c9972b;
+  --accent: #c9972b;
+  --muted: #555555;
   --gold-dark: #946e14;
   --text: #151515;
   --secondary: #555555;
