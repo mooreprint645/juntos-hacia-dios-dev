@@ -117,7 +117,8 @@
         <a href="#adminCategories">Categorías</a>
         <a href="#adminAlbums">Álbumes</a>
       </div>
-            <section class="admin-section" id="adminSongs">
+
+      <section class="admin-section" id="adminSongs">
         <div class="section-heading">
           <p class="hero-kicker">Cancionero</p>
           <h2>Canciones</h2>
@@ -170,37 +171,55 @@
               <input
                 type="text"
                 id="songToneInput"
-                placeholder="Ej. C, D, G, Am"
+                placeholder="Ej. A, G, D, C, Am"
               />
+              <small class="muted-text">
+                Este es el tono real de la canción. Ejemplo: A.
+              </small>
             </label>
 
             <label>
               Dificultad
-              <input
-                type="text"
-                id="songDifficultyInput"
-                placeholder="Ej. Fácil, Medio, Avanzado"
-              />
+              <select id="songDifficultyInput">
+                <option value="">Sin dificultad</option>
+                <option value="Fácil">Fácil</option>
+                <option value="Medio">Medio</option>
+                <option value="Avanzado">Avanzado</option>
+              </select>
             </label>
 
             <label>
-              Capo
-              <input
-                type="number"
-                id="songCapoInput"
-                min="0"
-                max="12"
-                placeholder="Ej. 2"
-              />
+              Capo / Cejilla
+              <select id="songCapoInput">
+                <option value="0">Sin capo</option>
+                <option value="1">Capo 1</option>
+                <option value="2">Capo 2</option>
+                <option value="3">Capo 3</option>
+                <option value="4">Capo 4</option>
+                <option value="5">Capo 5</option>
+                <option value="6">Capo 6</option>
+                <option value="7">Capo 7</option>
+                <option value="8">Capo 8</option>
+                <option value="9">Capo 9</option>
+                <option value="10">Capo 10</option>
+                <option value="11">Capo 11</option>
+                <option value="12">Capo 12</option>
+              </select>
+              <small class="muted-text">
+                Selecciona en qué traste se coloca el capo.
+              </small>
             </label>
 
             <label>
-              Figuras con capo
+              Figuras que se tocan con capo
               <input
                 type="text"
                 id="songCapoKeyInput"
-                placeholder="Ej. G, D, C"
+                placeholder="Ej. G"
               />
+              <small class="muted-text">
+                Ejemplo: si el tono real es A y quieres tocar con capo 2 usando figuras de G, escribe G.
+              </small>
             </label>
           </div>
 
@@ -209,7 +228,13 @@
             <textarea
               id="songLyricsInput"
               rows="16"
-              placeholder="Escribe la letra. Usa acordes entre paréntesis, por ejemplo: (G) Santo, (D) Santo..."
+              placeholder="Ejemplo:
+[Intro]
+(G)Caminar contigo (D)María
+
+[Verso 1]
+(G)Caminar contigo (D)María
+(Em)quiero aprender a (C)amar"
             ></textarea>
           </label>
 
@@ -320,7 +345,8 @@
           </div>
         </article>
       </section>
-            <section class="admin-section" id="adminArtists">
+
+      <section class="admin-section" id="adminArtists">
         <div class="section-heading">
           <p class="hero-kicker">Ministerios y salmistas</p>
           <h2>Artistas</h2>
@@ -419,7 +445,8 @@
           </div>
         </article>
       </section>
-            <section class="admin-section" id="adminAlbums">
+
+      <section class="admin-section" id="adminAlbums">
         <div class="section-heading">
           <p class="hero-kicker">Carpetas por artista</p>
           <h2>Álbumes / carpetas</h2>
