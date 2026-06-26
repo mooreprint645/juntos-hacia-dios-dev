@@ -3328,3 +3328,293 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }, 500);
 });
+/* =========================================================
+   FIX FINAL MÓVIL: MENÚ + LETRA + ACORDES DESTACADOS
+========================================================= */
+
+function injectMobileSongFixStyles() {
+  let oldStyle = document.getElementById("jhd-mobile-song-fix-styles");
+
+  if (oldStyle) {
+    oldStyle.remove();
+  }
+
+  const style = document.createElement("style");
+  style.id = "jhd-mobile-song-fix-styles";
+
+  style.textContent = `
+    @media (max-width: 768px) {
+      header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 999 !important;
+      }
+
+      .navbar {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding: 18px 28px !important;
+      }
+
+      .brand {
+        font-size: 1.35rem !important;
+        max-width: 75% !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+
+      .menu-toggle {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 58px !important;
+        height: 58px !important;
+        border-radius: 999px !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        background: rgba(255,255,255,0.08) !important;
+        color: #ffffff !important;
+        font-size: 1.6rem !important;
+        cursor: pointer !important;
+      }
+
+      .nav-menu {
+        display: none !important;
+        position: absolute !important;
+        top: 86px !important;
+        left: 22px !important;
+        right: 22px !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 18px !important;
+        border-radius: 22px !important;
+        background: #181b25 !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        box-shadow: 0 22px 60px rgba(0,0,0,0.45) !important;
+      }
+
+      .nav-menu.show-menu,
+      .nav-menu.open {
+        display: flex !important;
+      }
+
+      .nav-menu a,
+      .nav-menu button {
+        width: 100% !important;
+        text-align: left !important;
+        padding: 13px 14px !important;
+        border-radius: 14px !important;
+        font-size: 1rem !important;
+      }
+
+      .song-page-section {
+        padding: 24px 14px !important;
+      }
+
+      .song-detail-card {
+        padding: 22px !important;
+        border-radius: 22px !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+      }
+
+      .song-detail-card h1 {
+        font-size: 2.15rem !important;
+        line-height: 1.08 !important;
+        word-break: normal !important;
+        overflow-wrap: anywhere !important;
+      }
+
+      .capo-box,
+      .transpose-box {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        padding: 18px !important;
+      }
+
+      .capo-box span,
+      .transpose-box span {
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 1.1rem !important;
+        font-weight: 800 !important;
+      }
+
+      .song-btn.small-btn {
+        width: 100% !important;
+        padding: 14px 18px !important;
+        font-size: 1rem !important;
+      }
+
+      .lyrics-block {
+        background: #070a12 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        border-radius: 18px !important;
+        padding: 18px !important;
+        white-space: normal !important;
+        overflow-x: auto !important;
+        font-family: "Courier New", Courier, monospace !important;
+      }
+
+      .song-section-label {
+        display: inline-flex !important;
+        width: auto !important;
+        max-width: max-content !important;
+        margin: 12px 0 10px !important;
+        padding: 5px 10px !important;
+        border-radius: 999px !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.04em !important;
+        text-transform: uppercase !important;
+        color: #0b0d12 !important;
+        box-shadow: none !important;
+      }
+
+      .section-intro {
+        background: #7dd3fc !important;
+        border: 1px solid #38bdf8 !important;
+      }
+
+      .section-verso {
+        background: #86efac !important;
+        border: 1px solid #22c55e !important;
+      }
+
+      .section-coro {
+        background: #facc15 !important;
+        border: 1px solid #eab308 !important;
+      }
+
+      .section-puente {
+        background: #c084fc !important;
+        border: 1px solid #a855f7 !important;
+      }
+
+      .section-pre {
+        background: #f9a8d4 !important;
+        border: 1px solid #ec4899 !important;
+      }
+
+      .section-final,
+      .section-default {
+        background: #d1d5db !important;
+        border: 1px solid #9ca3af !important;
+      }
+
+      .song-line {
+        display: block !important;
+        margin-bottom: 12px !important;
+      }
+
+      .chord-line {
+        display: block !important;
+        min-height: 1.1em !important;
+        color: #ffd54a !important;
+        -webkit-text-fill-color: #ffd54a !important;
+        font-family: "Courier New", Courier, monospace !important;
+        font-size: 1rem !important;
+        font-weight: 900 !important;
+        line-height: 1.05 !important;
+        white-space: pre !important;
+        text-shadow:
+          0 0 8px rgba(255, 213, 74, 0.75),
+          0 0 18px rgba(255, 213, 74, 0.35) !important;
+      }
+
+      .lyric-line {
+        display: block !important;
+        color: #f8fafc !important;
+        font-family: "Courier New", Courier, monospace !important;
+        font-size: 1.02rem !important;
+        font-weight: 700 !important;
+        line-height: 1.45 !important;
+        white-space: pre !important;
+        letter-spacing: 0 !important;
+      }
+
+      .song-plain-line {
+        display: block !important;
+        color: #f8fafc !important;
+        font-family: "Courier New", Courier, monospace !important;
+        font-size: 1.02rem !important;
+        font-weight: 700 !important;
+        line-height: 1.45 !important;
+        margin-bottom: 8px !important;
+        white-space: pre-wrap !important;
+        letter-spacing: 0 !important;
+      }
+
+      .song-empty-line {
+        display: block !important;
+        height: 8px !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .song-detail-card h1 {
+        font-size: 1.8rem !important;
+      }
+
+      .lyrics-block {
+        padding: 16px !important;
+      }
+
+      .chord-line {
+        font-size: 0.95rem !important;
+      }
+
+      .lyric-line,
+      .song-plain-line {
+        font-size: 0.96rem !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+function fixMobileMenuButton() {
+  const oldButton = document.getElementById("menuToggle");
+  const menu = document.getElementById("navMenu");
+
+  if (!oldButton || !menu) return;
+
+  const newButton = oldButton.cloneNode(true);
+  oldButton.parentNode.replaceChild(newButton, oldButton);
+
+  newButton.addEventListener("click", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isOpen = menu.classList.toggle("show-menu");
+    menu.classList.toggle("open", isOpen);
+    newButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  });
+
+  menu.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", function () {
+      menu.classList.remove("show-menu");
+      menu.classList.remove("open");
+      newButton.setAttribute("aria-expanded", "false");
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  injectMobileSongFixStyles();
+
+  setTimeout(function () {
+    injectMobileSongFixStyles();
+    fixMobileMenuButton();
+
+    if (currentSongForPage) {
+      updateSongLyricsDisplay();
+    }
+  }, 700);
+});
