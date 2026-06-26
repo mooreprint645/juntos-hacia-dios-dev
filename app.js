@@ -3157,3 +3157,17 @@ function updateSongLyricsDisplay() {
 window.getTotalTransposeSteps = getTotalTransposeSteps;
 window.setCapoMode = setCapoMode;
 window.updateSongLyricsDisplay = updateSongLyricsDisplay;
+
+/* =========================================================
+   FIX FINAL: OCULTAR ADMIN EN PÁGINAS PÚBLICAS
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+  const isAdminPage = window.location.pathname.includes("admin.html");
+
+  if (!isAdminPage) {
+    document.querySelectorAll('a[href="admin.html"]').forEach(function (link) {
+      link.remove();
+    });
+  }
+});
