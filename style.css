@@ -2582,3 +2582,21 @@ button.danger {
     width: 100% !important;
   }
 }
+/* Ajuste: el icono ☰ es solo indicador visual por ahora */
+.admin-category-drag-handle {
+  cursor: default !important;
+  opacity: 0.9 !important;
+}
+
+@media (max-width: 768px) {
+  .admin-category-order-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .admin-category-order-actions button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
