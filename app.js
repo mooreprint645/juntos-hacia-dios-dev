@@ -3618,3 +3618,321 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }, 700);
 });
+/* =========================================================
+   FIX FINAL LIMPIO: TELÉFONO COMPACTO + MENÚ LEGIBLE
+========================================================= */
+
+function injectCleanMobileFinalStyles() {
+  const old1 = document.getElementById("jhd-mobile-song-fix-styles");
+  const old2 = document.getElementById("jhd-final-song-visual-styles");
+  const old3 = document.getElementById("jhd-clean-mobile-final-styles");
+
+  if (old1) old1.remove();
+  if (old2) old2.remove();
+  if (old3) old3.remove();
+
+  const style = document.createElement("style");
+  style.id = "jhd-clean-mobile-final-styles";
+
+  style.textContent = `
+    @media (max-width: 768px) {
+      body {
+        overflow-x: hidden !important;
+      }
+
+      header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 999 !important;
+        background: var(--bg) !important;
+        border-bottom: 1px solid var(--border) !important;
+      }
+
+      .navbar {
+        min-height: auto !important;
+        padding: 14px 18px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+      }
+
+      .brand {
+        font-size: 1.05rem !important;
+        font-weight: 800 !important;
+        max-width: 78% !important;
+        color: var(--text) !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+
+      .menu-toggle {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 14px !important;
+        border: 1px solid var(--border) !important;
+        background: var(--card) !important;
+        color: var(--text) !important;
+        font-size: 1.35rem !important;
+        padding: 0 !important;
+      }
+
+      .nav-menu {
+        display: none !important;
+        position: absolute !important;
+        top: 64px !important;
+        left: 16px !important;
+        right: 16px !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 14px !important;
+        border-radius: 18px !important;
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        box-shadow: 0 22px 55px rgba(0,0,0,0.45) !important;
+      }
+
+      .nav-menu.show-menu,
+      .nav-menu.open {
+        display: flex !important;
+      }
+
+      .nav-menu a,
+      .nav-menu button {
+        display: block !important;
+        width: 100% !important;
+        padding: 11px 12px !important;
+        border-radius: 12px !important;
+        color: var(--text) !important;
+        background: transparent !important;
+        font-size: 0.95rem !important;
+        text-align: left !important;
+        text-decoration: none !important;
+      }
+
+      .nav-menu a:hover,
+      .nav-menu a.active {
+        background: rgba(255, 207, 83, 0.13) !important;
+        color: var(--accent) !important;
+      }
+
+      .song-page-section {
+        padding: 18px 12px !important;
+      }
+
+      .song-detail-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 18px !important;
+        border-radius: 18px !important;
+        overflow: hidden !important;
+      }
+
+      .song-detail-card h1 {
+        font-size: 1.85rem !important;
+        line-height: 1.12 !important;
+        margin-bottom: 10px !important;
+        word-break: normal !important;
+        overflow-wrap: anywhere !important;
+      }
+
+      .artists-line {
+        font-size: 0.9rem !important;
+      }
+
+      .song-meta-line {
+        font-size: 0.95rem !important;
+        margin-bottom: 16px !important;
+      }
+
+      .capo-box,
+      .transpose-box {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        padding: 12px !important;
+        border-radius: 16px !important;
+        margin: 14px 0 !important;
+      }
+
+      .capo-box span,
+      .transpose-box span {
+        grid-column: 1 / -1 !important;
+        text-align: center !important;
+        font-size: 0.95rem !important;
+        font-weight: 800 !important;
+        color: var(--muted) !important;
+      }
+
+      .song-btn.small-btn {
+        width: 100% !important;
+        padding: 11px 10px !important;
+        min-height: 42px !important;
+        font-size: 0.88rem !important;
+        border-radius: 999px !important;
+      }
+
+      .transpose-box button:last-child {
+        grid-column: 1 / -1 !important;
+      }
+
+      .lyrics-block {
+        background: #070a12 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        border-radius: 16px !important;
+        padding: 16px !important;
+        margin-top: 16px !important;
+        white-space: normal !important;
+        overflow-x: auto !important;
+        font-family: "Courier New", Courier, monospace !important;
+      }
+
+      .song-section-label {
+        display: inline-flex !important;
+        width: auto !important;
+        max-width: max-content !important;
+        margin: 12px 0 10px !important;
+        padding: 5px 10px !important;
+        border-radius: 999px !important;
+        font-size: 0.65rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.05em !important;
+        text-transform: uppercase !important;
+        color: #071016 !important;
+      }
+
+      .section-intro {
+        background: #7dd3fc !important;
+      }
+
+      .section-verso {
+        background: #86efac !important;
+      }
+
+      .section-coro {
+        background: #facc15 !important;
+      }
+
+      .section-puente {
+        background: #c084fc !important;
+      }
+
+      .section-pre {
+        background: #f9a8d4 !important;
+      }
+
+      .section-final,
+      .section-default {
+        background: #d1d5db !important;
+      }
+
+      .song-line {
+        display: block !important;
+        margin-bottom: 11px !important;
+      }
+
+      .chord-line {
+        display: block !important;
+        min-height: 1.05em !important;
+        color: #ffcf53 !important;
+        -webkit-text-fill-color: #ffcf53 !important;
+        font-family: "Courier New", Courier, monospace !important;
+        font-size: 0.96rem !important;
+        font-weight: 950 !important;
+        line-height: 1.05 !important;
+        white-space: pre !important;
+        text-shadow: 0 0 8px rgba(255,207,83,0.7) !important;
+      }
+
+      .lyric-line {
+        display: block !important;
+        color: #f8fafc !important;
+        font-family: "Courier New", Courier, monospace !important;
+        font-size: 0.98rem !important;
+        font-weight: 650 !important;
+        line-height: 1.42 !important;
+        white-space: pre !important;
+        letter-spacing: 0 !important;
+      }
+
+      .song-plain-line {
+        display: block !important;
+        color: #f8fafc !important;
+        font-family: "Courier New", Courier, monospace !important;
+        font-size: 0.98rem !important;
+        font-weight: 650 !important;
+        line-height: 1.42 !important;
+        margin-bottom: 8px !important;
+        white-space: pre-wrap !important;
+      }
+
+      .song-empty-line {
+        display: block !important;
+        height: 6px !important;
+      }
+
+      footer {
+        padding: 28px 16px !important;
+        font-size: 0.9rem !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .song-detail-card h1 {
+        font-size: 1.65rem !important;
+      }
+
+      .song-btn.small-btn {
+        font-size: 0.82rem !important;
+        padding: 10px 8px !important;
+      }
+
+      .chord-line {
+        font-size: 0.9rem !important;
+      }
+
+      .lyric-line,
+      .song-plain-line {
+        font-size: 0.92rem !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+function fixCleanMobileMenu() {
+  const oldButton = document.getElementById("menuToggle");
+  const menu = document.getElementById("navMenu");
+
+  if (!oldButton || !menu) return;
+
+  const newButton = oldButton.cloneNode(true);
+  oldButton.parentNode.replaceChild(newButton, oldButton);
+
+  newButton.addEventListener("click", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isOpen = menu.classList.toggle("show-menu");
+    menu.classList.toggle("open", isOpen);
+    newButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(function () {
+    injectCleanMobileFinalStyles();
+    fixCleanMobileMenu();
+
+    if (currentSongForPage) {
+      updateSongLyricsDisplay();
+    }
+  }, 1200);
+});
