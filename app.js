@@ -3104,3 +3104,227 @@ function renderChordedLyrics(lyrics, transposeSteps) {
     `;
   }).join("");
 }
+/* =========================================================
+   FIX VISUAL FINAL: COLORES POR SECCIÓN + ACORDES MÁS VIVOS
+========================================================= */
+
+function getSectionClass(sectionName) {
+  const name = String(sectionName || "").toLowerCase();
+
+  if (name.includes("coro") || name.includes("estribillo")) return "section-coro";
+  if (name.includes("verso") || name.includes("estrofa")) return "section-verso";
+  if (name.includes("intro")) return "section-intro";
+  if (name.includes("puente")) return "section-puente";
+  if (name.includes("final") || name.includes("outro")) return "section-final";
+  if (name.includes("pre")) return "section-pre";
+
+  return "section-default";
+}
+
+function renderChordedLyrics(lyrics, transposeSteps) {
+  const steps = Number(transposeSteps || 0);
+  const lines = String(lyrics || "").split("\n");
+
+  return lines.map(function (line) {
+    const rawLine = String(line || "");
+    const trimmed = rawLine.trim();
+
+    if (!trimmed) {
+      return `<span class="song-empty-line"></span>`;
+    }
+
+    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
+
+    if (sectionMatch) {
+      const sectionName = sectionMatch[1];
+      const sectionClass = getSectionClass(sectionName);
+
+      return `
+        <span class="song-section-label ${sectionClass}">
+          ${escapeHTML(sectionName)}
+        </span>
+      `;
+    }
+
+    if (!rawLine.includes("(")) {
+      return `
+        <span class="song-plain-line">
+          ${escapeHTML(rawLine)}
+        </span>
+      `;
+    }
+
+    let chordLine = "";
+    let lyricLine = "";
+    let lyricPosition = 0;
+
+    const regex = /\(([^)]+)\)/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(rawLine)) !== null) {
+      const textBeforeChord = rawLine.slice(lastIndex, match.index);
+
+      lyricLine += textBeforeChord;
+      lyricPosition += textBeforeChord.length;
+
+      const chord = transposeChordGroup(match[1], steps);
+
+      while (chordLine.length < lyricPosition) {
+        chordLine += " ";
+      }
+
+      chordLine += chord;
+
+      lastIndex = regex.lastIndex;
+    }
+
+    const textAfterLastChord = rawLine.slice(lastIndex);
+    lyricLine += textAfterLastChord;
+
+    return `
+      <span class="song-line">
+        <span class="chord-line">${escapeHTML(chordLine)}</span>
+        <span class="lyric-line">${escapeHTML(lyricLine)}</span>
+      </span>
+    `;
+  }).join("");
+}
+
+function injectFinalSongVisualStyles() {
+  if (document.getElementById("jhd-final-song-visual-styles")) return;
+
+  const style = document.createElement("style");
+  style.id = "jhd-final-song-visual-styles";
+
+  style.textContent = `
+    .lyrics-block {
+      background: #070a12 !important;
+      border: 1px solid rgba(255, 255, 255, 0.09) !important;
+      border-radius: 18px !important;
+      padding: 24px !important;
+      white-space: normal !important;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+      overflow-x: auto !important;
+    }
+
+    .song-section-label {
+      display: inline-flex !important;
+      align-items: center !important;
+      width: fit-content !important;
+      margin: 18px 0 12px !important;
+      padding: 7px 13px !important;
+      border-radius: 999px !important;
+      color: #10131c !important;
+      font-size: 0.72rem !important;
+      font-weight: 950 !important;
+      letter-spacing: 0.06em !important;
+      text-transform: uppercase !important;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28) !important;
+    }
+
+    .song-section-label:first-child {
+      margin-top: 0 !important;
+    }
+
+    .section-intro {
+      background: linear-gradient(135deg, #9be7ff, #5cc8ff) !important;
+    }
+
+    .section-verso {
+      background: linear-gradient(135deg, #b8ffbf, #5bea76) !important;
+    }
+
+    .section-coro {
+      background: linear-gradient(135deg, #ffd76a, #ffb703) !important;
+    }
+
+    .section-puente {
+      background: linear-gradient(135deg, #d7b6ff, #a66cff) !important;
+    }
+
+    .section-pre {
+      background: linear-gradient(135deg, #ffb3d9, #ff6fb1) !important;
+    }
+
+    .section-final,
+    .section-default {
+      background: linear-gradient(135deg, #e7e7e7, #bdbdbd) !important;
+    }
+
+    .song-line {
+      display: block !important;
+      margin-bottom: 15px !important;
+    }
+
+    .chord-line {
+      display: block !important;
+      min-height: 1.2em !important;
+      color: #ffcf53 !important;
+      font-family: "Courier New", Courier, monospace !important;
+      font-size: 1.05rem !important;
+      font-weight: 950 !important;
+      line-height: 1.05 !important;
+      white-space: pre !important;
+      text-shadow:
+        0 0 10px rgba(255, 207, 83, 0.55),
+        0 0 22px rgba(255, 207, 83, 0.28) !important;
+    }
+
+    .lyric-line {
+      display: block !important;
+      color: #f4f6fb !important;
+      font-size: 1.08rem !important;
+      font-weight: 650 !important;
+      line-height: 1.5 !important;
+      white-space: pre !important;
+    }
+
+    .song-plain-line {
+      display: block !important;
+      color: #f4f6fb !important;
+      font-size: 1.05rem !important;
+      font-weight: 600 !important;
+      line-height: 1.5 !important;
+      margin-bottom: 10px !important;
+      white-space: pre-wrap !important;
+    }
+
+    .song-empty-line {
+      display: block !important;
+      height: 10px !important;
+    }
+
+    @media (max-width: 768px) {
+      .lyrics-block {
+        padding: 20px !important;
+      }
+
+      .song-section-label {
+        font-size: 0.66rem !important;
+        padding: 6px 11px !important;
+      }
+
+      .chord-line {
+        font-size: 1rem !important;
+      }
+
+      .lyric-line,
+      .song-plain-line {
+        font-size: 1rem !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  injectFinalSongVisualStyles();
+
+  setTimeout(function () {
+    if (currentSongForPage) {
+      updateSongLyricsDisplay();
+    }
+  }, 500);
+});
