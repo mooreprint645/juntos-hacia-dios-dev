@@ -3121,3 +3121,35 @@ footer a:hover {
     padding: 28px 16px 36px !important;
   }
 }
+/* =========================================================
+   FIX: footer dentro de artista.html
+========================================================= */
+
+body:has(#artistProfile) footer,
+body:has(#artistProfileContent) footer,
+body:has(#artistDetail) footer {
+  display: block !important;
+  width: calc(100% - 32px) !important;
+  max-width: 1200px !important;
+  margin: 48px auto 0 !important;
+  padding: 34px 20px 42px !important;
+  text-align: center !important;
+  color: var(--muted) !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+body:has(#artistProfile) footer p,
+body:has(#artistProfileContent) footer p,
+body:has(#artistDetail) footer p {
+  text-align: center !important;
+  margin: 0 0 10px !important;
+}
+
+body:has(#artistProfile) footer div,
+body:has(#artistProfileContent) footer div,
+body:has(#artistDetail) footer div {
+  display: flex !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
