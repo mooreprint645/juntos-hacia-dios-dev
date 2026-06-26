@@ -1329,3 +1329,429 @@ body.light-mode .shimmer-block {
     grid-area: original !important;
   }
 }
+/* =========================================================
+   ADMIN COMPACTO / ESCRITORIO
+========================================================= */
+
+.admin-page {
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  padding: 28px 18px 80px !important;
+}
+
+.admin-hero {
+  max-width: 900px !important;
+  margin: 0 auto 28px !important;
+  text-align: center !important;
+}
+
+.admin-hero h1 {
+  font-size: clamp(2rem, 5vw, 4rem) !important;
+  margin-bottom: 10px !important;
+}
+
+.admin-login-card,
+.admin-panel {
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+}
+
+.admin-topbar {
+  position: sticky !important;
+  top: 72px !important;
+  z-index: 50 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 18px !important;
+  padding: 12px 14px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  background: rgba(13, 17, 28, 0.92) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+.light-mode .admin-topbar {
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.admin-section {
+  margin: 26px 0 !important;
+  padding: 18px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,0.025) !important;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.18) !important;
+}
+
+.light-mode .admin-section {
+  background: rgba(255,255,255,0.75) !important;
+}
+
+.section-heading {
+  margin-bottom: 16px !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.section-heading h2 {
+  margin: 0 !important;
+}
+
+.admin-form-card,
+.admin-preview-card,
+.admin-login-card {
+  padding: 18px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 22px !important;
+  background: var(--card) !important;
+}
+
+.admin-form-card h3,
+.admin-preview-card h3 {
+  margin-top: 0 !important;
+}
+
+.admin-form-card label {
+  display: block !important;
+  margin: 12px 0 6px !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+}
+
+.admin-form-card input,
+.admin-form-card textarea,
+.admin-form-card select,
+.admin-login-card input,
+.admin-login-card textarea,
+.admin-login-card select {
+  width: 100% !important;
+  min-height: 42px !important;
+  border-radius: 12px !important;
+}
+
+.admin-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+}
+
+.admin-list {
+  display: grid !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+}
+
+.admin-list-item {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 14px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,0.03) !important;
+}
+
+.admin-list-item p {
+  margin: 4px 0 0 !important;
+}
+
+.admin-person-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.artist-avatar-small {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--accent) !important;
+  color: #111827 !important;
+  font-weight: 900 !important;
+}
+/* =========================================================
+   ADMIN COMPACTO: FORMULARIO DE CANCIÓN
+========================================================= */
+
+@media (min-width: 980px) {
+  #songsAdminSection {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr) !important;
+    gap: 18px !important;
+    align-items: start !important;
+  }
+
+  #songsAdminSection .section-heading {
+    grid-column: 1 / -1 !important;
+  }
+
+  #songFormCard {
+    grid-column: 1 / 2 !important;
+  }
+
+  #songsAdminSection .admin-preview-card {
+    grid-column: 2 / 3 !important;
+    position: sticky !important;
+    top: 150px !important;
+    max-height: calc(100vh - 170px) !important;
+    overflow: auto !important;
+  }
+
+  #songsAdminSection #adminSongList {
+    grid-column: 1 / -1 !important;
+  }
+
+  #songFormCard {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0 14px !important;
+  }
+
+  #songFormCard h3,
+  #songFormCard > small,
+  #songFormCard > .admin-capo-old-box,
+  #songFormCard > .admin-capo-versions-box,
+  #songFormCard > .editor-buttons,
+  #songFormCard > textarea,
+  #songFormCard > .admin-links-box,
+  #songFormCard > .admin-actions {
+    grid-column: 1 / -1 !important;
+  }
+
+  #songLyricsInput {
+    min-height: 360px !important;
+  }
+
+  #songArtistsInput {
+    min-height: 145px !important;
+  }
+
+  .admin-capo-old-box {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0 14px !important;
+  }
+
+  .admin-capo-old-box h4,
+  .admin-capo-old-box p {
+    grid-column: 1 / -1 !important;
+  }
+
+  .admin-capo-versions-box .song-card,
+  .admin-links-box .song-card {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto !important;
+    gap: 10px !important;
+    align-items: end !important;
+  }
+
+  .admin-capo-versions-box .song-card label,
+  .admin-links-box .song-card label {
+    margin-top: 0 !important;
+  }
+
+  .admin-capo-versions-box .song-card button,
+  .admin-links-box .song-card button {
+    align-self: end !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* =========================================================
+   ADMIN COMPACTO: SECCIONES SUPERIORES EN ESCRITORIO
+========================================================= */
+
+@media (min-width: 980px) {
+  #artistsAdminSection,
+  #categoriesAdminSection,
+  #albumsAdminSection,
+  #donationsAdminSection {
+    display: grid !important;
+    grid-template-columns: minmax(340px, 0.8fr) minmax(0, 1.2fr) !important;
+    gap: 18px !important;
+    align-items: start !important;
+  }
+
+  #artistsAdminSection .section-heading,
+  #categoriesAdminSection .section-heading,
+  #albumsAdminSection .section-heading,
+  #donationsAdminSection .section-heading {
+    grid-column: 1 / -1 !important;
+  }
+
+  #artistFormCard,
+  #categoryFormCard,
+  #albumFormCard,
+  #donationFormCard {
+    grid-column: 1 / 2 !important;
+  }
+
+  #adminArtistList,
+  #adminCategoryList,
+  #adminAlbumList {
+    grid-column: 2 / 3 !important;
+    margin-top: 0 !important;
+  }
+
+  #donationsAdminSection #donationFormCard {
+    max-width: 720px !important;
+  }
+}
+/* =========================================================
+   ADMIN COMPACTO: MÓVIL Y AJUSTES FINALES
+========================================================= */
+
+@media (max-width: 979px) {
+  .admin-page {
+    padding: 18px 12px 60px !important;
+  }
+
+  .admin-hero {
+    text-align: left !important;
+    margin-bottom: 18px !important;
+  }
+
+  .admin-topbar {
+    top: 64px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    text-align: center !important;
+  }
+
+  .admin-section {
+    padding: 14px !important;
+    border-radius: 20px !important;
+  }
+
+  .admin-form-card,
+  .admin-preview-card,
+  .admin-login-card {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .admin-list-item {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-list-item .admin-actions {
+    justify-content: flex-start !important;
+  }
+
+  .admin-capo-versions-box .song-card,
+  .admin-links-box .song-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .capo-version-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-actions .song-btn,
+  .admin-actions button {
+    width: 100% !important;
+  }
+
+  .editor-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .editor-buttons .song-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Tarjetas más limpias dentro del admin */
+.admin-capo-old-box h4,
+.admin-capo-versions-box h4,
+.admin-links-box h4 {
+  margin-top: 0 !important;
+  margin-bottom: 6px !important;
+}
+
+.admin-capo-old-box .muted-text,
+.admin-capo-versions-box .muted-text {
+  margin-top: 0 !important;
+}
+
+/* Vista previa más compacta */
+.admin-preview-card .song-detail-card {
+  padding: 14px !important;
+}
+
+.admin-preview-card .lyrics-block {
+  max-height: 420px !important;
+  overflow: auto !important;
+}
+
+/* Mejor separación entre secciones */
+#artistsAdminSection {
+  border-left: 4px solid rgba(125, 211, 252, 0.8) !important;
+}
+
+#categoriesAdminSection {
+  border-left: 4px solid rgba(134, 239, 172, 0.8) !important;
+}
+
+#albumsAdminSection {
+  border-left: 4px solid rgba(192, 132, 252, 0.8) !important;
+}
+
+#songsAdminSection {
+  border-left: 4px solid rgba(250, 204, 21, 0.8) !important;
+}
+
+#donationsAdminSection {
+  border-left: 4px solid rgba(249, 168, 212, 0.8) !important;
+}
+
+/* Forzar que inputs del admin no se salgan */
+.admin-page input,
+.admin-page textarea,
+.admin-page select,
+.admin-page button {
+  max-width: 100% !important;
+}
+
+/* Lista de canciones más legible */
+#adminSongList .admin-list-item strong {
+  font-size: 1.05rem !important;
+}
+
+#adminSongList .artists-line {
+  margin: 4px 0 !important;
+}
+
+/* Botones peligrosos más claros */
+.song-btn.danger,
+button.danger {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #fecaca !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+.light-mode .song-btn.danger,
+.light-mode button.danger {
+  color: #991b1b !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+}
