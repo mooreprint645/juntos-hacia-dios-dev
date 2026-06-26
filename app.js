@@ -3319,3 +3319,1150 @@ window.loadArtistsPage = loadArtistsPage;
 window.loadCategoriesPage = loadCategoriesPage;
 window.loadArtistProfile = loadArtistProfile;
 window.loadSongPage = loadSongPage;
+
+/* =========================================================
+   PATCH: VARIAS VERSIONES DE CAPO POR CANCIÓN
+   Pegar al final de app.js
+========================================================= */
+
+var adminCapoVersionItems = [];
+
+/* =========================================================
+   CAPO VERSIONS: HELPERS
+========================================================= */
+
+async function fetchCapoVersionsBySongIds(songIds) {
+  const client = getSupabase();
+
+  if (!client || !songIds || !songIds.length) {
+    return {
+      data: [],
+      error: null
+    };
+  }
+
+  return await client
+    .from("song_capo_versions")
+    .select("*")
+    .in("song_id", songIds)
+    .order("sort_order", { ascending: true })
+    .order("capo_position", { ascending: true });
+}
+
+function capoVersionLabel(version) {
+  if (!version) return "Sin capo";
+
+  const label = String(version.label || "").trim();
+
+  if (label) return label;
+
+  const capo = Number(version.capo_position || 0);
+  const key = String(version.capo_key || "").trim();
+
+  if (capo <= 0) return "Sin capo";
+
+  return "Capo " + capo + (key ? " · " + key : "");
+}
+
+function capoVersionToSong(song, version) {
+  return Object.assign({}, song, {
+    capo_position: Number(version && version.capo_position ? version.capo_position : 0),
+    capo_key: version && version.capo_key ? version.capo_key : ""
+  });
+}
+
+function getCapoVersionSteps(song, version) {
+  const fakeSong = capoVersionToSong(song, version);
+  return getCapoTransposeSteps(fakeSong);
+}
+
+function setCapoVersionByIndex(index) {
+  if (!currentSongForPage) return;
+
+  const versions = currentSongForPage._capoVersions || [];
+
+  if (index === "original" || index === -1) {
+    currentCapoMode = "original";
+    currentSongForPage._selectedCapoVersionIndex = -1;
+  } else {
+    currentCapoMode = "capo";
+    currentSongForPage._selectedCapoVersionIndex = Number(index);
+  }
+
+  currentTransposeSteps = 0;
+  updateSongLyricsDisplay();
+}
+
+/* =========================================================
+   REEMPLAZO: fetchSongsWithRelations con capo versions
+========================================================= */
+
+async function fetchSongsWithRelations(ids) {
+  const client = getSupabase();
+
+  if (!client) {
+    return {
+      data: [],
+      error: { message: "Sin conexión a Supabase" }
+    };
+  }
+
+  const { data: songs, error } = await fetchSongsBase(ids);
+
+  if (error) {
+    return {
+      data: [],
+      error: error
+    };
+  }
+
+  const safeSongs = songs || [];
+
+  const songIds = safeSongs
+    .map(function (song) {
+      return song.id;
+    })
+    .filter(Boolean);
+
+  if (!songIds.length) {
+    return {
+      data: [],
+      error: null
+    };
+  }
+
+  const [artistRes, categoryRes, albumRes, linksRes, capoRes] = await Promise.all([
+    client
+      .from("song_artists")
+      .select("song_id, role, sort_order, artists(id, name, slug, description)")
+      .in("song_id", songIds)
+      .order("sort_order", { ascending: true }),
+
+    client
+      .from("song_categories")
+      .select("song_id, categories(id, name, slug, description)")
+      .in("song_id", songIds),
+
+    client
+      .from("album_songs")
+      .select("song_id, albums(id, title, slug, description, artist_id)")
+      .in("song_id", songIds),
+
+    fetchSongLinksBySongIds(songIds),
+
+    fetchCapoVersionsBySongIds(songIds)
+  ]);
+
+  if (artistRes.error) return { data: [], error: artistRes.error };
+  if (categoryRes.error) return { data: [], error: categoryRes.error };
+  if (albumRes.error) return { data: [], error: albumRes.error };
+  if (linksRes.error) return { data: [], error: linksRes.error };
+  if (capoRes.error) return { data: [], error: capoRes.error };
+
+  const artistsBySong = new Map();
+  const categoriesBySong = new Map();
+  const albumsBySong = new Map();
+  const linksBySong = new Map();
+  const capoBySong = new Map();
+
+  (artistRes.data || []).forEach(function (row) {
+    if (!artistsBySong.has(row.song_id)) {
+      artistsBySong.set(row.song_id, []);
+    }
+
+    if (row.artists) {
+      artistsBySong.get(row.song_id).push(row.artists);
+    }
+  });
+
+  (categoryRes.data || []).forEach(function (row) {
+    if (!categoriesBySong.has(row.song_id)) {
+      categoriesBySong.set(row.song_id, []);
+    }
+
+    if (row.categories) {
+      categoriesBySong.get(row.song_id).push(row.categories);
+    }
+  });
+
+  (albumRes.data || []).forEach(function (row) {
+    if (!albumsBySong.has(row.song_id)) {
+      albumsBySong.set(row.song_id, []);
+    }
+
+    if (row.albums) {
+      albumsBySong.get(row.song_id).push(row.albums);
+    }
+  });
+
+  (linksRes.data || []).forEach(function (row) {
+    if (!linksBySong.has(row.song_id)) {
+      linksBySong.set(row.song_id, []);
+    }
+
+    linksBySong.get(row.song_id).push(row);
+  });
+
+  (capoRes.data || []).forEach(function (row) {
+    if (!capoBySong.has(row.song_id)) {
+      capoBySong.set(row.song_id, []);
+    }
+
+    capoBySong.get(row.song_id).push(row);
+  });
+
+  const merged = safeSongs.map(function (song) {
+    return Object.assign({}, song, {
+      _artists: artistsBySong.get(song.id) || [],
+      _categories: categoriesBySong.get(song.id) || [],
+      _albums: albumsBySong.get(song.id) || [],
+      _links: linksBySong.get(song.id) || [],
+      _capoVersions: capoBySong.get(song.id) || [],
+      _selectedCapoVersionIndex: -1
+    });
+  });
+
+  return {
+    data: merged,
+    error: null
+  };
+}
+/* =========================================================
+   REEMPLAZO: cálculo de transposición con capo múltiple
+========================================================= */
+
+function getTotalTransposeSteps() {
+  if (!currentSongForPage) return currentTransposeSteps;
+
+  if (currentCapoMode === "capo") {
+    const versions = currentSongForPage._capoVersions || [];
+    const selectedIndex = Number(currentSongForPage._selectedCapoVersionIndex);
+
+    if (selectedIndex >= 0 && versions[selectedIndex]) {
+      return currentTransposeSteps + getCapoVersionSteps(currentSongForPage, versions[selectedIndex]);
+    }
+
+    return currentTransposeSteps + getCapoTransposeSteps(currentSongForPage);
+  }
+
+  return currentTransposeSteps;
+}
+
+function updateSongLyricsDisplay() {
+  const lyricsBox = $("lyricsContent");
+  const label = $("transposeLabel");
+  const modeLabel = $("capoModeLabel");
+
+  if (!lyricsBox || !currentSongForPage) return;
+
+  lyricsBox.innerHTML = renderChordedLyrics(
+    currentSongForPage.lyrics || "",
+    getTotalTransposeSteps()
+  );
+
+  if (label) {
+    if (currentTransposeSteps === 0) {
+      label.textContent = "Tono original";
+    } else if (currentTransposeSteps > 0) {
+      label.textContent = "+" + currentTransposeSteps;
+    } else {
+      label.textContent = String(currentTransposeSteps);
+    }
+  }
+
+  if (modeLabel) {
+    const versions = currentSongForPage._capoVersions || [];
+    const selectedIndex = Number(currentSongForPage._selectedCapoVersionIndex);
+    const selectedVersion = selectedIndex >= 0 ? versions[selectedIndex] : null;
+
+    modeLabel.textContent = selectedVersion
+      ? capoVersionLabel(selectedVersion)
+      : "Sin capo / tono original";
+  }
+
+  document.querySelectorAll(".capo-version-btn").forEach(function (button) {
+    button.classList.remove("active-capo-version");
+  });
+
+  if (currentCapoMode === "original") {
+    const originalButton = document.querySelector('.capo-version-btn[data-capo-index="original"]');
+
+    if (originalButton) {
+      originalButton.classList.add("active-capo-version");
+    }
+  } else {
+    const selectedButton = document.querySelector(
+      '.capo-version-btn[data-capo-index="' + currentSongForPage._selectedCapoVersionIndex + '"]'
+    );
+
+    if (selectedButton) {
+      selectedButton.classList.add("active-capo-version");
+    }
+  }
+}
+
+function renderCapoVersionButtons(song) {
+  const versions = song._capoVersions || [];
+
+  const oldCapo = getCapoPosition(song);
+  const hasOldCapo = oldCapo > 0;
+
+  if (!versions.length && !hasOldCapo) {
+    return "";
+  }
+
+  const buttons = [];
+
+  buttons.push(`
+    <button
+      type="button"
+      class="song-btn small-btn capo-version-btn active-capo-version"
+      data-capo-index="original"
+      onclick="setCapoVersionByIndex('original')"
+    >
+      Sin capo
+    </button>
+  `);
+
+  if (versions.length) {
+    versions.forEach(function (version, index) {
+      buttons.push(`
+        <button
+          type="button"
+          class="song-btn small-btn capo-version-btn"
+          data-capo-index="${index}"
+          onclick="setCapoVersionByIndex(${index})"
+        >
+          ${escapeHTML(capoVersionLabel(version))}
+        </button>
+      `);
+    });
+  } else if (hasOldCapo) {
+    const oldVersion = {
+      capo_position: song.capo_position || 0,
+      capo_key: song.capo_key || "",
+      label: ""
+    };
+
+    buttons.push(`
+      <button
+        type="button"
+        class="song-btn small-btn capo-version-btn"
+        data-capo-index="0"
+        onclick="setCapoVersionByIndex(0)"
+      >
+        ${escapeHTML(capoVersionLabel(oldVersion))}
+      </button>
+    `);
+
+    song._capoVersions = [oldVersion];
+  }
+
+  return `
+    <div class="capo-box capo-versions-public">
+      <span id="capoModeLabel">Sin capo / tono original</span>
+      ${buttons.join("")}
+    </div>
+  `;
+}
+
+/* =========================================================
+   REEMPLAZO: página de canto con varias versiones de capo
+========================================================= */
+
+async function loadSongPage() {
+  const box = $("songPage") || $("songDetail") || $("cantoContent");
+
+  if (!box) return;
+
+  const slug = getUrlParam("slug");
+  const client = getSupabase();
+
+  if (!client || !slug) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>Canto no encontrado</h3>
+        <p>Vuelve al cancionero e intenta de nuevo.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const { data: song, error } = await client
+    .from("songs")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error || !song) {
+    box.innerHTML = `
+      <div class="song-card">
+        <h3>Canto no encontrado</h3>
+        <p>Este canto no existe o fue eliminado.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const { data: songs } = await fetchSongsWithRelations([song.id]);
+
+  const fullSong = songs && songs[0]
+    ? songs[0]
+    : Object.assign({}, song, {
+        _artists: [],
+        _categories: [],
+        _albums: [],
+        _links: [],
+        _capoVersions: [],
+        _selectedCapoVersionIndex: -1
+      });
+
+  currentSongForPage = fullSong;
+  currentTransposeSteps = 0;
+  currentCapoMode = "original";
+  currentSongForPage._selectedCapoVersionIndex = -1;
+
+  const meta = songMetaText(fullSong);
+
+  box.innerHTML = `
+    <article class="song-detail-card">
+      <a class="song-btn small-btn" href="canciones.html">
+        ← Volver a canciones
+      </a>
+
+      <p class="artists-line" style="margin-top:14px;">
+        ${artistLinksHTML(fullSong._artists)}
+      </p>
+
+      <h1>${escapeHTML(fullSong.title || "Sin título")}</h1>
+
+      <p class="song-meta-line">
+        ${escapeHTML(meta)}
+      </p>
+
+      ${renderCapoVersionButtons(fullSong)}
+
+      <div class="transpose-box">
+        <button type="button" class="song-btn small-btn" onclick="changeTranspose(-1)">
+          Bajar tono
+        </button>
+
+        <span id="transposeLabel">Tono original</span>
+
+        <button type="button" class="song-btn small-btn" onclick="changeTranspose(1)">
+          Subir tono
+        </button>
+
+        <button type="button" class="song-btn small-btn" onclick="resetTranspose()">
+          Original
+        </button>
+      </div>
+
+      <pre class="lyrics-block" id="lyricsContent"></pre>
+
+      ${renderSongLinksHTML(fullSong._links || [])}
+    </article>
+  `;
+
+  updateSongLyricsDisplay();
+}
+/* =========================================================
+   ADMIN: CAPO VERSIONS
+========================================================= */
+
+function adminDefaultCapoLabel(capoPosition, capoKey) {
+  const capo = Number(capoPosition || 0);
+  const key = String(capoKey || "").trim();
+
+  if (capo <= 0) return "Sin capo";
+
+  return "Capo " + capo + (key ? " · " + key : "");
+}
+
+function syncAdminCapoMainFields() {
+  if (!adminCapoVersionItems.length) {
+    return;
+  }
+
+  const first = adminCapoVersionItems[0];
+
+  setInputValue("songCapoInput", String(first.capo_position || 0));
+  setInputValue("songCapoKeyInput", first.capo_key || "");
+}
+
+function renderAdminCapoVersionRows() {
+  const box = $("songCapoVersionsRows");
+
+  if (!box) return;
+
+  if (!adminCapoVersionItems.length) {
+    box.innerHTML = `<p class="muted-text">Aún no hay versiones con capo agregadas.</p>`;
+    updateAdminPreview();
+    return;
+  }
+
+  box.innerHTML = adminCapoVersionItems.map(function (version, index) {
+    return `
+      <div class="song-card">
+        <label>Nombre visible</label>
+        <input
+          type="text"
+          value="${escapeHTML(version.label || "")}"
+          placeholder="Ejemplo: Capo 2 · E"
+          oninput="updateAdminCapoVersionField(${index}, 'label', this.value)"
+        >
+
+        <label>Capo</label>
+        <select onchange="updateAdminCapoVersionField(${index}, 'capo_position', this.value)">
+          ${[0,1,2,3,4,5,6,7,8,9,10,11,12].map(function (number) {
+            return `
+              <option value="${number}"${Number(version.capo_position || 0) === number ? " selected" : ""}>
+                ${number === 0 ? "Sin capo" : "Capo " + number}
+              </option>
+            `;
+          }).join("")}
+        </select>
+
+        <label>Figuras</label>
+        <input
+          type="text"
+          value="${escapeHTML(version.capo_key || "")}"
+          placeholder="Ejemplo: E"
+          oninput="updateAdminCapoVersionField(${index}, 'capo_key', this.value)"
+        >
+
+        <button class="song-btn small-btn danger" type="button" onclick="deleteAdminCapoVersion(${index})">
+          Borrar versión
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  syncAdminCapoMainFields();
+  updateAdminPreview();
+}
+
+function updateAdminCapoVersionField(index, field, value) {
+  if (!adminCapoVersionItems[index]) return;
+
+  if (field === "capo_position") {
+    adminCapoVersionItems[index][field] = Number(value || 0);
+  } else {
+    adminCapoVersionItems[index][field] = value;
+  }
+
+  if (field === "capo_position" || field === "capo_key") {
+    const item = adminCapoVersionItems[index];
+
+    if (!String(item.label || "").trim()) {
+      item.label = adminDefaultCapoLabel(item.capo_position, item.capo_key);
+    }
+  }
+
+  syncAdminCapoMainFields();
+  renderAdminCapoVersionRows();
+}
+
+function addAdminCapoVersionFromFields() {
+  const label = getInputValue("newCapoLabelInput");
+  const capoPosition = Number(getInputValue("newCapoPositionInput") || 0);
+  const capoKey = getInputValue("newCapoKeyInput");
+
+  if (capoPosition > 0 && !capoKey) {
+    alert("Escribe las figuras que se tocan con ese capo. Ejemplo: E.");
+    return;
+  }
+
+  const finalLabel = label || adminDefaultCapoLabel(capoPosition, capoKey);
+
+  adminCapoVersionItems.push({
+    label: finalLabel,
+    capo_position: Number.isNaN(capoPosition) ? 0 : capoPosition,
+    capo_key: capoKey,
+    sort_order: adminCapoVersionItems.length + 1
+  });
+
+  setInputValue("newCapoLabelInput", "");
+  setInputValue("newCapoPositionInput", "0");
+  setInputValue("newCapoKeyInput", "");
+
+  renderAdminCapoVersionRows();
+}
+
+function deleteAdminCapoVersion(index) {
+  if (!confirm("¿Borrar esta versión de capo?")) return;
+
+  adminCapoVersionItems.splice(index, 1);
+
+  adminCapoVersionItems = adminCapoVersionItems.map(function (item, itemIndex) {
+    return Object.assign({}, item, {
+      sort_order: itemIndex + 1
+    });
+  });
+
+  renderAdminCapoVersionRows();
+}
+
+async function loadAdminCapoVersionsForSong(songId) {
+  const result = await fetchCapoVersionsBySongIds([songId]);
+
+  adminCapoVersionItems = (result.data || []).map(function (item, index) {
+    return {
+      id: item.id,
+      label: item.label || adminDefaultCapoLabel(item.capo_position, item.capo_key),
+      capo_position: Number(item.capo_position || 0),
+      capo_key: item.capo_key || "",
+      sort_order: item.sort_order || index + 1
+    };
+  });
+
+  renderAdminCapoVersionRows();
+}
+
+function resetAdminCapoVersionItems() {
+  adminCapoVersionItems = [];
+  renderAdminCapoVersionRows();
+}
+/* =========================================================
+   REEMPLAZO: reset canción con versiones de capo
+========================================================= */
+
+function resetSongForm() {
+  currentEditingSongId = null;
+
+  const title = $("songFormTitle");
+
+  if (title) {
+    title.textContent = "Agregar canción";
+  }
+
+  [
+    "songTitleInput",
+    "songToneInput",
+    "songLyricsInput",
+    "songLinksInput",
+    "songCapoKeyInput"
+  ].forEach(function (id) {
+    setInputValue(id, "");
+  });
+
+  setInputValue("songTypeInput", "catolico");
+  setInputValue("songDifficultyInput", "");
+  setInputValue("songCapoInput", "0");
+  setInputValue("songCategoryInput", "");
+  setInputValue("songAlbumInput", "");
+  setSelectedValues("songArtistsInput", []);
+
+  setInputValue("newCapoLabelInput", "");
+  setInputValue("newCapoPositionInput", "0");
+  setInputValue("newCapoKeyInput", "");
+
+  resetAdminLinkItems();
+  resetAdminCapoVersionItems();
+  updateAdminPreview();
+}
+
+/* =========================================================
+   REEMPLAZO: guardar canción con varias versiones de capo
+========================================================= */
+
+async function saveSong() {
+  const title = getInputValue("songTitleInput");
+  const songType = getInputValue("songTypeInput") || "catolico";
+  const tone = getInputValue("songToneInput");
+  const difficulty = getInputValue("songDifficultyInput");
+  const lyrics = $("songLyricsInput") ? $("songLyricsInput").value : "";
+  const categoryId = getInputValue("songCategoryInput");
+  const albumId = getInputValue("songAlbumInput");
+  const artistIds = getSelectedValues("songArtistsInput");
+  const linksText = getInputValue("songLinksInput");
+  const links = parseSongLinksText(linksText);
+
+  const capoPositionRaw = getInputValue("songCapoInput");
+  const capoPosition = capoPositionRaw ? Number(capoPositionRaw) : 0;
+  const capoKey = getInputValue("songCapoKeyInput");
+
+  if (!title) {
+    alert("Escribe el título de la canción.");
+    return;
+  }
+
+  if (!tone) {
+    alert("Escribe el tono original de la canción.");
+    return;
+  }
+
+  if (!artistIds.length) {
+    alert("Selecciona al menos un artista.");
+    return;
+  }
+
+  const cleanCapoVersions = adminCapoVersionItems.map(function (item, index) {
+    const capo = Number(item.capo_position || 0);
+    const key = String(item.capo_key || "").trim();
+
+    return {
+      label: String(item.label || "").trim() || adminDefaultCapoLabel(capo, key),
+      capo_position: Number.isNaN(capo) ? 0 : capo,
+      capo_key: key,
+      sort_order: index + 1
+    };
+  }).filter(function (item) {
+    return item.capo_position > 0 || item.capo_key || item.label;
+  });
+
+  const invalidCapo = cleanCapoVersions.find(function (item) {
+    return item.capo_position > 0 && !item.capo_key;
+  });
+
+  if (invalidCapo) {
+    alert("Hay una versión de capo sin figuras. Escribe las figuras, por ejemplo: E.");
+    return;
+  }
+
+  if (!cleanCapoVersions.length && capoPosition > 0 && !capoKey) {
+    alert("Si seleccionas capo principal, escribe las figuras que se tocan con capo. Ejemplo: G.");
+    return;
+  }
+
+  const client = getSupabase();
+
+  if (!client) {
+    alert("No se pudo conectar con Supabase.");
+    return;
+  }
+
+  const firstCapoVersion = cleanCapoVersions[0] || null;
+
+  const finalMainCapoPosition = firstCapoVersion
+    ? Number(firstCapoVersion.capo_position || 0)
+    : Number.isNaN(capoPosition) ? 0 : capoPosition;
+
+  const finalMainCapoKey = firstCapoVersion
+    ? firstCapoVersion.capo_key || ""
+    : finalMainCapoPosition > 0 ? capoKey : "";
+
+  const payload = {
+    title: title,
+    slug: slugify(title),
+    song_type: songType,
+    tone: tone,
+    difficulty: difficulty,
+    lyrics: lyrics,
+    artist_id: artistIds[0],
+    category_id: categoryId || null,
+    capo_position: finalMainCapoPosition,
+    capo_key: finalMainCapoKey
+  };
+
+  let savedSongId = currentEditingSongId;
+  let result;
+
+  if (currentEditingSongId) {
+    result = await client
+      .from("songs")
+      .update(payload)
+      .eq("id", currentEditingSongId)
+      .select("id")
+      .single();
+  } else {
+    result = await client
+      .from("songs")
+      .insert(payload)
+      .select("id")
+      .single();
+  }
+
+  if (result.error) {
+    alert("No se pudo guardar canción: " + result.error.message);
+    return;
+  }
+
+  savedSongId = result.data ? result.data.id : savedSongId;
+
+  await client.from("song_artists").delete().eq("song_id", savedSongId);
+  await client.from("song_categories").delete().eq("song_id", savedSongId);
+  await client.from("album_songs").delete().eq("song_id", savedSongId);
+  await client.from("song_links").delete().eq("song_id", savedSongId);
+  await client.from("song_capo_versions").delete().eq("song_id", savedSongId);
+
+  const artistRows = artistIds.map(function (artistId, index) {
+    return {
+      song_id: savedSongId,
+      artist_id: artistId,
+      role: index === 0 ? "principal" : "colaborador",
+      sort_order: index
+    };
+  });
+
+  if (artistRows.length) {
+    const artistResult = await client.from("song_artists").insert(artistRows);
+
+    if (artistResult.error) {
+      alert("La canción se guardó, pero falló la relación con artistas: " + artistResult.error.message);
+      return;
+    }
+  }
+
+  if (categoryId) {
+    const categoryResult = await client.from("song_categories").insert({
+      song_id: savedSongId,
+      category_id: categoryId
+    });
+
+    if (categoryResult.error) {
+      alert("La canción se guardó, pero falló la categoría: " + categoryResult.error.message);
+      return;
+    }
+  }
+
+  if (albumId) {
+    const albumResult = await client.from("album_songs").insert({
+      song_id: savedSongId,
+      album_id: albumId
+    });
+
+    if (albumResult.error) {
+      alert("La canción se guardó, pero falló el álbum: " + albumResult.error.message);
+      return;
+    }
+  }
+
+  if (links.length) {
+    const linkRows = links.map(function (link, index) {
+      return {
+        song_id: savedSongId,
+        title: link.title,
+        link_type: link.link_type || "Tutorial",
+        platform: link.platform || "",
+        url: link.url,
+        sort_order: index
+      };
+    });
+
+    const linksResult = await client.from("song_links").insert(linkRows);
+
+    if (linksResult.error) {
+      alert("La canción se guardó, pero fallaron los links: " + linksResult.error.message);
+      return;
+    }
+  }
+
+  if (cleanCapoVersions.length) {
+    const capoRows = cleanCapoVersions.map(function (item, index) {
+      return {
+        song_id: savedSongId,
+        label: item.label || adminDefaultCapoLabel(item.capo_position, item.capo_key),
+        capo_position: item.capo_position,
+        capo_key: item.capo_key,
+        sort_order: index + 1
+      };
+    });
+
+    const capoResult = await client.from("song_capo_versions").insert(capoRows);
+
+    if (capoResult.error) {
+      alert("La canción se guardó, pero fallaron las versiones de capo: " + capoResult.error.message);
+      return;
+    }
+  }
+
+  const wasEditing = !!currentEditingSongId;
+
+  resetSongForm();
+
+  await Promise.all([
+    loadAdminSongs(),
+    loadSongsPage(),
+    loadHomeSongs()
+  ]);
+
+  alert(wasEditing ? "Canción actualizada." : "Canción guardada.");
+     }
+/* =========================================================
+   REEMPLAZO: editar canción con varias versiones de capo
+========================================================= */
+
+async function editSong(id) {
+  const { data: songs, error } = await fetchSongsWithRelations([id]);
+
+  if (error || !songs || !songs.length) {
+    alert("No se pudo cargar la canción.");
+    return;
+  }
+
+  const song = songs[0];
+
+  currentEditingSongId = song.id;
+
+  const title = $("songFormTitle");
+
+  if (title) {
+    title.textContent = "Editar canción";
+  }
+
+  setInputValue("songTitleInput", song.title || "");
+  setInputValue("songTypeInput", song.song_type || "catolico");
+  setInputValue("songToneInput", song.tone || "");
+  setInputValue("songDifficultyInput", song.difficulty || "");
+  setInputValue("songLyricsInput", song.lyrics || "");
+  setInputValue("songLinksInput", linksToText(song._links || []));
+  setInputValue("songCapoInput", String(song.capo_position || 0));
+  setInputValue("songCapoKeyInput", song.capo_key || "");
+
+  setInputValue("newCapoLabelInput", "");
+  setInputValue("newCapoPositionInput", "0");
+  setInputValue("newCapoKeyInput", "");
+
+  setSelectedValues(
+    "songArtistsInput",
+    (song._artists || []).map(function (artist) {
+      return artist.id;
+    })
+  );
+
+  setInputValue(
+    "songCategoryInput",
+    song._categories && song._categories[0] ? song._categories[0].id : ""
+  );
+
+  setInputValue(
+    "songAlbumInput",
+    song._albums && song._albums[0] ? song._albums[0].id : ""
+  );
+
+  loadAdminLinksFromTextarea();
+  await loadAdminCapoVersionsForSong(song.id);
+
+  if (!adminCapoVersionItems.length && getCapoPosition(song) > 0) {
+    adminCapoVersionItems = [
+      {
+        label: adminDefaultCapoLabel(song.capo_position, song.capo_key),
+        capo_position: Number(song.capo_position || 0),
+        capo_key: song.capo_key || "",
+        sort_order: 1
+      }
+    ];
+
+    renderAdminCapoVersionRows();
+  }
+
+  updateAdminPreview();
+
+  const form = $("songFormCard");
+
+  if (form) {
+    form.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+/* =========================================================
+   REEMPLAZO: preview con varias versiones de capo
+========================================================= */
+
+function updateAdminPreview() {
+  const box = $("adminPreviewBox");
+
+  if (!box) return;
+
+  const title = getInputValue("songTitleInput") || "Título del canto";
+  const tone = getInputValue("songToneInput");
+  const difficulty = getInputValue("songDifficultyInput");
+  const lyrics = $("songLyricsInput") ? $("songLyricsInput").value : "";
+  const linksText = $("songLinksInput") ? $("songLinksInput").value : "";
+
+  const artists = adminGetSelectedTexts("songArtistsInput");
+  const links = adminLinkItems.length ? adminLinkItems : adminParseLinksText(linksText);
+
+  const previewSong = {
+    tone: tone,
+    lyrics: lyrics
+  };
+
+  const capoPreviewItems = adminCapoVersionItems.slice();
+
+  box.innerHTML = `
+    <article class="song-detail-card preview-card">
+      <p class="artists-line">
+        ${artists.length ? escapeHTML(artists.join(" · ")) : "Sin artista seleccionado"}
+      </p>
+
+      <h1>${escapeHTML(title)}</h1>
+
+      <p class="song-meta-line">
+        ${escapeHTML([tone ? "Tono " + tone : "", difficulty].filter(Boolean).join(" · "))}
+      </p>
+
+      ${capoPreviewItems.length ? `
+        <div class="capo-box">
+          <span>Versiones con capo guardadas</span>
+
+          ${capoPreviewItems.map(function (version) {
+            return `
+              <button type="button" class="song-btn small-btn">
+                ${escapeHTML(capoVersionLabel(version))}
+              </button>
+            `;
+          }).join("")}
+        </div>
+      ` : ""}
+
+      <h4>Vista sin capo</h4>
+      <pre class="lyrics-block">${renderChordedLyrics(lyrics || "La letra aparecerá aquí...", 0)}</pre>
+
+      ${capoPreviewItems.map(function (version) {
+        const steps = getCapoVersionSteps(previewSong, version);
+
+        return `
+          <h4>Vista ${escapeHTML(capoVersionLabel(version))}</h4>
+          <pre class="lyrics-block">${renderChordedLyrics(lyrics || "La letra aparecerá aquí...", steps)}</pre>
+        `;
+      }).join("")}
+
+      ${links.length ? `
+        <section class="song-links-box">
+          <h2>Tutoriales y enlaces</h2>
+
+          <div class="song-links-list">
+            ${links.map(function (link) {
+              return `
+                <div class="song-link-item">
+                  <span>🔗</span>
+
+                  <div>
+                    <strong>${escapeHTML(link.title || "Link")}</strong>
+                    <small>${escapeHTML([link.platform, link.type].filter(Boolean).join(" · "))}</small>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      ` : ""}
+    </article>
+  `;
+}
+/* =========================================================
+   PATCH FINAL: init y estilos para capo múltiple
+========================================================= */
+
+function injectCapoVersionStyles() {
+  const old = document.getElementById("jhd-capo-version-styles");
+
+  if (old) {
+    old.remove();
+  }
+
+  const style = document.createElement("style");
+  style.id = "jhd-capo-version-styles";
+
+  style.textContent = `
+    .capo-versions-public {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .capo-versions-public span {
+      flex: 0 0 100% !important;
+      text-align: center !important;
+    }
+
+    .capo-version-btn.active-capo-version {
+      background: var(--accent) !important;
+      color: #111827 !important;
+      border-color: var(--accent) !important;
+      font-weight: 900 !important;
+    }
+
+    .admin-capo-old-box,
+    .admin-capo-versions-box,
+    .admin-links-box {
+      margin-top: 18px !important;
+      padding: 16px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 18px !important;
+      background: rgba(255,255,255,0.03) !important;
+    }
+
+    .capo-version-grid {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+      align-items: end !important;
+    }
+
+    .admin-capo-version-list {
+      margin-top: 14px !important;
+      display: grid !important;
+      gap: 12px !important;
+    }
+
+    @media (max-width: 768px) {
+      .capo-version-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .capo-versions-public {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+      }
+
+      .capo-versions-public span {
+        grid-column: 1 / -1 !important;
+      }
+
+      .capo-versions-public button {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+/* Reforzar init después de cargar la página */
+document.addEventListener("DOMContentLoaded", function () {
+  injectCapoVersionStyles();
+
+  const newCapoPosition = $("newCapoPositionInput");
+  const newCapoKey = $("newCapoKeyInput");
+  const newCapoLabel = $("newCapoLabelInput");
+
+  function autoFillNewCapoLabel() {
+    if (!newCapoLabel) return;
+
+    if (String(newCapoLabel.value || "").trim()) return;
+
+    const capo = newCapoPosition ? newCapoPosition.value : "0";
+    const key = newCapoKey ? newCapoKey.value : "";
+
+    newCapoLabel.value = adminDefaultCapoLabel(capo, key);
+  }
+
+  if (newCapoPosition) {
+    newCapoPosition.addEventListener("change", autoFillNewCapoLabel);
+  }
+
+  if (newCapoKey) {
+    newCapoKey.addEventListener("input", autoFillNewCapoLabel);
+  }
+
+  resetAdminCapoVersionItems();
+});
+
+/* Exponer funciones nuevas */
+window.setCapoVersionByIndex = setCapoVersionByIndex;
+
+window.addAdminCapoVersionFromFields = addAdminCapoVersionFromFields;
+window.updateAdminCapoVersionField = updateAdminCapoVersionField;
+window.deleteAdminCapoVersion = deleteAdminCapoVersion;
+window.resetAdminCapoVersionItems = resetAdminCapoVersionItems;
+window.loadAdminCapoVersionsForSong = loadAdminCapoVersionsForSong;
