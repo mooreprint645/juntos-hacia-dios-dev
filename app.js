@@ -7275,3 +7275,169 @@ window.setLockedCategoryParent = setLockedCategoryParent;
 window.editCategory = editCategory;
 window.resetCategoryForm = resetCategoryForm;
 window.cancelCategoryEdit = cancelCategoryEdit;
+
+/* =========================================================
+   PATCH: ADMIN SECCIONES PRINCIPALES PLEGABLES
+========================================================= */
+
+const ADMIN_COLLAPSIBLE_SECTIONS = [
+  "artistsAdminSection",
+  "categoriesAdminSection",
+  "albumsAdminSection",
+  "songsAdminSection",
+  "donationsAdminSection"
+];
+
+function getAdminSectionLabel(sectionId) {
+  if (sectionId === "artistsAdminSection") return "Artistas";
+  if (sectionId === "categoriesAdminSection") return "Categorías";
+  if (sectionId === "albumsAdminSection") return "Álbumes";
+  if (sectionId === "songsAdminSection") return "Canciones";
+  if (sectionId === "donationsAdminSection") return "Donaciones";
+  return "Sección";
+}
+
+function openAdminSection(sectionId) {
+  ADMIN_COLLAPSIBLE_SECTIONS.forEach(function (id) {
+    const section = $(id);
+
+    if (!section) return;
+
+    if (id === sectionId) {
+      section.classList.add("admin-section-open");
+      section.classList.remove("admin-section-closed");
+    } else {
+      section.classList.remove("admin-section-open");
+      section.classList.add("admin-section-closed");
+    }
+  });
+
+  const target = $(sectionId);
+
+  if (target) {
+    setTimeout(function () {
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 80);
+  }
+}
+
+function toggleAdminSection(sectionId) {
+  const section = $(sectionId);
+
+  if (!section) return;
+
+  const isOpen = section.classList.contains("admin-section-open");
+
+  if (isOpen) {
+    section.classList.remove("admin-section-open");
+    section.classList.add("admin-section-closed");
+  } else {
+    openAdminSection(sectionId);
+  }
+}
+
+function openAllAdminSections() {
+  ADMIN_COLLAPSIBLE_SECTIONS.forEach(function (id) {
+    const section = $(id);
+
+    if (!section) return;
+
+    section.classList.add("admin-section-open");
+    section.classList.remove("admin-section-closed");
+  });
+}
+
+function closeAllAdminSections() {
+  ADMIN_COLLAPSIBLE_SECTIONS.forEach(function (id) {
+    const section = $(id);
+
+    if (!section) return;
+
+    section.classList.remove("admin-section-open");
+    section.classList.add("admin-section-closed");
+  });
+}
+
+function ensureAdminCollapseHelper() {
+  const adminPanel = $("adminPanel");
+
+  if (!adminPanel) return;
+  if ($("adminCollapseHelper")) return;
+
+  const helper = document.createElement("div");
+  helper.id = "adminCollapseHelper";
+  helper.className = "admin-collapse-helper";
+
+  helper.innerHTML = `
+    ${ADMIN_COLLAPSIBLE_SECTIONS.map(function (id) {
+      return `
+        <button type="button" class="song-btn small-btn" onclick="openAdminSection('${id}')">
+          ${escapeHTML(getAdminSectionLabel(id))}
+        </button>
+      `;
+    }).join("")}
+
+    <button type="button" class="song-btn small-btn secondary" onclick="openAllAdminSections()">
+      Abrir todo
+    </button>
+
+    <button type="button" class="song-btn small-btn secondary" onclick="closeAllAdminSections()">
+      Cerrar todo
+    </button>
+  `;
+
+  const jumpMenu = $("adminJumpMenu");
+
+  if (jumpMenu && jumpMenu.parentNode) {
+    jumpMenu.parentNode.insertBefore(helper, jumpMenu.nextSibling);
+  } else {
+    adminPanel.insertBefore(helper, adminPanel.firstChild);
+  }
+}
+
+function setupAdminCollapsibleSections() {
+  const existingSections = ADMIN_COLLAPSIBLE_SECTIONS
+    .map(function (id) {
+      return $(id);
+    })
+    .filter(Boolean);
+
+  if (!existingSections.length) return;
+
+  ensureAdminCollapseHelper();
+
+  existingSections.forEach(function (section, index) {
+    const heading = section.querySelector(".section-heading");
+
+    if (heading && !heading.dataset.collapseReady) {
+      heading.dataset.collapseReady = "true";
+
+      heading.addEventListener("click", function () {
+        toggleAdminSection(section.id);
+      });
+    }
+
+    if (index === 0) {
+      section.classList.add("admin-section-open");
+      section.classList.remove("admin-section-closed");
+    } else {
+      section.classList.remove("admin-section-open");
+      section.classList.add("admin-section-closed");
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(function () {
+    setupAdminCollapsibleSections();
+  }, 1500);
+});
+
+window.openAdminSection = openAdminSection;
+window.toggleAdminSection = toggleAdminSection;
+window.openAllAdminSections = openAllAdminSections;
+window.closeAllAdminSections = closeAllAdminSections;
+window.setupAdminCollapsibleSections = setupAdminCollapsibleSections;
