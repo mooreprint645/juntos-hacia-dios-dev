@@ -2050,13 +2050,13 @@ ${recentSongs.length ? `
       <div class="artist-song-list">
         ${albums.map(function (album) {
           return `
-            <div class="artist-song-row">
+            <a class="artist-song-row" href="canciones.html?q=${safeUrlParam(album.title || album.name || "")}">
               <div>
                 <h3>${escapeHTML(album.title || album.name || "Álbum sin nombre")}</h3>
                 <p>${escapeHTML(album.year || album.description || "Álbum registrado")}</p>
               </div>
               <span>♪</span>
-            </div>
+            </a>
           `;
         }).join("")}
       </div>
