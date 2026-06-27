@@ -201,7 +201,7 @@ function setMultiOptions(selectId, items, labelKey) {
     box.innerHTML += `
       <label class="checkbox-item">
         <input type="checkbox" value="${escapeHTML(id)}" />
-        <span>${escapeHTML(name)}</span>
+        <span class="checkbox-name">${escapeHTML(name)}</span>
       </label>
     `;
   });
