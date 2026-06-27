@@ -3325,6 +3325,7 @@ body:has(#artistDetail) footer div {
 .checkbox-item {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
@@ -3333,8 +3334,12 @@ body:has(#artistDetail) footer div {
 }
 
 .checkbox-item input {
-  width: 18px;
-  height: 18px;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  margin: 0;
+  accent-color: var(--gold);
+  flex: 0 0 auto;
 }
 
 .checkbox-item span {
