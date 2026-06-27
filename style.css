@@ -3584,3 +3584,38 @@ body:has(#categoriesGrid) .public-category-card-actions .song-btn {
 .artist-checkbox-item .checkbox-name {
   grid-column: 2 !important;
 }
+/* =========================================================
+   ADMIN: COLABORADORES - DISEÑO FINAL
+========================================================= */
+
+.artist-checkbox-list {
+  display: grid !important;
+  gap: 10px !important;
+  max-height: 260px !important;
+  overflow-y: auto !important;
+  padding: 12px !important;
+}
+
+.artist-checkbox-item {
+  display: grid !important;
+  grid-template-columns: 28px 1fr !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 54px !important;
+  padding: 12px 14px !important;
+  border-radius: 14px !important;
+}
+
+.artist-checkbox-item input {
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+}
+
+.artist-checkbox-item .checkbox-name {
+  display: block !important;
+  font-size: 1rem !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
