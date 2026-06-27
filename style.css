@@ -3359,3 +3359,39 @@ body:has(#artistDetail) footer div {
   padding: 0 !important;
   display: block;
 }
+/* =========================================================
+   FIX: categorías en compu con más columnas
+========================================================= */
+
+@media (min-width: 769px) {
+  body:has(#categoriesPage) .public-category-explorer {
+    width: 100% !important;
+    max-width: 1100px !important;
+    margin: 0 auto !important;
+    padding: 0 24px !important;
+  }
+
+  body:has(#categoriesPage) .public-category-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+    gap: 18px !important;
+    width: 100% !important;
+  }
+
+  body:has(#categoriesPage) .public-category-card {
+    width: 100% !important;
+    min-height: 170px !important;
+  }
+
+  body:has(#categoriesPage) .public-category-card-actions {
+    display: grid !important;
+    gap: 8px !important;
+    margin-top: 14px !important;
+  }
+
+  body:has(#categoriesPage) .public-category-card-actions .song-btn,
+  body:has(#categoriesPage) .public-category-card-actions a {
+    width: 100% !important;
+    text-align: center !important;
+  }
+}
