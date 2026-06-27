@@ -1970,47 +1970,114 @@ async function loadArtistProfile() {
       .filter(Boolean);
 
     const songsResult = await fetchSongsWithRelations(songIds);
-    const songs = songsResult.data || [];
+const songs = songsResult.data || [];
 
-    box.innerHTML = `
-      <section class="artist-hero-card">
-        <div class="artist-avatar-public big">
-          ${escapeHTML(getInitials(artist.name))}
-        </div>
+const albumMap = {};
 
-        <div>
-          <p class="hero-kicker">${escapeHTML(artistTypeLabel(artist.artist_type || ""))}</p>
-          <h1>${escapeHTML(artist.name || "Sin nombre")}</h1>
-          <p>${escapeHTML(artist.description || "Ministerio o artista registrado.")}</p>
-        </div>
-      </section>
+songs.forEach(function (song) {
+  (song._albums || []).forEach(function (album) {
+    const key = album.id || album.slug || album.name;
 
-      ${songs.length ? `
-        <section class="artist-profile-section">
-          <h2>Cantos de este artista</h2>
+    if (key && !albumMap[key]) {
+      albumMap[key] = album;
+    }
+  });
+});
 
-          <div class="artist-song-list">
-            ${songs.map(function (song) {
-              const songSlug = song.slug || slugify(song.title || "");
+const albums = Object.values(albumMap);
 
-              return `
-                <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
-                  <div>
-                    <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
-                    <p>${escapeHTML(songMetaText(song) || "Canto disponible")}</p>
-                  </div>
-                  <span>›</span>
-                </a>
-              `;
-            }).join("")}
-          </div>
-        </section>
-      ` : `
-        <div class="song-card">
-          <h3>Este artista aún no tiene cantos</h3>
-          <p>Agrega canciones desde el panel de administración.</p>
-        </div>
-      `}
+const collaborations = songs.filter(function (song) {
+  const artists = song._artists || [];
+
+  return artists.some(function (item) {
+    return String(item.id) === String(artist.id);
+  }) && artists.some(function (item) {
+    return String(item.id) !== String(artist.id);
+  });
+});
+
+box.innerHTML = `
+  <section class="artist-hero-card">
+    <div class="artist-avatar-public big">
+      ${escapeHTML(getInitials(artist.name))}
+    </div>
+
+    <div>
+      <p class="hero-kicker">${escapeHTML(artistTypeLabel(artist.artist_type || ""))}</p>
+      <h1>${escapeHTML(artist.name || "Sin nombre")}</h1>
+      <p>${escapeHTML(artist.description || "Ministerio o artista registrado.")}</p>
+    </div>
+  </section>
+
+  ${songs.length ? `
+    <section class="artist-profile-section">
+      <h2>Cantos de este artista</h2>
+
+      <div class="artist-song-list">
+        ${songs.map(function (song) {
+          const songSlug = song.slug || slugify(song.title || "");
+
+          return `
+            <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
+              <div>
+                <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
+                <p>${escapeHTML(songMetaText(song) || "Canto disponible")}</p>
+              </div>
+              <span>›</span>
+            </a>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  ` : `
+    <div class="song-card">
+      <h3>Este artista aún no tiene cantos</h3>
+      <p>Agrega canciones desde el panel de administración.</p>
+    </div>
+  `}
+
+  ${albums.length ? `
+    <section class="artist-profile-section">
+      <h2>Álbumes</h2>
+
+      <div class="artist-song-list">
+        ${albums.map(function (album) {
+          return `
+            <div class="artist-song-row">
+              <div>
+                <h3>${escapeHTML(album.name || album.title || "Álbum sin nombre")}</h3>
+                <p>${escapeHTML(album.year || album.description || "Álbum registrado")}</p>
+              </div>
+              <span>♪</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  ` : ""}
+
+  ${collaborations.length ? `
+    <section class="artist-profile-section">
+      <h2>Colaboraciones</h2>
+
+      <div class="artist-song-list">
+        ${collaborations.map(function (song) {
+          const songSlug = song.slug || slugify(song.title || "");
+
+          return `
+            <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
+              <div>
+                <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
+                <p>${escapeHTML(songMetaText(song) || "Colaboración")}</p>
+              </div>
+              <span>›</span>
+            </a>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  ` : ""}
+`;
     `;
   } catch (error) {
     box.innerHTML = `
