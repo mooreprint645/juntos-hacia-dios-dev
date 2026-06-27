@@ -222,7 +222,7 @@ function filterSongArtistCheckboxes(query) {
     const text = String(item.textContent || "").toLowerCase();
 
     if (text.includes(cleanQuery)) {
-  item.style.setProperty("display", "grid", "important");
+  item.style.setProperty("display", "flex", "important");
 } else {
   item.style.setProperty("display", "none", "important");
     }
