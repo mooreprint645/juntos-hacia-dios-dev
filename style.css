@@ -3360,58 +3360,7 @@ body:has(#artistDetail) footer div {
   display: block;
 }
 /* =========================================================
-   FIX: categorías en compu con más columnas
-========================================================= */
-
-@media (min-width: 769px) {
-  body:has(#categoriesPage) .public-category-explorer {
-    width: 100% !important;
-    max-width: 1100px !important;
-    margin: 0 auto !important;
-    padding: 0 24px !important;
-  }
-
-  body:has(#categoriesPage) .public-category-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
-    gap: 18px !important;
-    width: 100% !important;
-  }
-
-  body:has(#categoriesPage) .public-category-card {
-    width: 100% !important;
-    min-height: 170px !important;
-  }
-
-  body:has(#categoriesPage) .public-category-card-actions {
-    display: grid !important;
-    gap: 8px !important;
-    margin-top: 14px !important;
-  }
-
-  body:has(#categoriesPage) .public-category-card-actions .song-btn,
-  body:has(#categoriesPage) .public-category-card-actions a {
-    width: 100% !important;
-    text-align: center !important;
-  }
-}
-/* Categorías: más columnas en pantallas grandes */
-@media (min-width: 700px) {
-  body:has(#categoriesPage) .public-category-explorer {
-    max-width: 1200px !important;
-  }
-
-  body:has(#categoriesPage) .public-category-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
-    gap: 16px !important;
-  }
-
-  body:has(#categoriesPage) .public-category-card {
-    min-height: 150px !important;
-  }
-}
-/* =========================================================
-   Categorías estilo tarjetas tipo artistas
+   CATEGORÍAS: estilo limpio tipo artistas
 ========================================================= */
 
 body:has(#categoriesPage) .public-category-explorer {
@@ -3426,27 +3375,29 @@ body:has(#categoriesPage) .public-category-grid {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
   gap: 24px !important;
   width: 100% !important;
+  align-items: stretch !important;
 }
 
 body:has(#categoriesPage) .public-category-card {
   width: 100% !important;
-  min-height: 190px !important;
-  padding: 26px 28px !important;
-  border-radius: 16px !important;
-  background: rgba(18, 23, 38, 0.96) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18) !important;
+  min-height: 180px !important;
+  padding: 26px !important;
+  border-radius: 18px !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
 }
 
 body:has(#categoriesPage) .public-category-card h3 {
   color: var(--gold) !important;
-  font-size: 20px !important;
-  margin-bottom: 12px !important;
+  font-size: 1.15rem !important;
+  margin-bottom: 10px !important;
 }
 
 body:has(#categoriesPage) .public-category-card p {
-  font-size: 15px !important;
-  line-height: 1.45 !important;
+  color: var(--secondary) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
 }
 
 body:has(#categoriesPage) .public-category-card-actions {
@@ -3458,10 +3409,17 @@ body:has(#categoriesPage) .public-category-card-actions {
 body:has(#categoriesPage) .public-category-card-actions .song-btn,
 body:has(#categoriesPage) .public-category-card-actions a {
   flex: 1 !important;
+  width: auto !important;
   text-align: center !important;
+  margin-top: 0 !important;
 }
 
 @media (max-width: 768px) {
+  body:has(#categoriesPage) .public-category-explorer {
+    max-width: 420px !important;
+    padding: 0 16px !important;
+  }
+
   body:has(#categoriesPage) .public-category-grid {
     grid-template-columns: 1fr !important;
     gap: 14px !important;
