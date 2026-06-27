@@ -221,7 +221,11 @@ function filterSongArtistCheckboxes(query) {
   Array.from(box.querySelectorAll(".artist-checkbox-item")).forEach(function (item) {
     const text = String(item.textContent || "").toLowerCase();
 
-    item.style.display = text.includes(cleanQuery) ? "" : "none";
+    if (text.includes(cleanQuery)) {
+  item.style.setProperty("display", "grid", "important");
+} else {
+  item.style.setProperty("display", "none", "important");
+    }
   });
 }
 function artistsText(song) {
