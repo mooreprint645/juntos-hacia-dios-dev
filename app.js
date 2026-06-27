@@ -1977,6 +1977,13 @@ const recentSongs = songs
     return new Date(b.created_at || 0) - new Date(a.created_at || 0);
   })
   .slice(0, 3);
+     const albumsResult = await client
+  .from("albums")
+  .select("*")
+  .eq("artist_id", artist.id)
+  .order("title", { ascending: true });
+
+const albums = albumsResult.data || [];
 box.innerHTML = `
   <section class="artist-hero-card">
     <div class="artist-avatar-public big">
@@ -2036,6 +2043,25 @@ ${recentSongs.length ? `
       <p>Agrega canciones desde el panel de administración.</p>
     </div>
   `}
+  ${albums.length ? `
+    <section class="artist-profile-section">
+      <h2>Álbumes</h2>
+
+      <div class="artist-song-list">
+        ${albums.map(function (album) {
+          return `
+            <div class="artist-song-row">
+              <div>
+                <h3>${escapeHTML(album.title || album.name || "Álbum sin nombre")}</h3>
+                <p>${escapeHTML(album.year || album.description || "Álbum registrado")}</p>
+              </div>
+              <span>♪</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  ` : ""}
 `;
   } catch (error) {
     box.innerHTML = `
