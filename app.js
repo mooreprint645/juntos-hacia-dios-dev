@@ -2526,7 +2526,7 @@ async function loadAdminArtists() {
 
 async function loadArtistOptions() {
   const { data } = await fetchArtists();
-
+setOptions("songMainArtistInput", data || [], "Selecciona artista principal", "id", "name");
   setOptions("albumArtistInput", data || [], "Selecciona artista", "id", "name");
   setMultiOptions("songArtistsInput", data || [], "name");
 }
@@ -3807,6 +3807,7 @@ function resetSongForm() {
   }
 
   [
+     "songMainArtistInput",
     "songTitleInput",
     "songToneInput",
     "songLyricsInput",
@@ -3836,7 +3837,12 @@ async function saveSong() {
   const lyrics = $("songLyricsInput") ? $("songLyricsInput").value : "";
   const categoryId = getInputValue("songCategoryInput");
   const albumId = getInputValue("songAlbumInput");
-  const artistIds = getSelectedValues("songArtistsInput");
+  const mainArtistId = getInputValue("songMainArtistInput");
+const collaboratorIds = getSelectedValues("songArtistsInput");
+
+const artistIds = Array.from(new Set(
+  [mainArtistId].concat(collaboratorIds).filter(Boolean)
+));
   const links = getAdminLinksFromForm();
 
   const capoPositionRaw = getInputValue("songCapoInput");
@@ -3877,7 +3883,7 @@ async function saveSong() {
     tone: tone,
     difficulty: difficulty,
     lyrics: lyrics,
-    artist_id: artistIds[0],
+    artist_id: artistIds[0] || null,
     category_id: categoryId || null,
     capo_position: Number.isNaN(capoPosition) ? 0 : capoPosition,
     capo_key: capoPosition > 0 ? capoKey : ""
@@ -3983,7 +3989,10 @@ async function editSong(id) {
   setInputValue("songCapoKeyInput", song.capo_key || "");
   setInputValue("songCategoryInput", song._categories && song._categories[0] ? song._categories[0].id : "");
   setInputValue("songAlbumInput", song._albums && song._albums[0] ? song._albums[0].id : "");
-
+setInputValue(
+  "songMainArtistInput",
+  song.artist_id || ((song._artists || [])[0] ? (song._artists || [])[0].id : "")
+);
   setSelectedValues(
     "songArtistsInput",
     (song._artists || []).map(function (artist) {
