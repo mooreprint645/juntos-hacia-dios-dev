@@ -186,20 +186,42 @@ function setOptions(selectId, items, placeholder, valueKey, labelKey) {
 }
 
 function setMultiOptions(selectId, items, labelKey) {
-  const select = $(selectId);
+  const box = $(selectId);
 
-  if (!select) return;
+  if (!box) return;
 
   const labelField = labelKey || "name";
 
-  select.innerHTML = "";
+  box.innerHTML = "";
 
   (items || []).forEach(function (item) {
-    select.innerHTML += `
-      <option value="${escapeHTML(item.id || "")}">
-        ${escapeHTML(item[labelField] || "Sin nombre")}
-      </option>
+    const id = String(item.id || "");
+    const name = item[labelField] || "Sin nombre";
+    const checkboxId = "songArtistCheckbox-" + id;
+
+    box.innerHTML += `
+      <label class="checkbox-item artist-checkbox-item">
+        <input
+          id="${escapeHTML(checkboxId)}"
+          type="checkbox"
+          value="${escapeHTML(id)}"
+        />
+        <span class="checkbox-name">${escapeHTML(name)}</span>
+      </label>
     `;
+  });
+}
+function filterSongArtistCheckboxes(query) {
+  const box = $("songArtistsInput");
+
+  if (!box) return;
+
+  const cleanQuery = String(query || "").trim().toLowerCase();
+
+  Array.from(box.querySelectorAll(".artist-checkbox-item")).forEach(function (item) {
+    const text = String(item.textContent || "").toLowerCase();
+
+    item.style.display = text.includes(cleanQuery) ? "" : "none";
   });
 }
 function artistsText(song) {
