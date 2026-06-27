@@ -3410,3 +3410,70 @@ body:has(#artistDetail) footer div {
     min-height: 150px !important;
   }
 }
+/* =========================================================
+   Categorías estilo tarjetas tipo artistas
+========================================================= */
+
+body:has(#categoriesPage) .public-category-explorer {
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+  padding: 0 20px !important;
+}
+
+body:has(#categoriesPage) .public-category-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+  gap: 24px !important;
+  width: 100% !important;
+}
+
+body:has(#categoriesPage) .public-category-card {
+  width: 100% !important;
+  min-height: 190px !important;
+  padding: 26px 28px !important;
+  border-radius: 16px !important;
+  background: rgba(18, 23, 38, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18) !important;
+}
+
+body:has(#categoriesPage) .public-category-card h3 {
+  color: var(--gold) !important;
+  font-size: 20px !important;
+  margin-bottom: 12px !important;
+}
+
+body:has(#categoriesPage) .public-category-card p {
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+}
+
+body:has(#categoriesPage) .public-category-card-actions {
+  display: flex !important;
+  gap: 10px !important;
+  margin-top: 18px !important;
+}
+
+body:has(#categoriesPage) .public-category-card-actions .song-btn,
+body:has(#categoriesPage) .public-category-card-actions a {
+  flex: 1 !important;
+  text-align: center !important;
+}
+
+@media (max-width: 768px) {
+  body:has(#categoriesPage) .public-category-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  body:has(#categoriesPage) .public-category-card {
+    min-height: auto !important;
+    padding: 20px !important;
+  }
+
+  body:has(#categoriesPage) .public-category-card-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+}
