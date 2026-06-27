@@ -3323,13 +3323,14 @@ body:has(#artistDetail) footer div {
 }
 
 .checkbox-item {
-  display: flex;
+  display: grid !important;
+  grid-template-columns: 22px 1fr;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-padding: 6px 10px;
-min-height: 34px;
-border-radius: 10px;
+  column-gap: 10px;
+  row-gap: 0;
+  padding: 8px 10px;
+  min-height: 42px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
 }
@@ -3354,6 +3355,7 @@ border-radius: 10px;
   color: var(--text);
   font-weight: 600;
   line-height: 1.2;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block;
 }
