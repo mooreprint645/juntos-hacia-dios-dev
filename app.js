@@ -1971,7 +1971,12 @@ async function loadArtistProfile() {
 
     const songsResult = await fetchSongsWithRelations(songIds);
 const songs = songsResult.data || [];
-
+const recentSongs = songs
+  .slice()
+  .sort(function (a, b) {
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  })
+  .slice(0, 3);
 box.innerHTML = `
   <section class="artist-hero-card">
     <div class="artist-avatar-public big">
@@ -1984,7 +1989,27 @@ box.innerHTML = `
       <p>${escapeHTML(artist.description || "Ministerio o artista registrado.")}</p>
     </div>
   </section>
+${recentSongs.length ? `
+    <section class="artist-profile-section">
+      <h2>Canciones recientes</h2>
 
+      <div class="artist-song-list">
+        ${recentSongs.map(function (song) {
+          const songSlug = song.slug || slugify(song.title || "");
+
+          return `
+            <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
+              <div>
+                <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
+                <p>${escapeHTML(songMetaText(song) || "Canto disponible")}</p>
+              </div>
+              <span>›</span>
+            </a>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  ` : ""}
   ${songs.length ? `
     <section class="artist-profile-section">
       <h2>Cantos de este artista</h2>
