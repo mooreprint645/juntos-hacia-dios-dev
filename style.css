@@ -3447,3 +3447,62 @@ body:has(#categoriesPage) .public-category-card-actions a {
     grid-template-columns: 1fr !important;
   }
 }
+/* =========================================================
+   FIX FINAL CATEGORÍAS - usar estilo tipo artistas
+========================================================= */
+
+body:has(#categoriesGrid) #categoriesGrid,
+body:has(#categoriesGrid) .public-category-explorer {
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+body:has(#categoriesGrid) .public-category-grid,
+body:has(#categoriesGrid) .artists-grid.public-category-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(240px, 1fr)) !important;
+  gap: 24px !important;
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+body:has(#categoriesGrid) .public-category-card {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 190px !important;
+  padding: 26px !important;
+  border-radius: 20px !important;
+}
+
+body:has(#categoriesGrid) .public-category-card-actions {
+  display: flex !important;
+  gap: 10px !important;
+  margin-top: 18px !important;
+}
+
+body:has(#categoriesGrid) .public-category-card-actions .song-btn {
+  flex: 1 !important;
+  width: auto !important;
+}
+
+@media (max-width: 768px) {
+  body:has(#categoriesGrid) .public-category-grid,
+  body:has(#categoriesGrid) .artists-grid.public-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+
+  body:has(#categoriesGrid) .public-category-card {
+    padding: 14px !important;
+    min-height: auto !important;
+  }
+
+  body:has(#categoriesGrid) .public-category-card-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+}
