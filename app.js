@@ -1495,14 +1495,14 @@ function renderCategoriesExplorer() {
       ${renderPublicCategoryPath()}
 
       ${children.length ? `
-        <div class="public-category-grid">
+        <div class="artist-grid public-category-grid">
           ${children.map(function (category) {
             const childCount = allCategoriesForPage.filter(function (child) {
               return String(child.parent_id || "") === String(category.id || "");
             }).length;
 
             return `
-              <article class="public-category-card">
+              <article class="artist-card public-category-card">
                 <h3>📁 ${escapeHTML(category.name || "Categoría")}</h3>
                 <p>${escapeHTML(category.description || "Sin descripción.")}</p>
                 <p>${childCount} subcategoría(s)</p>
