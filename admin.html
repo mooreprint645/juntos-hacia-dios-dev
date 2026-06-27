@@ -215,9 +215,16 @@
 <select id="songMainArtistInput">
   <option value="">Selecciona artista principal</option>
 </select>
-          <label for="songArtistsInput">Artistas / Colaboradores</label>
-<select id="songArtistsInput" multiple size="5"></select>
+          <label for="songArtistsSearchInput">Artistas / Colaboradores</label>
 
+<input
+  type="search"
+  id="songArtistsSearchInput"
+  placeholder="Buscar colaborador..."
+  oninput="filterSongArtistCheckboxes(this.value)"
+/>
+
+<div id="songArtistsInput" class="checkbox-list artist-checkbox-list"></div>
 <small class="muted-text">
   Selecciona aquí los colaboradores. El artista principal se elige arriba.
 </small>
