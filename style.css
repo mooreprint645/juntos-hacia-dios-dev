@@ -3333,7 +3333,11 @@ border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
 }
-
+.checkbox-list .checkbox-item {
+  margin: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
+}
 .checkbox-item input {
   width: 18px !important;
   height: 18px !important;
@@ -3342,7 +3346,10 @@ border-radius: 10px;
   accent-color: var(--gold);
   flex: 0 0 auto;
 }
-
+.checkbox-list .checkbox-item input {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+}
 .checkbox-item span {
   color: var(--text);
   font-weight: 600;
