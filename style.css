@@ -3647,3 +3647,39 @@ body:has(#categoriesGrid) .public-category-card-actions .song-btn {
   line-height: 1.2 !important;
   font-size: 1rem !important;
 }
+/* =========================================================
+   FIX REAL: colaboradores dentro del formulario
+========================================================= */
+
+#songFormCard .artist-checkbox-list .artist-checkbox-item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  padding: 12px 14px !important;
+  margin: 0 !important;
+  border-radius: 14px !important;
+}
+
+#songFormCard .artist-checkbox-list .artist-checkbox-item input[type="checkbox"] {
+  display: inline-block !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 0 0 18px !important;
+}
+
+#songFormCard .artist-checkbox-list .artist-checkbox-item .checkbox-name {
+  display: block !important;
+  flex: 1 1 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.2 !important;
+  font-size: 1rem !important;
+  color: var(--text) !important;
+}
