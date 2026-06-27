@@ -186,26 +186,20 @@ function setOptions(selectId, items, placeholder, valueKey, labelKey) {
 }
 
 function setMultiOptions(selectId, items, labelKey) {
-  const box = $(selectId);
+  const select = $(selectId);
 
-  if (!box) return;
+  if (!select) return;
 
   const labelField = labelKey || "name";
 
-  box.innerHTML = "";
+  select.innerHTML = "";
 
   (items || []).forEach(function (item) {
-    const id = String(item.id || "");
-    const name = item[labelField] || "Sin nombre";
-
-    const checkboxId = "songArtistCheckbox-" + id;
-
-box.innerHTML += `
-  <div class="checkbox-item">
-    <input id="${escapeHTML(checkboxId)}" type="checkbox" value="${escapeHTML(id)}" />
-    <label class="checkbox-name" for="${escapeHTML(checkboxId)}">${escapeHTML(name)}</label>
-  </div>
-`;
+    select.innerHTML += `
+      <option value="${escapeHTML(item.id || "")}">
+        ${escapeHTML(item[labelField] || "Sin nombre")}
+      </option>
+    `;
   });
 }
 function artistsText(song) {
