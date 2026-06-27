@@ -1972,30 +1972,6 @@ async function loadArtistProfile() {
     const songsResult = await fetchSongsWithRelations(songIds);
 const songs = songsResult.data || [];
 
-const albumMap = {};
-
-songs.forEach(function (song) {
-  (song._albums || []).forEach(function (album) {
-    const key = album.id || album.slug || album.name;
-
-    if (key && !albumMap[key]) {
-      albumMap[key] = album;
-    }
-  });
-});
-
-const albums = Object.values(albumMap);
-
-const collaborations = songs.filter(function (song) {
-  const artists = song._artists || [];
-
-  return artists.some(function (item) {
-    return String(item.id) === String(artist.id);
-  }) && artists.some(function (item) {
-    return String(item.id) !== String(artist.id);
-  });
-});
-
 box.innerHTML = `
   <section class="artist-hero-card">
     <div class="artist-avatar-public big">
@@ -2035,48 +2011,6 @@ box.innerHTML = `
       <p>Agrega canciones desde el panel de administración.</p>
     </div>
   `}
-
-  ${albums.length ? `
-    <section class="artist-profile-section">
-      <h2>Álbumes</h2>
-
-      <div class="artist-song-list">
-        ${albums.map(function (album) {
-          return `
-            <div class="artist-song-row">
-              <div>
-                <h3>${escapeHTML(album.name || album.title || "Álbum sin nombre")}</h3>
-                <p>${escapeHTML(album.year || album.description || "Álbum registrado")}</p>
-              </div>
-              <span>♪</span>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    </section>
-  ` : ""}
-
-  ${collaborations.length ? `
-    <section class="artist-profile-section">
-      <h2>Colaboraciones</h2>
-
-      <div class="artist-song-list">
-        ${collaborations.map(function (song) {
-          const songSlug = song.slug || slugify(song.title || "");
-
-          return `
-            <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
-              <div>
-                <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
-                <p>${escapeHTML(songMetaText(song) || "Colaboración")}</p>
-              </div>
-              <span>›</span>
-            </a>
-          `;
-        }).join("")}
-      </div>
-    </section>
-  ` : ""}
 `;
     `;
   } catch (error) {
