@@ -128,26 +128,41 @@ function getInitials(name) {
 }
 
 function getSelectedValues(selectId) {
-  const select = $(selectId);
+  const box = $(selectId);
 
-  if (!select) return [];
+  if (!box) return [];
 
-  return Array.from(select.selectedOptions || [])
-    .map(function (option) {
-      return option.value;
+  if (box.tagName === "SELECT") {
+    return Array.from(box.selectedOptions || [])
+      .map(function (option) {
+        return option.value;
+      })
+      .filter(Boolean);
+  }
+
+  return Array.from(box.querySelectorAll('input[type="checkbox"]:checked'))
+    .map(function (input) {
+      return input.value;
     })
     .filter(Boolean);
 }
 
 function setSelectedValues(selectId, values) {
-  const select = $(selectId);
+  const box = $(selectId);
 
-  if (!select) return;
+  if (!box) return;
 
   const selected = new Set((values || []).map(String));
 
-  Array.from(select.options || []).forEach(function (option) {
-    option.selected = selected.has(String(option.value));
+  if (box.tagName === "SELECT") {
+    Array.from(box.options || []).forEach(function (option) {
+      option.selected = selected.has(String(option.value));
+    });
+    return;
+  }
+
+  Array.from(box.querySelectorAll('input[type="checkbox"]')).forEach(function (input) {
+    input.checked = selected.has(String(input.value));
   });
 }
 
@@ -171,23 +186,26 @@ function setOptions(selectId, items, placeholder, valueKey, labelKey) {
 }
 
 function setMultiOptions(selectId, items, labelKey) {
-  const select = $(selectId);
+  const box = $(selectId);
 
-  if (!select) return;
+  if (!box) return;
 
   const labelField = labelKey || "name";
 
-  select.innerHTML = "";
+  box.innerHTML = "";
 
   (items || []).forEach(function (item) {
-    select.innerHTML += `
-      <option value="${escapeHTML(item.id || "")}">
-        ${escapeHTML(item[labelField] || "Sin nombre")}
-      </option>
+    const id = String(item.id || "");
+    const name = item[labelField] || "Sin nombre";
+
+    box.innerHTML += `
+      <label class="checkbox-item">
+        <input type="checkbox" value="${escapeHTML(id)}" />
+        <span>${escapeHTML(name)}</span>
+      </label>
     `;
   });
 }
-
 function artistsText(song) {
   const artists = song && song._artists ? song._artists : [];
 
