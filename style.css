@@ -3311,3 +3311,33 @@ body:has(#artistDetail) footer div {
     max-width: 100% !important;
   }
 }
+.checkbox-list {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 214, 102, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.checkbox-item input {
+  width: 18px;
+  height: 18px;
+}
+
+.checkbox-item span {
+  color: var(--text);
+  font-weight: 600;
+}
