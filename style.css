@@ -3277,3 +3277,37 @@ body:has(#artistDetail) footer div {
     margin-right: 0 !important;
   }
 }
+/* =========================================================
+   FIX FINAL: donaciones móvil natural
+========================================================= */
+
+@media (max-width: 768px) {
+  body:has(#donationPage) main {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  body:has(#donationPage) .hero-section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  body:has(#donationPage) #donationPage {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+
+  body:has(#donationPage) .donation-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 28px 20px !important;
+  }
+
+  body:has(#donationPage) .donation-page .song-card,
+  body:has(#donationPage) .donation-page .song-detail-card {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
