@@ -3548,3 +3548,39 @@ body:has(#categoriesGrid) .public-category-card-actions .song-btn {
 #songArtistsSearchInput {
   margin-bottom: 10px !important;
 }
+/* =========================================================
+   ADMIN: COLABORADORES BUSCADOR - AJUSTE ESCRITORIO/MÓVIL
+========================================================= */
+
+#songFormCard label[for="songArtistsSearchInput"],
+#songFormCard #songArtistsSearchInput,
+#songFormCard #songArtistsInput {
+  grid-column: 1 / -1 !important;
+}
+
+#songArtistsSearchInput {
+  width: 100% !important;
+  margin-top: 8px !important;
+  margin-bottom: 10px !important;
+}
+
+.artist-checkbox-list {
+  width: 100% !important;
+  max-height: 240px !important;
+  overflow-y: auto !important;
+}
+
+.artist-checkbox-item {
+  display: grid !important;
+  grid-template-columns: 24px 1fr !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.artist-checkbox-item input {
+  grid-column: 1 !important;
+}
+
+.artist-checkbox-item .checkbox-name {
+  grid-column: 2 !important;
+}
