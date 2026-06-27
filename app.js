@@ -1987,6 +1987,11 @@ const recentSongs = songs
   .order("title", { ascending: true });
 
 const albums = albumsResult.data || [];
+     const collaborations = songs.filter(function (song) {
+  return (song._artists || []).some(function (songArtist) {
+    return String(songArtist.id) !== String(artist.id);
+  });
+});
 box.innerHTML = `
   <section class="artist-hero-card">
     <div class="artist-avatar-public big">
@@ -2059,6 +2064,27 @@ ${recentSongs.length ? `
                 <p>${escapeHTML(album.year || album.description || "Álbum registrado")}</p>
               </div>
               <span>♪</span>
+            </a>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  ` : ""}
+  ${collaborations.length ? `
+    <section class="artist-profile-section">
+      <h2>Colaboraciones</h2>
+
+      <div class="artist-song-list">
+        ${collaborations.map(function (song) {
+          const songSlug = song.slug || slugify(song.title || "");
+
+          return `
+            <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
+              <div>
+                <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
+                <p>${escapeHTML(songMetaText(song) || "Colaboración")}</p>
+              </div>
+              <span>›</span>
             </a>
           `;
         }).join("")}
