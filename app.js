@@ -1495,7 +1495,7 @@ function renderCategoriesExplorer() {
       ${renderPublicCategoryPath()}
 
       ${children.length ? `
-        <div class="artist-grid public-category-grid">
+        <div class="artists-grid public-category-grid">
           ${children.map(function (category) {
             const childCount = allCategoriesForPage.filter(function (child) {
               return String(child.parent_id || "") === String(category.id || "");
