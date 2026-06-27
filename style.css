@@ -3396,13 +3396,13 @@ body:has(#artistDetail) footer div {
   }
 }
 /* Categorías: más columnas en pantallas grandes */
-@media (min-width: 1000px) {
+@media (min-width: 700px) {
   body:has(#categoriesPage) .public-category-explorer {
     max-width: 1200px !important;
   }
 
   body:has(#categoriesPage) .public-category-grid {
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
     gap: 16px !important;
   }
 
