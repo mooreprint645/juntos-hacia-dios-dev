@@ -198,12 +198,14 @@ function setMultiOptions(selectId, items, labelKey) {
     const id = String(item.id || "");
     const name = item[labelField] || "Sin nombre";
 
-    box.innerHTML += `
-      <label class="checkbox-item">
-        <input type="checkbox" value="${escapeHTML(id)}" />
-        <span class="checkbox-name">${escapeHTML(name)}</span>
-      </label>
-    `;
+    const checkboxId = "songArtistCheckbox-" + id;
+
+box.innerHTML += `
+  <div class="checkbox-item">
+    <input id="${escapeHTML(checkboxId)}" type="checkbox" value="${escapeHTML(id)}" />
+    <label class="checkbox-name" for="${escapeHTML(checkboxId)}">${escapeHTML(name)}</label>
+  </div>
+`;
   });
 }
 function artistsText(song) {
