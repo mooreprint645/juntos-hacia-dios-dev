@@ -3350,7 +3350,10 @@ border-radius: 10px;
   appearance: auto;
   -webkit-appearance: checkbox;
 }
-.checkbox-item span {
+.checkbox-item .checkbox-name {
   color: var(--text);
   font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
 }
