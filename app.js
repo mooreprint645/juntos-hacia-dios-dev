@@ -1127,7 +1127,10 @@ function renderSongsPage() {
         artistsText(song),
         (song._categories || []).map(function (category) {
           return category.name;
-        }).join(" ")
+        }).join(" "),
+         (song._albums || []).map(function (album) {
+  return album.title || album.name || "";
+}).join(" ")
       ].join(" ").toLowerCase();
 
       return text.includes(query);
@@ -1201,7 +1204,7 @@ async function loadSongsPage() {
   allSongsForPage = data || [];
 
   const type = getUrlParam("tipo");
-  const searchParam = getUrlParam("buscar");
+  const searchParam = getUrlParam("buscar") || getUrlParam("q");
 
   if (type) {
     currentSongsFilter = type.toLowerCase();
