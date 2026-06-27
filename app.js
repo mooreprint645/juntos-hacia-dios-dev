@@ -2012,7 +2012,6 @@ box.innerHTML = `
     </div>
   `}
 `;
-    `;
   } catch (error) {
     box.innerHTML = `
       <div class="song-card">
