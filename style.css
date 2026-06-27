@@ -3363,6 +3363,14 @@ body:has(#artistDetail) footer div {
    CATEGORÍAS: estilo limpio tipo artistas
 ========================================================= */
 
+body:has(#categoriesPage) main,
+body:has(#categoriesPage) .section {
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
 body:has(#categoriesPage) .public-category-explorer {
   width: 100% !important;
   max-width: none !important;
