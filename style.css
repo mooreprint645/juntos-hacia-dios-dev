@@ -3365,19 +3365,23 @@ body:has(#artistDetail) footer div {
 
 body:has(#categoriesPage) .public-category-explorer {
   width: 100% !important;
-  max-width: 1180px !important;
+  max-width: none !important;
   margin: 0 auto !important;
   padding: 0 20px !important;
 }
 
 body:has(#categoriesPage) .public-category-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+  grid-template-columns: repeat(3, minmax(220px, 1fr)) !important;
   gap: 24px !important;
   width: 100% !important;
   align-items: stretch !important;
 }
-
+@media (min-width: 1200px) {
+  body:has(#categoriesPage) .public-category-grid {
+    grid-template-columns: repeat(4, minmax(220px, 1fr)) !important;
+  }
+}
 body:has(#categoriesPage) .public-category-card {
   width: 100% !important;
   min-height: 180px !important;
