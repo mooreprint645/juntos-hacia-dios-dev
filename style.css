@@ -3510,48 +3510,6 @@ body:has(#categoriesGrid) .public-category-card-actions .song-btn {
    ADMIN: COLABORADORES CON BUSCADOR
 ========================================================= */
 
-.artist-checkbox-list {
-  display: grid !important;
-  gap: 8px !important;
-  max-height: 230px !important;
-  overflow-y: auto !important;
-  padding: 10px !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 16px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-}
-
-.artist-checkbox-item {
-  display: grid !important;
-  grid-template-columns: 22px 1fr !important;
-  align-items: center !important;
-  gap: 10px !important;
-  padding: 10px 12px !important;
-  border-radius: 12px !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  cursor: pointer !important;
-}
-
-.artist-checkbox-item input {
-  width: 18px !important;
-  height: 18px !important;
-  margin: 0 !important;
-  accent-color: var(--gold) !important;
-}
-
-.artist-checkbox-item .checkbox-name {
-  color: var(--text) !important;
-  font-weight: 700 !important;
-  line-height: 1.2 !important;
-}
-
-#songArtistsSearchInput {
-  margin-bottom: 10px !important;
-}
-/* =========================================================
-   ADMIN: COLABORADORES BUSCADOR - AJUSTE ESCRITORIO/MÓVIL
-========================================================= */
-
 #songFormCard label[for="songArtistsSearchInput"],
 #songFormCard #songArtistsSearchInput,
 #songFormCard #songArtistsInput {
@@ -3564,92 +3522,17 @@ body:has(#categoriesGrid) .public-category-card-actions .song-btn {
   margin-bottom: 10px !important;
 }
 
-.artist-checkbox-list {
-  width: 100% !important;
-  max-height: 240px !important;
-  overflow-y: auto !important;
-}
-
-.artist-checkbox-item {
-  display: grid !important;
-  grid-template-columns: 24px 1fr !important;
-  align-items: center !important;
-  gap: 12px !important;
-}
-
-.artist-checkbox-item input {
-  grid-column: 1 !important;
-}
-
-.artist-checkbox-item .checkbox-name {
-  grid-column: 2 !important;
-}
-/* =========================================================
-   ADMIN: COLABORADORES - DISEÑO FINAL
-========================================================= */
-
-.artist-checkbox-list {
+#songFormCard .artist-checkbox-list {
   display: grid !important;
   gap: 10px !important;
+  width: 100% !important;
   max-height: 260px !important;
   overflow-y: auto !important;
   padding: 12px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
 }
-
-.artist-checkbox-item {
-  display: grid !important;
-  grid-template-columns: 28px 1fr !important;
-  align-items: center !important;
-  gap: 12px !important;
-  min-height: 54px !important;
-  padding: 12px 14px !important;
-  border-radius: 14px !important;
-}
-
-.artist-checkbox-item input {
-  width: 18px !important;
-  height: 18px !important;
-  margin: 0 !important;
-}
-
-.artist-checkbox-item .checkbox-name {
-  display: block !important;
-  font-size: 1rem !important;
-  line-height: 1.25 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-/* =========================================================
-   ADMIN: COLABORADORES - CORRECCIÓN FINAL FLEX
-========================================================= */
-
-.artist-checkbox-item {
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  min-height: 52px !important;
-  padding: 12px 14px !important;
-  border-radius: 14px !important;
-}
-
-.artist-checkbox-item input {
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;
-  margin: 0 !important;
-  flex: 0 0 auto !important;
-}
-
-.artist-checkbox-item .checkbox-name {
-  display: block !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  line-height: 1.2 !important;
-  font-size: 1rem !important;
-}
-/* =========================================================
-   FIX REAL: colaboradores dentro del formulario
-========================================================= */
 
 #songFormCard .artist-checkbox-list .artist-checkbox-item {
   display: flex !important;
@@ -3662,6 +3545,8 @@ body:has(#categoriesGrid) .public-category-card-actions .song-btn {
   padding: 12px 14px !important;
   margin: 0 !important;
   border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  cursor: pointer !important;
 }
 
 #songFormCard .artist-checkbox-list .artist-checkbox-item input[type="checkbox"] {
@@ -3672,6 +3557,7 @@ body:has(#categoriesGrid) .public-category-card-actions .song-btn {
   margin: 0 !important;
   padding: 0 !important;
   flex: 0 0 18px !important;
+  accent-color: var(--gold) !important;
 }
 
 #songFormCard .artist-checkbox-list .artist-checkbox-item .checkbox-name {
@@ -3681,5 +3567,6 @@ body:has(#categoriesGrid) .public-category-card-actions .song-btn {
   padding: 0 !important;
   line-height: 1.2 !important;
   font-size: 1rem !important;
+  font-weight: 800 !important;
   color: var(--text) !important;
 }
