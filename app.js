@@ -2552,9 +2552,9 @@ function filterAdminArtistList(query) {
     const text = String(item.textContent || "").toLowerCase();
 
     if (!cleanQuery || text.includes(cleanQuery)) {
-      item.style.display = "";
-    } else {
-      item.style.display = "none";
+  item.style.removeProperty("display");
+} else {
+  item.style.setProperty("display", "none", "important");
     }
   });
      }
