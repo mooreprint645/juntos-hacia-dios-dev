@@ -3521,7 +3521,34 @@ body:has(#artistDetail) footer div {
   font-weight: 700;
   cursor: pointer;
 }
+.song-category-picker > .song-btn {
+  width: auto;
+  max-width: 260px;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+}
 
+.song-category-picker-panel .song-btn {
+  width: 100%;
+  max-width: none;
+  margin-bottom: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.95rem;
+}
+
+.song-category-picker-panel .song-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-color);
+}
+
+.song-category-picker-panel p {
+  margin-bottom: 0.75rem;
+}
+
+.song-category-folder-btn {
+  min-height: 54px;
+  font-size: 0.95rem;
+}
 .song-category-folder-btn:hover {
   background: rgba(245, 190, 72, 0.14);
   border-color: rgba(245, 190, 72, 0.45);
