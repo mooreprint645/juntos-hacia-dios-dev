@@ -3360,153 +3360,135 @@ body:has(#artistDetail) footer div {
   display: block;
 }
 /* =========================================================
-   CATEGORÍAS: estilo limpio tipo artistas
+   CATEGORÍAS PÚBLICAS
 ========================================================= */
 
-body:has(#categoriesPage) main,
-body:has(#categoriesPage) .section {
+#categoriesGrid {
+  display: block !important;
   width: 100% !important;
   max-width: 1180px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  margin: 0 auto !important;
 }
 
-body:has(#categoriesPage) .public-category-explorer {
+#categoriesGrid .public-category-explorer {
   width: 100% !important;
   max-width: none !important;
   margin: 0 auto !important;
   padding: 0 20px !important;
 }
 
-body:has(#categoriesPage) .public-category-grid {
+#categoriesGrid .public-category-tabs {
+  display: flex !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin: 18px 0 12px !important;
+}
+
+#categoriesGrid .public-category-path {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 12px 0 22px !important;
+  color: var(--secondary) !important;
+}
+
+#categoriesGrid .public-category-path button {
+  width: auto !important;
+  margin: 0 !important;
+}
+
+#categoriesGrid .public-category-grid,
+#categoriesGrid .artists-grid.public-category-grid {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(220px, 1fr)) !important;
+  grid-template-columns: repeat(3, minmax(240px, 1fr)) !important;
   gap: 24px !important;
   width: 100% !important;
+  max-width: none !important;
+  margin: 0 auto !important;
   align-items: stretch !important;
 }
-@media (min-width: 1200px) {
-  body:has(#categoriesPage) .public-category-grid {
-    grid-template-columns: repeat(4, minmax(220px, 1fr)) !important;
-  }
-}
-body:has(#categoriesPage) .public-category-card {
+
+#categoriesGrid .public-category-card {
+  display: block !important;
   width: 100% !important;
+  max-width: none !important;
   min-height: 180px !important;
   padding: 26px !important;
-  border-radius: 18px !important;
+  border-radius: 20px !important;
   background: var(--card) !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow) !important;
+  text-align: left !important;
 }
 
-body:has(#categoriesPage) .public-category-card h3 {
+#categoriesGrid .public-category-card h3 {
   color: var(--gold) !important;
   font-size: 1.15rem !important;
+  line-height: 1.2 !important;
   margin-bottom: 10px !important;
 }
 
-body:has(#categoriesPage) .public-category-card p {
+#categoriesGrid .public-category-card p {
   color: var(--secondary) !important;
   font-size: 0.95rem !important;
   line-height: 1.5 !important;
+  margin-bottom: 8px !important;
 }
 
-body:has(#categoriesPage) .public-category-card-actions {
+#categoriesGrid .public-category-card-actions {
   display: flex !important;
   gap: 10px !important;
   margin-top: 18px !important;
 }
 
-body:has(#categoriesPage) .public-category-card-actions .song-btn,
-body:has(#categoriesPage) .public-category-card-actions a {
+#categoriesGrid .public-category-card-actions .song-btn,
+#categoriesGrid .public-category-card-actions a {
   flex: 1 !important;
   width: auto !important;
   text-align: center !important;
   margin-top: 0 !important;
 }
 
+#categoriesGrid .public-category-empty {
+  width: 100% !important;
+  padding: 28px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 20px !important;
+  background: var(--card) !important;
+  color: var(--secondary) !important;
+  text-align: center !important;
+}
+
 @media (max-width: 768px) {
-  body:has(#categoriesPage) .public-category-explorer {
-    max-width: 420px !important;
+  #categoriesGrid {
+    max-width: 430px !important;
+  }
+
+  #categoriesGrid .public-category-explorer {
     padding: 0 16px !important;
   }
 
-  body:has(#categoriesPage) .public-category-grid {
+  #categoriesGrid .public-category-grid,
+  #categoriesGrid .artists-grid.public-category-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 14px !important;
   }
 
-  body:has(#categoriesPage) .public-category-card {
+  #categoriesGrid .public-category-card {
     min-height: auto !important;
     padding: 14px !important;
   }
 
-  body:has(#categoriesPage) .public-category-card-actions {
+  #categoriesGrid .public-category-card-actions {
     display: grid !important;
     grid-template-columns: 1fr !important;
   }
 }
-/* =========================================================
-   FIX FINAL CATEGORÍAS - usar estilo tipo artistas
-========================================================= */
-
-body:has(#categoriesGrid) #categoriesGrid,
-body:has(#categoriesGrid) .public-category-explorer {
-  width: 100% !important;
-  max-width: 1180px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-body:has(#categoriesGrid) .public-category-grid,
-body:has(#categoriesGrid) .artists-grid.public-category-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(240px, 1fr)) !important;
-  gap: 24px !important;
-  width: 100% !important;
-  max-width: 1180px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-body:has(#categoriesGrid) .public-category-card {
-  width: 100% !important;
-  max-width: none !important;
-  min-height: 190px !important;
-  padding: 26px !important;
-  border-radius: 20px !important;
-}
-
-body:has(#categoriesGrid) .public-category-card-actions {
-  display: flex !important;
-  gap: 10px !important;
-  margin-top: 18px !important;
-}
-
-body:has(#categoriesGrid) .public-category-card-actions .song-btn {
-  flex: 1 !important;
-  width: auto !important;
-}
-
-@media (max-width: 768px) {
-  body:has(#categoriesGrid) .public-category-grid,
-  body:has(#categoriesGrid) .artists-grid.public-category-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 14px !important;
-  }
-
-  body:has(#categoriesGrid) .public-category-card {
-    padding: 14px !important;
-    min-height: auto !important;
-  }
-
-  body:has(#categoriesGrid) .public-category-card-actions {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-  }
-}
-/* =========================================================
+/*
+=========================================================
    ADMIN: COLABORADORES CON BUSCADOR
 ========================================================= */
 
