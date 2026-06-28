@@ -2546,7 +2546,7 @@ function filterAdminArtistList(query) {
   if (!list) return;
 
   const cleanQuery = String(query || "").trim().toLowerCase();
-  const items = Array.from(list.querySelectorAll(".admin-list-item"));
+  const items = Array.from(list.children);
 
   items.forEach(function (item) {
     const text = String(item.textContent || "").toLowerCase();
