@@ -3553,3 +3553,13 @@ body:has(#artistDetail) footer div {
   background: rgba(245, 190, 72, 0.14);
   border-color: rgba(245, 190, 72, 0.45);
 }
+.song-category-picker-panel .song-btn.secondary {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  opacity: 1 !important;
+}
+
+.song-category-picker-panel .song-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
