@@ -242,7 +242,13 @@
 <small class="muted-text">
   Selecciona aquí los colaboradores. El artista principal se elige arriba.
 </small>
-
+<label for="songCategorySearchInput">Buscar categoría</label>
+<input
+  type="search"
+  id="songCategorySearchInput"
+  placeholder="Buscar: Misa, Entrada, Adviento..."
+  oninput="filterSongCategoryOptions(this.value)"
+/>
           <label for="songCategoryInput">Categoría principal</label>
           <select id="songCategoryInput">
             <option value="">Selecciona categoría</option>
