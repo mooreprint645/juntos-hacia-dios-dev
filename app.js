@@ -2840,6 +2840,12 @@ function sameSongCategoryId(a, b) {
   return String(a) === String(b);
 }
 
+function songCategoryTypeName(type) {
+  if (type === "catolico") return "Católico";
+  if (type === "cristiano") return "Cristiano";
+  return "General";
+}
+
 async function getSongCategoryPickerFlat() {
   const { data } = await fetchCategories();
   const categories = data || [];
@@ -2870,6 +2876,101 @@ async function renderSongCategoryPicker(parentId) {
 
   const flat = await getSongCategoryPickerFlat();
 
+  if (!songCategoryPickerCurrentId) {
+    panel.innerHTML = `
+      <div class="song-category-picker-header">
+        <p class="muted-text">
+          Primero elige el tipo de categoría:
+        </p>
+      </div>
+
+      <div class="song-category-folder-list">
+        <button
+          type="button"
+          class="song-category-folder-btn"
+          onclick="renderSongCategoryPicker('type:catolico')"
+        >
+          📁 Católico
+        </button>
+
+        <button
+          type="button"
+          class="song-category-folder-btn"
+          onclick="renderSongCategoryPicker('type:cristiano')"
+        >
+          📁 Cristiano
+        </button>
+
+        <button
+          type="button"
+          class="song-category-folder-btn"
+          onclick="renderSongCategoryPicker('type:general')"
+        >
+          📁 General
+        </button>
+      </div>
+    `;
+
+    return;
+  }
+
+  if (String(songCategoryPickerCurrentId).startsWith("type:")) {
+    const selectedType = String(songCategoryPickerCurrentId).replace("type:", "");
+
+    const children = flat.filter(function (category) {
+      const categoryType = category.song_type || "general";
+
+      return (
+        sameSongCategoryId(category.parent_id, null) &&
+        categoryType === selectedType
+      );
+    });
+
+    let html = `
+      <div class="song-category-picker-header">
+        <p class="muted-text">
+          Ruta actual:
+          <strong>${escapeHTML(songCategoryTypeName(selectedType))}</strong>
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="song-btn small-btn secondary"
+        onclick="renderSongCategoryPicker(null)"
+      >
+        Volver
+      </button>
+    `;
+
+    if (!children.length) {
+      html += `
+        <p class="muted-text">
+          No hay categorías en este tipo todavía.
+        </p>
+      `;
+    } else {
+      html += `<div class="song-category-folder-list">`;
+
+      children.forEach(function (category) {
+        html += `
+          <button
+            type="button"
+            class="song-category-folder-btn"
+            onclick="renderSongCategoryPicker('${escapeHTML(category.id)}')"
+          >
+            📁 ${escapeHTML(category.name || "Sin nombre")}
+          </button>
+        `;
+      });
+
+      html += `</div>`;
+    }
+
+    panel.innerHTML = html;
+    return;
+  }
+
   const currentCategory = flat.find(function (category) {
     return sameSongCategoryId(category.id, songCategoryPickerCurrentId);
   });
@@ -2885,7 +2986,11 @@ async function renderSongCategoryPicker(parentId) {
       <p class="muted-text">
         Ruta actual:
         <strong>
-          ${currentCategory ? escapeHTML(currentCategory.path) : "Categorías principales"}
+          ${
+            currentCategory
+              ? escapeHTML(songCategoryTypeName(currentCategory.song_type || "general") + " — " + currentCategory.path)
+              : "Categorías principales"
+          }
         </strong>
       </p>
     </div>
@@ -2902,15 +3007,27 @@ async function renderSongCategoryPicker(parentId) {
       </button>
     `;
 
-    html += `
-      <button
-        type="button"
-        class="song-btn small-btn secondary"
-        onclick="renderSongCategoryPicker('${escapeHTML(currentCategory.parent_id || "")}')"
-      >
-        Volver
-      </button>
-    `;
+    if (currentCategory.parent_id) {
+      html += `
+        <button
+          type="button"
+          class="song-btn small-btn secondary"
+          onclick="renderSongCategoryPicker('${escapeHTML(currentCategory.parent_id)}')"
+        >
+          Volver
+        </button>
+      `;
+    } else {
+      html += `
+        <button
+          type="button"
+          class="song-btn small-btn secondary"
+          onclick="renderSongCategoryPicker('type:${escapeHTML(currentCategory.song_type || "general")}')"
+        >
+          Volver
+        </button>
+      `;
+    }
   }
 
   if (!children.length) {
