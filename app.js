@@ -1478,7 +1478,7 @@ function renderPublicCategoryPath() {
 }
 
 function categorySongsHref(category) {
-  return `categorias.html?categoria=${safeUrlParam(category.slug || "")}`;
+  return `categorias.html?categoria=${safeUrlParam(category.id || category.slug || "")}`;
 }
 function getPublicCategoryDescendantIds(categoryId) {
   const ids = new Set([String(categoryId || "")]);
@@ -1718,8 +1718,11 @@ async function showCategorySongsBySlug(categorySlug) {
   `;
 
   const category = allCategoriesForPage.find(function (item) {
-    return String(item.slug || "") === cleanSlug;
-  });
+  return (
+    String(item.id || "") === cleanSlug ||
+    String(item.slug || "") === cleanSlug
+  );
+});
 
   if (!category) {
     root.innerHTML = `
