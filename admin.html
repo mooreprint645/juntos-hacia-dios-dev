@@ -80,7 +80,15 @@
           <p class="hero-kicker">Artistas</p>
           <h2>Artistas / Ministerios</h2>
         </div>
-
+<div class="admin-section-search">
+  <label for="adminArtistSearchInput">Buscar artista</label>
+  <input
+    type="search"
+    id="adminArtistSearchInput"
+    placeholder="Buscar por nombre, tipo o descripción..."
+    oninput="filterAdminArtistList(this.value)"
+  />
+</div>
         <article class="admin-form-card" id="artistFormCard">
           <h3 id="artistFormTitle">Agregar artista</h3>
 
