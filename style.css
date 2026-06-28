@@ -971,33 +971,7 @@ body.light-mode .shimmer-block {
   }
 }
 /* =========================================================
-   FIX: ACORDES ENCIMA DE LA LETRA
-========================================================= */
-
-.lyrics-block {
-  white-space: pre-wrap;
-  font-family: "Courier New", Courier, monospace;
-  line-height: 1.35;
-}
-
-.chord-line {
-  display: block;
-  color: var(--accent);
-  font-weight: 800;
-  line-height: 1.1;
-  min-height: 1.1em;
-  white-space: pre;
-}
-
-.lyric-line {
-  display: block;
-  color: var(--text);
-  line-height: 1.5;
-  margin-bottom: 10px;
-  white-space: pre-wrap;
-}
-/* =========================================================
-   FIX FINAL: MÓVIL + LETRA DE CANCIONES
+   LETRAS Y ACORDES
 ========================================================= */
 
 .song-detail-card {
@@ -1009,26 +983,83 @@ body.light-mode .shimmer-block {
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
-  font-size: 16px;
-  line-height: 1.45;
-  padding: 22px;
+  background: #10131c;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 28px;
+  white-space: normal;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.light-mode .lyrics-block {
+  background: #fffaf0;
+  color: #111111;
+}
+
+.song-section-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 18px 0 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 207, 83, 0.16);
+  color: var(--accent);
+  border: 1px solid rgba(255, 207, 83, 0.35);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.song-section-label:first-child {
+  margin-top: 0;
+}
+
+.song-line {
+  display: block;
+  margin-bottom: 14px;
 }
 
 .chord-line {
   display: block;
+  min-height: 1.15em;
   color: var(--accent);
-  font-weight: 800;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.95rem;
+  font-weight: 900;
   line-height: 1.1;
-  min-height: 1.1em;
   white-space: pre;
+  text-shadow: 0 0 14px rgba(255, 207, 83, 0.22);
 }
 
 .lyric-line {
   display: block;
   color: var(--text);
-  line-height: 1.5;
-  margin-bottom: 12px;
+  font-size: 1.08rem;
+  font-weight: 500;
+  line-height: 1.55;
   white-space: pre;
+}
+
+.song-plain-line {
+  display: block;
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
+
+.song-empty-line {
+  display: block;
+  height: 10px;
+}
+
+body.light-mode .lyric-line,
+body.light-mode .song-plain-line {
+  color: #111111;
 }
 
 @media (max-width: 768px) {
@@ -1092,115 +1123,6 @@ body.light-mode .shimmer-block {
     word-break: break-word;
   }
 
-  .capo-box,
-  .transpose-box {
-    justify-content: center;
-    gap: 8px;
-    padding: 14px;
-  }
-
-  .capo-box span,
-  .transpose-box span {
-    width: 100%;
-    text-align: center;
-  }
-
-  .song-btn.small-btn {
-    padding: 10px 14px;
-    font-size: 0.85rem;
-  }
-
-  .lyrics-block {
-    font-size: 15px;
-    padding: 18px;
-  }
-}
-
-@media (max-width: 420px) {
-  .song-detail-card h1 {
-    font-size: 1.65rem;
-  }
-
-  .lyrics-block {
-    font-size: 14px;
-    padding: 16px;
-  }
-}
-/* =========================================================
-   ESTILO VISUAL: SECCIONES + ACORDES DESTACADOS
-========================================================= */
-
-.lyrics-block {
-  background: #10131c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 28px;
-  white-space: normal;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  overflow-x: auto;
-}
-
-.song-section-label {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  margin: 18px 0 14px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255, 207, 83, 0.16);
-  color: var(--accent);
-  border: 1px solid rgba(255, 207, 83, 0.35);
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.song-section-label:first-child {
-  margin-top: 0;
-}
-
-.song-line {
-  display: block;
-  margin-bottom: 14px;
-}
-
-.chord-line {
-  display: block;
-  min-height: 1.15em;
-  color: var(--accent);
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.95rem;
-  font-weight: 900;
-  line-height: 1.1;
-  white-space: pre;
-  text-shadow: 0 0 14px rgba(255, 207, 83, 0.22);
-}
-
-.lyric-line {
-  display: block;
-  color: var(--text);
-  font-size: 1.08rem;
-  font-weight: 500;
-  line-height: 1.55;
-  white-space: pre;
-}
-
-.song-plain-line {
-  display: block;
-  color: var(--text);
-  font-size: 1.05rem;
-  line-height: 1.55;
-  margin-bottom: 10px;
-  white-space: pre-wrap;
-}
-
-.song-empty-line {
-  display: block;
-  height: 10px;
-}
-
-@media (max-width: 768px) {
   .lyrics-block {
     padding: 20px;
     border-radius: 16px;
@@ -1219,6 +1141,17 @@ body.light-mode .shimmer-block {
   .lyric-line,
   .song-plain-line {
     font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .song-detail-card h1 {
+    font-size: 1.65rem;
+  }
+
+  .lyrics-block {
+    font-size: 14px;
+    padding: 16px;
   }
 }
 /* Ajuste final móvil para controles del canto */
