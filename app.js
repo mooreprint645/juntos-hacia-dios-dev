@@ -2830,25 +2830,138 @@ async function loadCategoryParentOptions() {
     `;
   });
 }
-function filterSongCategoryOptions(query) {
+let songCategoryPickerCurrentId = null;
+
+function sameSongCategoryId(a, b) {
+  if ((a === null || a === undefined || a === "") && (b === null || b === undefined || b === "")) {
+    return true;
+  }
+
+  return String(a) === String(b);
+}
+
+async function getSongCategoryPickerFlat() {
+  const { data } = await fetchCategories();
+  const categories = data || [];
+  const tree = buildCategoryTree(categories, null);
+
+  return flattenCategoryTree(tree, 0, "");
+}
+
+async function toggleSongCategoryPicker() {
+  const panel = $("songCategoryPickerPanel");
+
+  if (!panel) return;
+
+  if (panel.style.display === "none" || !panel.style.display) {
+    panel.style.display = "block";
+    await renderSongCategoryPicker(null);
+  } else {
+    panel.style.display = "none";
+  }
+}
+
+async function renderSongCategoryPicker(parentId) {
+  const panel = $("songCategoryPickerPanel");
+
+  if (!panel) return;
+
+  songCategoryPickerCurrentId = parentId || null;
+
+  const flat = await getSongCategoryPickerFlat();
+
+  const currentCategory = flat.find(function (category) {
+    return sameSongCategoryId(category.id, songCategoryPickerCurrentId);
+  });
+
+  const children = flat.filter(function (category) {
+    return sameSongCategoryId(category.parent_id, songCategoryPickerCurrentId);
+  });
+
+  let html = "";
+
+  html += `
+    <div class="song-category-picker-header">
+      <p class="muted-text">
+        Ruta actual:
+        <strong>
+          ${currentCategory ? escapeHTML(currentCategory.path) : "Categorías principales"}
+        </strong>
+      </p>
+    </div>
+  `;
+
+  if (currentCategory) {
+    html += `
+      <button
+        type="button"
+        class="song-btn small-btn"
+        onclick="useSongCategoryPickerCategory('${escapeHTML(currentCategory.id)}')"
+      >
+        Usar esta categoría para el canto
+      </button>
+    `;
+
+    html += `
+      <button
+        type="button"
+        class="song-btn small-btn secondary"
+        onclick="renderSongCategoryPicker('${escapeHTML(currentCategory.parent_id || "")}')"
+      >
+        Volver
+      </button>
+    `;
+  }
+
+  if (!children.length) {
+    html += `
+      <p class="muted-text">
+        Esta categoría no tiene subcategorías.
+      </p>
+    `;
+  } else {
+    html += `<div class="song-category-folder-list">`;
+
+    children.forEach(function (category) {
+      html += `
+        <button
+          type="button"
+          class="song-category-folder-btn"
+          onclick="renderSongCategoryPicker('${escapeHTML(category.id)}')"
+        >
+          📁 ${escapeHTML(category.name || "Sin nombre")}
+        </button>
+      `;
+    });
+
+    html += `</div>`;
+  }
+
+  panel.innerHTML = html;
+}
+
+function useSongCategoryPickerCategory(categoryId) {
   const select = $("songCategoryInput");
+  const text = $("songCategorySelectedText");
+  const panel = $("songCategoryPickerPanel");
 
   if (!select) return;
 
-  const cleanQuery = String(query || "").trim().toLowerCase();
-  const options = Array.from(select.querySelectorAll("option"));
+  select.value = categoryId;
 
-  options.forEach(function (option) {
-    const text = String(option.textContent || "").toLowerCase();
-    const value = String(option.value || "");
+  const selectedOption = select.options[select.selectedIndex];
 
-    if (!value || !cleanQuery || text.includes(cleanQuery)) {
-      option.hidden = false;
-    } else {
-      option.hidden = true;
-    }
-  });
-     }
+  if (text && selectedOption) {
+    text.innerHTML = `
+      Categoría elegida:
+      <strong>${escapeHTML(selectedOption.textContent || "")}</strong>
+    `;
+  }
+
+  if (panel) {
+    panel.style.display = "none";
+  }
+}
 function loadCategoryOptions() {
   return fetchCategories().then(function ({ data }) {
     const categories = data || [];
