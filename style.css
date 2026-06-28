@@ -3563,3 +3563,32 @@ body:has(#artistDetail) footer div {
 .song-category-picker-panel .song-btn.secondary:hover {
   background: rgba(255, 255, 255, 0.18) !important;
 }
+#songFormCard {
+  display: block !important;
+}
+
+#songFormCard label,
+#songFormCard input,
+#songFormCard select,
+#songFormCard textarea,
+#songFormCard .song-category-picker,
+#songFormCard .admin-capo-old-box,
+#songFormCard .admin-capo-versions-box,
+#songFormCard .admin-links-box,
+#songFormCard .editor-buttons,
+#songFormCard .admin-actions {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#songFormCard label {
+  display: block !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.35rem !important;
+}
+
+#songFormCard input,
+#songFormCard select,
+#songFormCard textarea {
+  margin-bottom: 0.85rem !important;
+}
