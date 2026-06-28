@@ -2830,7 +2830,25 @@ async function loadCategoryParentOptions() {
     `;
   });
 }
+function filterSongCategoryOptions(query) {
+  const select = $("songCategoryInput");
 
+  if (!select) return;
+
+  const cleanQuery = String(query || "").trim().toLowerCase();
+  const options = Array.from(select.querySelectorAll("option"));
+
+  options.forEach(function (option) {
+    const text = String(option.textContent || "").toLowerCase();
+    const value = String(option.value || "");
+
+    if (!value || !cleanQuery || text.includes(cleanQuery)) {
+      option.hidden = false;
+    } else {
+      option.hidden = true;
+    }
+  });
+     }
 function loadCategoryOptions() {
   return fetchCategories().then(function ({ data }) {
     const categories = data || [];
