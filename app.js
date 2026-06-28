@@ -2540,7 +2540,24 @@ async function deleteArtist(id) {
     loadHomeArtists()
   ]);
 }
+function filterAdminArtistList(query) {
+  const list = $("adminArtistList");
 
+  if (!list) return;
+
+  const cleanQuery = String(query || "").trim().toLowerCase();
+  const items = Array.from(list.querySelectorAll(".admin-list-item"));
+
+  items.forEach(function (item) {
+    const text = String(item.textContent || "").toLowerCase();
+
+    if (!cleanQuery || text.includes(cleanQuery)) {
+      item.style.display = "";
+    } else {
+      item.style.display = "none";
+    }
+  });
+     }
 async function loadAdminArtists() {
   const list = $("adminArtistList");
 
