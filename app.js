@@ -1480,7 +1480,27 @@ function renderPublicCategoryPath() {
 function categorySongsHref(category) {
   return `categorias.html?categoria=${safeUrlParam(category.slug || "")}`;
 }
+function getPublicCategoryDescendantIds(categoryId) {
+  const ids = new Set([String(categoryId || "")]);
 
+  let added = true;
+
+  while (added) {
+    added = false;
+
+    allCategoriesForPage.forEach(function (category) {
+      const parentId = String(category.parent_id || "");
+      const id = String(category.id || "");
+
+      if (parentId && ids.has(parentId) && !ids.has(id)) {
+        ids.add(id);
+        added = true;
+      }
+    });
+  }
+
+  return ids;
+                         }
 function renderCategoriesExplorer() {
   const root = getCategoriesRoot();
 
@@ -1729,11 +1749,13 @@ async function showCategorySongsBySlug(categorySlug) {
     return;
   }
 
-  const categorySongs = (songsResult.data || []).filter(function (song) {
-    return (song._categories || []).some(function (songCategory) {
-      return String(songCategory.slug || "") === cleanSlug;
-    });
+  const allowedCategoryIds = getPublicCategoryDescendantIds(category.id);
+
+const categorySongs = (songsResult.data || []).filter(function (song) {
+  return (song._categories || []).some(function (songCategory) {
+    return allowedCategoryIds.has(String(songCategory.id || ""));
   });
+});
 
   root.innerHTML = `
     <div class="category-songs-view">
