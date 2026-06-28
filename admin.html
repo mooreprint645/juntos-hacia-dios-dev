@@ -242,18 +242,30 @@
 <small class="muted-text">
   Selecciona aquí los colaboradores. El artista principal se elige arriba.
 </small>
-<label for="songCategorySearchInput">Buscar categoría</label>
-<input
-  type="search"
-  id="songCategorySearchInput"
-  placeholder="Buscar: Misa, Entrada, Adviento..."
-  oninput="filterSongCategoryOptions(this.value)"
-/>
-          <label for="songCategoryInput">Categoría principal</label>
-          <select id="songCategoryInput">
-            <option value="">Selecciona categoría</option>
-          </select>
+<label for="songCategoryInput">Categoría principal</label>
+<select id="songCategoryInput">
+  <option value="">Selecciona categoría</option>
+</select>
 
+<div class="song-category-picker" id="songCategoryPicker">
+  <p class="muted-text" id="songCategorySelectedText">
+    Puedes elegir la categoría desde la lista o usar el explorador por carpetas.
+  </p>
+
+  <button
+    type="button"
+    class="song-btn small-btn"
+    onclick="toggleSongCategoryPicker()"
+  >
+    Elegir por carpetas
+  </button>
+
+  <div
+    class="song-category-picker-panel"
+    id="songCategoryPickerPanel"
+    style="display: none;"
+  ></div>
+</div>
           <label for="songAlbumInput">Álbum / carpeta</label>
           <select id="songAlbumInput">
             <option value="">Sin álbum / carpeta</option>
