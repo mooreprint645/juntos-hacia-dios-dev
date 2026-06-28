@@ -2609,6 +2609,16 @@ async function loadAdminArtists() {
 async function loadArtistOptions() {
   const { data } = await fetchArtists();
 setOptions("songMainArtistInput", data || [], "Selecciona artista principal", "id", "name");
+   const songMainArtistSelect = $("songMainArtistInput");
+
+if (songMainArtistSelect && !songMainArtistSelect.dataset.albumFilterReady) {
+  songMainArtistSelect.dataset.albumFilterReady = "true";
+
+  songMainArtistSelect.addEventListener("change", function () {
+    setInputValue("songAlbumInput", "");
+    loadAlbumOptions();
+  });
+}
   setOptions("albumArtistInput", data || [], "Selecciona artista", "id", "name");
   setMultiOptions("songArtistsInput", data || [], "name");
 }
@@ -3763,21 +3773,40 @@ async function loadAlbumOptions() {
   const { data } = await fetchAlbums();
 
   const select = $("songAlbumInput");
+  const artistSelect = $("songMainArtistInput");
 
   if (!select) return;
 
+  const selectedArtistId = artistSelect ? String(artistSelect.value || "") : "";
+
+  if (!selectedArtistId) {
+    select.innerHTML = `<option value="">Primero selecciona artista principal</option>`;
+    return;
+  }
+
+  const albums = (data || []).filter(function (album) {
+    return String(album.artist_id || "") === selectedArtistId;
+  });
+
   select.innerHTML = `<option value="">Sin álbum / carpeta</option>`;
 
-  (data || []).forEach(function (album) {
-    const artistName = album.artist ? album.artist.name : "Sin artista";
+  if (!albums.length) {
+    select.innerHTML += `
+      <option value="" disabled>
+        Este artista no tiene álbumes / carpetas
+      </option>
+    `;
+    return;
+  }
 
+  albums.forEach(function (album) {
     select.innerHTML += `
       <option value="${escapeHTML(album.id)}">
-        ${escapeHTML(artistName)} — ${escapeHTML(album.title || "Sin título")}
+        ${escapeHTML(album.title || "Sin título")}
       </option>
     `;
   });
-}
+       }
    /* =========================================================
    ADMIN: EDITOR DE LETRA
 ========================================================= */
