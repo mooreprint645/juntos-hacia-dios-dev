@@ -3592,3 +3592,129 @@ body:has(#artistDetail) footer div {
 #songFormCard textarea {
   margin-bottom: 0.85rem !important;
 }
+    @media (max-width: 768px) {
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+      }
+
+      .brand {
+        max-width: 72%;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .menu-toggle {
+        display: inline-flex !important;
+      }
+
+      .nav-menu {
+        display: none !important;
+        position: absolute;
+        top: 62px;
+        left: 14px;
+        right: 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 16px;
+        border-radius: 18px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+      }
+
+      .nav-menu.show-menu {
+        display: flex !important;
+      }
+
+      .nav-menu a,
+      .nav-menu button {
+        width: 100%;
+        text-align: left;
+      }
+
+      .song-page-section {
+        padding: 22px 14px;
+      }
+
+      .song-detail-card {
+        padding: 18px;
+        border-radius: 18px;
+      }
+
+      .song-detail-card h1 {
+        font-size: 1.9rem;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+
+      .capo-box,
+      .transpose-box {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px;
+      }
+
+      .capo-box span,
+      .transpose-box span {
+        width: 100%;
+        text-align: center;
+      }
+
+      .song-btn.small-btn {
+        padding: 10px 14px;
+        font-size: 0.82rem;
+      }
+
+      .lyrics-block {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        padding: 18px;
+        font-size: 15px;
+        line-height: 1.35;
+        white-space: pre;
+        font-family: "Courier New", Courier, monospace;
+      }
+
+      .chord-line {
+        display: block;
+        color: var(--accent);
+        font-weight: 800;
+        line-height: 1.1;
+        min-height: 1.1em;
+        white-space: pre;
+      }
+
+      .lyric-line {
+        display: block;
+        color: var(--text);
+        line-height: 1.45;
+        margin-bottom: 12px;
+        white-space: pre;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .song-detail-card h1 {
+        font-size: 1.55rem;
+      }
+
+      .lyrics-block {
+        font-size: 14px;
+        padding: 16px;
+      }
+    }
