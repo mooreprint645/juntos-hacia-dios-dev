@@ -12,10 +12,6 @@
   />
 
   <link rel="stylesheet" href="style.css" />
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
-  <script src="app.js" defer></script>
 </head>
 
 <body>
@@ -69,7 +65,43 @@
             autocomplete="off"
           />
         </div>
+<div class="public-song-filters">
+  <div>
+    <label for="songToneFilter">Tono</label>
+    <select id="songToneFilter" onchange="renderSongsPage()">
+      <option value="">Todos los tonos</option>
+    </select>
+  </div>
 
+  <div>
+    <label for="songArtistFilter">Artista</label>
+    <select id="songArtistFilter" onchange="renderSongsPage()">
+      <option value="">Todos los artistas</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="songCategoryFilter">Categoría</label>
+    <select id="songCategoryFilter" onchange="renderSongsPage()">
+      <option value="">Todas las categorías</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="songAlbumFilter">Álbum</label>
+    <select id="songAlbumFilter" onchange="renderSongsPage()">
+      <option value="">Todos los álbumes</option>
+    </select>
+  </div>
+
+  <button
+    type="button"
+    class="song-btn small-btn secondary"
+    onclick="clearPublicSongFilters()"
+  >
+    Limpiar filtros
+  </button>
+</div>
         <div class="filter-buttons" aria-label="Filtros de canciones">
           <button class="song-btn small-btn" type="button" onclick="setSongsFilter('all')">
             Todas
