@@ -1988,7 +1988,20 @@ async function loadSongPage() {
 
   updateSongLyricsDisplay();
 }
+function filterArtistProfileSongs(query) {
+  const cleanQuery = String(query || "").trim().toLowerCase();
+  const rows = Array.from(document.querySelectorAll(".artist-profile-song-item"));
 
+  rows.forEach(function (row) {
+    const text = String(row.textContent || "").toLowerCase();
+
+    if (!cleanQuery || text.includes(cleanQuery)) {
+      row.style.removeProperty("display");
+    } else {
+      row.style.setProperty("display", "none", "important");
+    }
+  });
+}
 async function loadArtistProfile() {
   if (!isPage("artista.html")) return;
 
@@ -2069,6 +2082,15 @@ box.innerHTML = `
       <p>${escapeHTML(artist.description || "Ministerio o artista registrado.")}</p>
     </div>
   </section>
+  <section class="artist-profile-section">
+  <label for="artistProfileSearchInput">Buscar canciones de este artista</label>
+  <input
+    type="search"
+    id="artistProfileSearchInput"
+    placeholder="Buscar por título, tono o álbum..."
+    oninput="filterArtistProfileSongs(this.value)"
+  />
+</section>
 ${recentSongs.length ? `
     <section class="artist-profile-section">
       <h2>Canciones recientes</h2>
@@ -2078,7 +2100,7 @@ ${recentSongs.length ? `
           const songSlug = song.slug || slugify(song.title || "");
 
           return `
-            <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
+            <a class="artist-song-row artist-profile-song-item" href="canto.html?slug=${safeUrlParam(songSlug)}">
               <div>
                 <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
                 <p>${escapeHTML(songMetaText(song) || "Canto disponible")}</p>
@@ -2099,7 +2121,7 @@ ${recentSongs.length ? `
           const songSlug = song.slug || slugify(song.title || "");
 
           return `
-            <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
+            <a class="artist-song-row artist-profile-song-item" href="canto.html?slug=${safeUrlParam(songSlug)}">
               <div>
                 <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
                 <p>${escapeHTML(songMetaText(song) || "Canto disponible")}</p>
@@ -2144,7 +2166,7 @@ ${recentSongs.length ? `
           const songSlug = song.slug || slugify(song.title || "");
 
           return `
-            <a class="artist-song-row" href="canto.html?slug=${safeUrlParam(songSlug)}">
+            <a class="artist-song-row artist-profile-song-item" href="canto.html?slug=${safeUrlParam(songSlug)}">
               <div>
                 <h3>${escapeHTML(song.title || "Canto sin título")}</h3>
                 <p>${escapeHTML(songMetaText(song) || "Colaboración")}</p>
