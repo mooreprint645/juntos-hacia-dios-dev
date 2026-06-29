@@ -222,7 +222,30 @@
           <p class="hero-kicker">Cancionero</p>
           <h2>Canciones</h2>
         </div>
+<div class="admin-section-search">
+  <label for="adminSongSearchInput">Buscar canción</label>
+  <input
+    type="search"
+    id="adminSongSearchInput"
+    placeholder="Buscar por título, artista, tono, categoría o álbum..."
+    oninput="filterAdminSongList()"
+  />
 
+  <label for="adminSongArtistFilter">Filtrar por artista</label>
+  <select id="adminSongArtistFilter" onchange="filterAdminSongList()">
+    <option value="">Todos los artistas</option>
+  </select>
+
+  <label for="adminSongCategoryFilter">Filtrar por categoría</label>
+  <select id="adminSongCategoryFilter" onchange="filterAdminSongList()">
+    <option value="">Todas las categorías</option>
+  </select>
+
+  <label for="adminSongAlbumFilter">Filtrar por álbum</label>
+  <select id="adminSongAlbumFilter" onchange="filterAdminSongList()">
+    <option value="">Todos los álbumes</option>
+  </select>
+</div>
         <article class="admin-form-card" id="songFormCard">
           <h3 id="songFormTitle">Agregar canción</h3>
 
