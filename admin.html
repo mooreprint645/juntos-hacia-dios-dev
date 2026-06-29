@@ -167,7 +167,20 @@
           <p class="hero-kicker">Álbumes / Carpetas</p>
           <h2>Álbumes por artista</h2>
         </div>
+<div class="admin-section-search">
+  <label for="adminAlbumSearchInput">Buscar álbum</label>
+  <input
+    type="search"
+    id="adminAlbumSearchInput"
+    placeholder="Buscar por álbum, artista o descripción..."
+    oninput="filterAdminAlbumList()"
+  />
 
+  <label for="adminAlbumArtistFilter">Filtrar por artista</label>
+  <select id="adminAlbumArtistFilter" onchange="filterAdminAlbumList()">
+    <option value="">Todos los artistas</option>
+  </select>
+</div>
         <article class="admin-form-card" id="albumFormCard">
           <h3 id="albumFormTitle">Agregar álbum / carpeta</h3>
 
