@@ -3690,9 +3690,10 @@ async function saveAlbum() {
   resetAlbumForm();
 
   await Promise.all([
-    loadAdminAlbums(),
-    loadAlbumOptions()
-  ]);
+  loadAdminAlbums(),
+  loadAlbumOptions(),
+  loadAdminAlbumArtistFilter()
+]);
 
   alert(wasEditing ? "Álbum actualizado." : "Álbum guardado.");
 }
@@ -3757,7 +3758,54 @@ async function deleteAlbum(id) {
     loadAlbumOptions()
   ]);
 }
+function filterAdminAlbumList() {
+  const searchInput = $("adminAlbumSearchInput");
+  const artistFilter = $("adminAlbumArtistFilter");
+  const list = $("adminAlbumList");
 
+  if (!list) return;
+
+  const query = String(searchInput ? searchInput.value : "").trim().toLowerCase();
+  const artistId = String(artistFilter ? artistFilter.value : "").trim();
+  const items = Array.from(list.querySelectorAll(".admin-album-item"));
+
+  items.forEach(function (item) {
+    const text = String(item.textContent || "").toLowerCase();
+    const itemArtistId = String(item.dataset.artistId || "").trim();
+
+    const matchesSearch = !query || text.includes(query);
+    const matchesArtist = !artistId || itemArtistId === artistId;
+
+    if (matchesSearch && matchesArtist) {
+      item.style.removeProperty("display");
+    } else {
+      item.style.setProperty("display", "none", "important");
+    }
+  });
+}
+async function loadAdminAlbumArtistFilter() {
+  const select = $("adminAlbumArtistFilter");
+
+  if (!select) return;
+
+  const { data } = await fetchArtists();
+  const artists = data || [];
+
+  select.innerHTML = '<option value="">Todos los artistas</option>';
+
+  artists
+    .slice()
+    .sort(function (a, b) {
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    })
+    .forEach(function (artist) {
+      select.innerHTML += `
+        <option value="${escapeHTML(artist.id)}">
+          ${escapeHTML(artist.name || "Sin nombre")}
+        </option>
+      `;
+    });
+}
 async function loadAdminAlbums() {
   const list = $("adminAlbumList");
 
@@ -3775,9 +3823,9 @@ async function loadAdminAlbums() {
     return;
   }
 
-  list.innerHTML = data.map(function (album) {
+  list.innerHTML = (data || []).map(function (album) {
     return `
-      <div class="admin-list-item">
+      <div class="admin-list-item admin-album-item" data-artist-id="${escapeHTML(album.artist_id || "")}">
         <strong>📁 ${escapeHTML(album.title || "Sin título")}</strong>
         <p>${escapeHTML(album.artist ? album.artist.name : "Sin artista")}</p>
         <p>${escapeHTML(album.description || "Sin descripción.")}</p>
@@ -3794,6 +3842,7 @@ async function loadAdminAlbums() {
       </div>
     `;
   }).join("");
+   filterAdminAlbumList();
 }
 
 async function loadAlbumOptions() {
@@ -4892,7 +4941,7 @@ function initAdminPage() {
   ensureArtistTypeField();
   ensureCategoryTreeFields();
   ensureAdminDonationSection();
-
+loadAdminAlbumArtistFilter();
   checkAdminSession();
 
   [
@@ -4967,6 +5016,7 @@ window.resetAlbumForm = resetAlbumForm;
 window.saveAlbum = saveAlbum;
 window.editAlbum = editAlbum;
 window.deleteAlbum = deleteAlbum;
+window.filterAdminAlbumList = filterAdminAlbumList;
 
 window.addAdminLinkFromFields = addAdminLinkFromFields;
 window.removeAdminLinkItem = removeAdminLinkItem;
