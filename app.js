@@ -4096,8 +4096,7 @@ async function saveSongCapoVersions(songId) {
 ========================================================= */
 
 function updateAdminPreview() {
-  const preview = $("songPreview") || $("adminSongPreview") || $("songPreviewContent");
-
+  const preview = $("adminPreviewBox") || $("songPreview") || $("adminSongPreview") || $("songPreviewContent");
   if (!preview) return;
 
   const title = getInputValue("songTitleInput") || "Título del canto";
