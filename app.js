@@ -2636,6 +2636,7 @@ async function loadAdminArtists() {
 async function loadArtistOptions() {
   const { data } = await fetchArtists();
 setOptions("songMainArtistInput", data || [], "Selecciona artista principal", "id", "name");
+   setOptions("adminSongArtistFilter", data || [], "Todos los artistas", "id", "name");
    const songMainArtistSelect = $("songMainArtistInput");
 
 if (songMainArtistSelect && !songMainArtistSelect.dataset.albumFilterReady) {
@@ -3139,6 +3140,7 @@ function loadCategoryOptions() {
           ${escapeHTML(label)}
         </option>
       `;
+       setOptions("adminSongCategoryFilter", flat, "Todas las categorías", "id", "path");
     });
   });
 }
@@ -3847,7 +3849,7 @@ async function loadAdminAlbums() {
 
 async function loadAlbumOptions() {
   const { data } = await fetchAlbums();
-
+setOptions("adminSongAlbumFilter", data || [], "Todos los álbumes", "id", "title");
   const select = $("songAlbumInput");
   const artistSelect = $("songMainArtistInput");
 
@@ -4496,7 +4498,40 @@ async function deleteSong(id) {
     loadHomeSongs()
   ]);
 }
+function filterAdminSongList() {
+  const searchInput = $("adminSongSearchInput");
+  const artistFilter = $("adminSongArtistFilter");
+  const categoryFilter = $("adminSongCategoryFilter");
+  const albumFilter = $("adminSongAlbumFilter");
+  const list = $("adminSongList");
 
+  if (!list) return;
+
+  const query = String(searchInput ? searchInput.value : "").trim().toLowerCase();
+  const artistId = String(artistFilter ? artistFilter.value : "").trim();
+  const categoryId = String(categoryFilter ? categoryFilter.value : "").trim();
+  const albumId = String(albumFilter ? albumFilter.value : "").trim();
+
+  const items = Array.from(list.querySelectorAll(".admin-song-item"));
+
+  items.forEach(function (item) {
+    const text = String(item.textContent || "").toLowerCase();
+    const artistIds = String(item.dataset.artistIds || "").split(",");
+    const categoryIds = String(item.dataset.categoryIds || "").split(",");
+    const albumIds = String(item.dataset.albumIds || "").split(",");
+
+    const matchesSearch = !query || text.includes(query);
+    const matchesArtist = !artistId || artistIds.includes(artistId);
+    const matchesCategory = !categoryId || categoryIds.includes(categoryId);
+    const matchesAlbum = !albumId || albumIds.includes(albumId);
+
+    if (matchesSearch && matchesArtist && matchesCategory && matchesAlbum) {
+      item.style.removeProperty("display");
+    } else {
+      item.style.setProperty("display", "none", "important");
+    }
+  });
+}
 async function loadAdminSongs() {
   const list = $("adminSongList");
 
@@ -4516,7 +4551,12 @@ async function loadAdminSongs() {
 
   list.innerHTML = data.map(function (song) {
     return `
-      <div class="admin-list-item">
+      <div
+  class="admin-list-item admin-song-item"
+  data-artist-ids="${escapeHTML((song._artists || []).map(function (artist) { return artist.id; }).join(","))}"
+  data-category-ids="${escapeHTML((song._categories || []).map(function (category) { return category.id; }).join(","))}"
+  data-album-ids="${escapeHTML((song._albums || []).map(function (album) { return album.id; }).join(","))}"
+>
         <strong>${escapeHTML(song.title || "Sin título")}</strong>
         <p>${escapeHTML(artistsText(song))}</p>
         <p>${escapeHTML(songTypeLabel(song.song_type))} · ${escapeHTML(songMetaText(song))}</p>
@@ -4537,6 +4577,7 @@ async function loadAdminSongs() {
       </div>
     `;
   }).join("");
+   filterAdminSongList();
 }
    /* =========================================================
    ADMIN: DONACIONES
@@ -5028,6 +5069,7 @@ window.resetSongForm = resetSongForm;
 window.saveSong = saveSong;
 window.editSong = editSong;
 window.deleteSong = deleteSong;
+window.filterAdminSongList = filterAdminSongList;
 window.updateAdminPreview = updateAdminPreview;
 
 window.saveDonationSettings = saveDonationSettings;
