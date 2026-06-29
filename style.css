@@ -3856,3 +3856,32 @@ body:has(#artistDetail) footer div {
   margin-top: 18px;
   margin-bottom: 28px;
 }
+.artist-profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.artist-profile-stats span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: rgba(246, 196, 83, 0.12);
+  border: 1px solid rgba(246, 196, 83, 0.25);
+  color: var(--gold);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+@media (max-width: 520px) {
+  .artist-profile-stats {
+    justify-content: center;
+  }
+
+  .artist-profile-stats span {
+    flex: 1 1 auto;
+  }
+}
