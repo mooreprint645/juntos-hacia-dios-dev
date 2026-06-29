@@ -2080,6 +2080,11 @@ box.innerHTML = `
       <p class="hero-kicker">${escapeHTML(artistTypeLabel(artist.artist_type || ""))}</p>
       <h1>${escapeHTML(artist.name || "Sin nombre")}</h1>
       <p>${escapeHTML(artist.description || "Ministerio o artista registrado.")}</p>
+    <div class="artist-profile-stats">
+  <span>${songs.length} canto${songs.length === 1 ? "" : "s"}</span>
+  <span>${albums.length} álbum${albums.length === 1 ? "" : "es"}</span>
+  <span>${collaborations.length} colaboración${collaborations.length === 1 ? "" : "es"}</span>
+</div>
     </div>
   </section>
   <section class="artist-profile-section">
