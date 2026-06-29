@@ -3830,3 +3830,29 @@ body:has(#artistDetail) footer div {
     text-decoration: none;
   }
 }
+.artist-profile-section label[for="artistProfileSearchInput"] {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+#artistProfileSearchInput {
+  width: 100%;
+  max-width: 520px;
+  padding: 13px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+#artistProfileSearchInput::placeholder {
+  color: var(--muted);
+}
+
+.artist-profile-section:has(#artistProfileSearchInput) {
+  margin-top: 18px;
+  margin-bottom: 28px;
+}
