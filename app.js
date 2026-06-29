@@ -1148,10 +1148,7 @@ function renderSongsPage() {
   if (!grid) return;
 
   const query = input ? input.value.trim().toLowerCase() : "";
-const toneFilter = $("songToneFilter") ? $("songToneFilter").value : "";
-const artistFilter = $("songArtistFilter") ? $("songArtistFilter").value : "";
-const categoryFilter = $("songCategoryFilter") ? $("songCategoryFilter").value : "";
-const albumFilter = $("songAlbumFilter") ? $("songAlbumFilter").value : "";
+
   let items = allSongsForPage.slice();
 
   if (currentSongsFilter !== "all") {
@@ -1159,35 +1156,7 @@ const albumFilter = $("songAlbumFilter") ? $("songAlbumFilter").value : "";
       return String(song.song_type || "").toLowerCase() === currentSongsFilter;
     });
   }
-if (toneFilter) {
-  items = items.filter(function (song) {
-    return String(song.tone || "").toLowerCase() === String(toneFilter).toLowerCase();
-  });
-}
 
-if (artistFilter) {
-  items = items.filter(function (song) {
-    return (song._artists || []).some(function (artist) {
-      return String(artist.id || "") === String(artistFilter);
-    });
-  });
-}
-
-if (categoryFilter) {
-  items = items.filter(function (song) {
-    return (song._categories || []).some(function (category) {
-      return String(category.id || "") === String(categoryFilter);
-    });
-  });
-}
-
-if (albumFilter) {
-  items = items.filter(function (song) {
-    return (song._albums || []).some(function (album) {
-      return String(album.id || "") === String(albumFilter);
-    });
-  });
-}
   if (query) {
     items = items.filter(function (song) {
       const text = [
@@ -1246,95 +1215,7 @@ function setSongsFilter(filter) {
   currentSongsFilter = filter || "all";
   renderSongsPage();
 }
-function fillPublicSongFilters() {
-  const toneSelect = $("songToneFilter");
-  const artistSelect = $("songArtistFilter");
-  const categorySelect = $("songCategoryFilter");
-  const albumSelect = $("songAlbumFilter");
 
-  const tones = new Set();
-  const artists = new Map();
-  const categories = new Map();
-  const albums = new Map();
-
-  allSongsForPage.forEach(function (song) {
-    if (song.tone) {
-      tones.add(String(song.tone).trim());
-    }
-
-    (song._artists || []).forEach(function (artist) {
-      if (artist.id) artists.set(String(artist.id), artist.name || "Sin artista");
-    });
-
-    (song._categories || []).forEach(function (category) {
-      if (category.id) categories.set(String(category.id), category.name || "Sin categoría");
-    });
-
-    (song._albums || []).forEach(function (album) {
-      if (album.id) albums.set(String(album.id), album.title || album.name || "Sin álbum");
-    });
-  });
-
-  if (toneSelect) {
-    toneSelect.innerHTML = `<option value="">Todos los tonos</option>`;
-
-    Array.from(tones).sort().forEach(function (tone) {
-      toneSelect.innerHTML += `
-        <option value="${escapeHTML(tone)}">${escapeHTML(tone)}</option>
-      `;
-    });
-  }
-
-  if (artistSelect) {
-    artistSelect.innerHTML = `<option value="">Todos los artistas</option>`;
-
-    Array.from(artists.entries())
-      .sort(function (a, b) {
-        return a[1].localeCompare(b[1]);
-      })
-      .forEach(function (entry) {
-        artistSelect.innerHTML += `
-          <option value="${escapeHTML(entry[0])}">${escapeHTML(entry[1])}</option>
-        `;
-      });
-  }
-
-  if (categorySelect) {
-    categorySelect.innerHTML = `<option value="">Todas las categorías</option>`;
-
-    Array.from(categories.entries())
-      .sort(function (a, b) {
-        return a[1].localeCompare(b[1]);
-      })
-      .forEach(function (entry) {
-        categorySelect.innerHTML += `
-          <option value="${escapeHTML(entry[0])}">${escapeHTML(entry[1])}</option>
-        `;
-      });
-  }
-
-  if (albumSelect) {
-    albumSelect.innerHTML = `<option value="">Todos los álbumes</option>`;
-
-    Array.from(albums.entries())
-      .sort(function (a, b) {
-        return a[1].localeCompare(b[1]);
-      })
-      .forEach(function (entry) {
-        albumSelect.innerHTML += `
-          <option value="${escapeHTML(entry[0])}">${escapeHTML(entry[1])}</option>
-        `;
-      });
-  }
-}
-function clearPublicSongFilters() {
-  setInputValue("songToneFilter", "");
-  setInputValue("songArtistFilter", "");
-  setInputValue("songCategoryFilter", "");
-  setInputValue("songAlbumFilter", "");
-
-  renderSongsPage();
-}
 async function loadSongsPage() {
   if (!isPage("canciones.html")) return;
 
@@ -1361,7 +1242,7 @@ async function loadSongsPage() {
   }
 
   allSongsForPage = data || [];
-fillPublicSongFilters();
+
   const type = getUrlParam("tipo");
   const searchParam = getUrlParam("buscar") || getUrlParam("q");
 
