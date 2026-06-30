@@ -3917,3 +3917,16 @@ body:has(#artistDetail) footer div {
     flex: 1 1 auto;
   }
 }
+.admin-count {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(246, 196, 83, 0.12);
+  border: 1px solid rgba(246, 196, 83, 0.25);
+  color: var(--gold);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
