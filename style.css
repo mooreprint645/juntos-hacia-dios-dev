@@ -3885,3 +3885,35 @@ body:has(#artistDetail) footer div {
     flex: 1 1 auto;
   }
 }
+@media (max-width: 700px) {
+  .admin-section {
+    padding: 14px;
+  }
+
+  .admin-form-card,
+  .admin-section article {
+    width: 100%;
+  }
+
+  .admin-form-card input,
+  .admin-form-card select,
+  .admin-form-card textarea,
+  .admin-section input,
+  .admin-section select,
+  .admin-section textarea {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-actions,
+  .admin-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .admin-actions button,
+  .admin-form-actions button {
+    flex: 1 1 auto;
+  }
+}
