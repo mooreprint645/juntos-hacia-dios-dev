@@ -4498,6 +4498,8 @@ async function deleteSong(id) {
     loadHomeSongs()
   ]);
 }
+let adminSongVisibleLimit = 8;
+
 function filterAdminSongList() {
   const searchInput = $("adminSongSearchInput");
   const artistFilter = $("adminSongArtistFilter");
@@ -4512,7 +4514,11 @@ function filterAdminSongList() {
   const categoryId = String(categoryFilter ? categoryFilter.value : "").trim();
   const albumId = String(albumFilter ? albumFilter.value : "").trim();
 
+  const hasFilters = !!(query || artistId || categoryId || albumId);
   const items = Array.from(list.querySelectorAll(".admin-song-item"));
+
+  let matchedCount = 0;
+  let shownCount = 0;
 
   items.forEach(function (item) {
     const text = String(item.textContent || "").toLowerCase();
@@ -4524,13 +4530,44 @@ function filterAdminSongList() {
     const matchesArtist = !artistId || artistIds.includes(artistId);
     const matchesCategory = !categoryId || categoryIds.includes(categoryId);
     const matchesAlbum = !albumId || albumIds.includes(albumId);
+    const matchesAll = matchesSearch && matchesArtist && matchesCategory && matchesAlbum;
 
-    if (matchesSearch && matchesArtist && matchesCategory && matchesAlbum) {
-      item.style.removeProperty("display");
+    if (matchesAll) {
+      matchedCount += 1;
+
+      if (hasFilters || shownCount < adminSongVisibleLimit) {
+        item.style.removeProperty("display");
+        shownCount += 1;
+      } else {
+        item.style.setProperty("display", "none", "important");
+      }
     } else {
       item.style.setProperty("display", "none", "important");
     }
   });
+
+  let button = $("adminSongShowMoreButton");
+
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.id = "adminSongShowMoreButton";
+    button.className = "song-btn secondary-btn";
+    button.onclick = showMoreAdminSongs;
+    list.insertAdjacentElement("afterend", button);
+  }
+
+  if (!hasFilters && matchedCount > adminSongVisibleLimit) {
+    button.textContent = "Ver más canciones";
+    button.style.removeProperty("display");
+  } else {
+    button.style.setProperty("display", "none", "important");
+  }
+}
+
+function showMoreAdminSongs() {
+  adminSongVisibleLimit += 8;
+  filterAdminSongList();
 }
 async function loadAdminSongs() {
   const list = $("adminSongList");
