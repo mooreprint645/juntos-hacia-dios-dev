@@ -89,6 +89,13 @@ function showMessage(id, text) {
     element.textContent = text || "";
   }
 }
+function setText(id, text) {
+  const element = $(id);
+
+  if (element) {
+    element.textContent = text || "";
+  }
+}
 
 function getUrlParam(name) {
   return new URLSearchParams(window.location.search).get(name) || "";
