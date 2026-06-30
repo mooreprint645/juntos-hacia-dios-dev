@@ -2630,6 +2630,7 @@ async function loadAdminArtists() {
   ensureArtistTypeField();
 
   const { data, error } = await fetchArtists();
+   setText("adminArtistCount", `${(data || []).length} artista${(data || []).length === 1 ? "" : "s"}`);
 
   if (error) {
     list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
@@ -3527,6 +3528,7 @@ async function loadAdminCategories() {
   ensureCategoryTreeFields();
 
   const { data, error } = await fetchCategories();
+   setText("adminCategoryCount", `${(data || []).length} categoría${(data || []).length === 1 ? "" : "s"}`);
 
   if (error) {
     list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
@@ -3906,6 +3908,7 @@ async function loadAdminAlbums() {
   if (!list) return;
 
   const { data, error } = await fetchAlbums();
+   setText("adminAlbumCount", `${(data || []).length} álbum${(data || []).length === 1 ? "" : "es"}`);
 
   if (error) {
     list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
@@ -4667,6 +4670,7 @@ async function loadAdminSongs() {
   if (!list) return;
 
   const { data, error } = await fetchSongsWithRelations();
+   setText("adminSongCount", `${(data || []).length} canción${(data || []).length === 1 ? "" : "es"}`);
 
   if (error) {
     list.innerHTML = `<p style="color:#ffb4b4;">Error: ${escapeHTML(error.message)}</p>`;
