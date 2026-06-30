@@ -2567,24 +2567,61 @@ async function deleteArtist(id) {
     loadHomeArtists()
   ]);
 }
+let adminArtistVisibleLimit = 8;
+
 function filterAdminArtistList(query) {
   const list = $("adminArtistList");
 
   if (!list) return;
 
   const cleanQuery = String(query || "").trim().toLowerCase();
+  const hasFilter = !!cleanQuery;
   const items = Array.from(list.children);
+
+  let matchedCount = 0;
+  let shownCount = 0;
 
   items.forEach(function (item) {
     const text = String(item.textContent || "").toLowerCase();
+    const matchesSearch = !cleanQuery || text.includes(cleanQuery);
 
-    if (!cleanQuery || text.includes(cleanQuery)) {
-  item.style.removeProperty("display");
-} else {
-  item.style.setProperty("display", "none", "important");
+    if (matchesSearch) {
+      matchedCount += 1;
+
+      if (hasFilter || shownCount < adminArtistVisibleLimit) {
+        item.style.removeProperty("display");
+        shownCount += 1;
+      } else {
+        item.style.setProperty("display", "none", "important");
+      }
+    } else {
+      item.style.setProperty("display", "none", "important");
     }
   });
-     }
+
+  let button = $("adminArtistShowMoreButton");
+
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.id = "adminArtistShowMoreButton";
+    button.className = "song-btn secondary-btn";
+    button.onclick = showMoreAdminArtists;
+    list.insertAdjacentElement("afterend", button);
+  }
+
+  if (!hasFilter && matchedCount > adminArtistVisibleLimit) {
+    button.textContent = "Ver más artistas";
+    button.style.removeProperty("display");
+  } else {
+    button.style.setProperty("display", "none", "important");
+  }
+}
+
+function showMoreAdminArtists() {
+  adminArtistVisibleLimit += 8;
+  filterAdminArtistList($("adminArtistSearchInput") ? $("adminArtistSearchInput").value : "");
+}
 async function loadAdminArtists() {
   const list = $("adminArtistList");
 
@@ -2631,6 +2668,7 @@ async function loadAdminArtists() {
       </div>
     `;
   }).join("");
+filterAdminArtistList($("adminArtistSearchInput") ? $("adminArtistSearchInput").value : "");   
 }
 
 async function loadArtistOptions() {
@@ -5117,6 +5155,7 @@ window.resetArtistForm = resetArtistForm;
 window.saveArtist = saveArtist;
 window.editArtist = editArtist;
 window.deleteArtist = deleteArtist;
+window.showMoreAdminArtists = showMoreAdminArtists;
 
 window.setAdminCategoryBrowserType = setAdminCategoryBrowserType;
 window.openAdminCategoryFolder = openAdminCategoryFolder;
