@@ -4601,6 +4601,7 @@ async function deleteSong(id) {
   ]);
 }
 let adminSongVisibleLimit = 8;
+let adminSongsCache = [];
 
 function filterAdminSongList() {
   const searchInput = $("adminSongSearchInput");
@@ -4617,36 +4618,46 @@ function filterAdminSongList() {
   const albumId = String(albumFilter ? albumFilter.value : "").trim();
 
   const hasFilters = !!(query || artistId || categoryId || albumId);
-  const items = Array.from(list.querySelectorAll(".admin-song-item"));
+  const sourceSongs = adminSongsCache || [];
 
-  let matchedCount = 0;
-  let shownCount = 0;
+  const matchedSongs = sourceSongs.filter(function (song) {
+    const artistIds = (song._artists || []).map(function (artist) {
+      return String(artist.id || "");
+    });
 
-  items.forEach(function (item) {
-    const text = String(item.textContent || "").toLowerCase();
-    const artistIds = String(item.dataset.artistIds || "").split(",");
-    const categoryIds = String(item.dataset.categoryIds || "").split(",");
-    const albumIds = String(item.dataset.albumIds || "").split(",");
+    const categoryIds = (song._categories || []).map(function (category) {
+      return String(category.id || "");
+    });
+
+    const albumIds = (song._albums || []).map(function (album) {
+      return String(album.id || "");
+    });
+
+    const text = [
+      song.title || "",
+      artistsText(song),
+      songTypeLabel(song.song_type),
+      songMetaText(song),
+      (song._categories || []).map(function (category) { return category.name || ""; }).join(" "),
+      (song._albums || []).map(function (album) { return album.title || ""; }).join(" ")
+    ].join(" ").toLowerCase();
 
     const matchesSearch = !query || text.includes(query);
     const matchesArtist = !artistId || artistIds.includes(artistId);
     const matchesCategory = !categoryId || categoryIds.includes(categoryId);
     const matchesAlbum = !albumId || albumIds.includes(albumId);
-    const matchesAll = matchesSearch && matchesArtist && matchesCategory && matchesAlbum;
 
-    if (matchesAll) {
-      matchedCount += 1;
-
-      if (hasFilters || shownCount < adminSongVisibleLimit) {
-        item.style.removeProperty("display");
-        shownCount += 1;
-      } else {
-        item.style.setProperty("display", "none", "important");
-      }
-    } else {
-      item.style.setProperty("display", "none", "important");
-    }
+    return matchesSearch && matchesArtist && matchesCategory && matchesAlbum;
   });
+
+  list.innerHTML = matchedSongs
+    .slice(0, adminSongVisibleLimit)
+    .map(adminSongItemHTML)
+    .join("");
+
+  if (!matchedSongs.length) {
+    list.innerHTML = '<p class="muted-text">No hay canciones con esos filtros.</p>';
+  }
 
   let button = $("adminSongShowMoreButton");
 
@@ -4659,14 +4670,41 @@ function filterAdminSongList() {
     list.insertAdjacentElement("afterend", button);
   }
 
-  if (!hasFilters && matchedCount > adminSongVisibleLimit) {
-    button.textContent = "Ver más canciones";
+  if (matchedSongs.length > adminSongVisibleLimit) {
+    button.textContent = hasFilters ? "Ver más canciones filtradas" : "Ver más canciones";
     button.style.removeProperty("display");
   } else {
     button.style.setProperty("display", "none", "important");
   }
 }
+function adminSongItemHTML(song) {
+  return `
+    <div
+      class="admin-list-item admin-song-item"
+      data-artist-ids="${escapeHTML((song._artists || []).map(function (artist) { return artist.id; }).join(","))}"
+      data-category-ids="${escapeHTML((song._categories || []).map(function (category) { return category.id; }).join(","))}"
+      data-album-ids="${escapeHTML((song._albums || []).map(function (album) { return album.id; }).join(","))}"
+    >
+      <strong>${escapeHTML(song.title || "Sin título")}</strong>
+      <p>${escapeHTML(artistsText(song))}</p>
+      <p>${escapeHTML(songTypeLabel(song.song_type))} · ${escapeHTML(songMetaText(song))}</p>
 
+      <div class="admin-actions">
+        <button type="button" class="song-btn small-btn" onclick="editSong('${escapeHTML(song.id)}')">
+          Editar
+        </button>
+
+        <a class="song-btn small-btn" href="canto.html?slug=${safeUrlParam(song.slug || "")}" target="_blank">
+          Ver
+        </a>
+
+        <button type="button" class="song-btn small-btn danger" onclick="deleteSong('${escapeHTML(song.id)}')">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  `;
+}
 function showMoreAdminSongs() {
   adminSongVisibleLimit += 8;
   filterAdminSongList();
@@ -4689,35 +4727,15 @@ async function loadAdminSongs() {
     return;
   }
 
-  list.innerHTML = data.map(function (song) {
-    return `
-      <div
-  class="admin-list-item admin-song-item"
-  data-artist-ids="${escapeHTML((song._artists || []).map(function (artist) { return artist.id; }).join(","))}"
-  data-category-ids="${escapeHTML((song._categories || []).map(function (category) { return category.id; }).join(","))}"
-  data-album-ids="${escapeHTML((song._albums || []).map(function (album) { return album.id; }).join(","))}"
->
-        <strong>${escapeHTML(song.title || "Sin título")}</strong>
-        <p>${escapeHTML(artistsText(song))}</p>
-        <p>${escapeHTML(songTypeLabel(song.song_type))} · ${escapeHTML(songMetaText(song))}</p>
+  adminSongsCache = data || [];
+adminSongVisibleLimit = 8;
 
-        <div class="admin-actions">
-          <button type="button" class="song-btn small-btn" onclick="editSong('${escapeHTML(song.id)}')">
-            Editar
-          </button>
+list.innerHTML = adminSongsCache
+  .slice(0, adminSongVisibleLimit)
+  .map(adminSongItemHTML)
+  .join("");
 
-          <a class="song-btn small-btn" href="canto.html?slug=${safeUrlParam(song.slug || "")}" target="_blank">
-            Ver
-          </a>
-
-          <button type="button" class="song-btn small-btn danger" onclick="deleteSong('${escapeHTML(song.id)}')">
-            Eliminar
-          </button>
-        </div>
-      </div>
-    `;
-  }).join("");
-   filterAdminSongList();
+filterAdminSongList();
 }
    /* =========================================================
    ADMIN: DONACIONES
