@@ -3760,16 +3760,24 @@ async function deleteAlbum(id) {
     loadAlbumOptions()
   ]);
 }
+let adminAlbumVisibleLimit = 8;
+
 function filterAdminAlbumList() {
   const searchInput = $("adminAlbumSearchInput");
   const artistFilter = $("adminAlbumArtistFilter");
   const list = $("adminAlbumList");
+ 
 
   if (!list) return;
 
   const query = String(searchInput ? searchInput.value : "").trim().toLowerCase();
   const artistId = String(artistFilter ? artistFilter.value : "").trim();
+
+  const hasFilters = !!(query || artistId);
   const items = Array.from(list.querySelectorAll(".admin-album-item"));
+
+  let matchedCount = 0;
+  let shownCount = 0;
 
   items.forEach(function (item) {
     const text = String(item.textContent || "").toLowerCase();
@@ -3777,13 +3785,44 @@ function filterAdminAlbumList() {
 
     const matchesSearch = !query || text.includes(query);
     const matchesArtist = !artistId || itemArtistId === artistId;
+    const matchesAll = matchesSearch && matchesArtist;
 
-    if (matchesSearch && matchesArtist) {
-      item.style.removeProperty("display");
+    if (matchesAll) {
+      matchedCount += 1;
+
+      if (hasFilters || shownCount < adminAlbumVisibleLimit) {
+        item.style.removeProperty("display");
+        shownCount += 1;
+      } else {
+        item.style.setProperty("display", "none", "important");
+      }
     } else {
       item.style.setProperty("display", "none", "important");
     }
   });
+
+  let button = $("adminAlbumShowMoreButton");
+
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.id = "adminAlbumShowMoreButton";
+    button.className = "song-btn secondary-btn";
+    button.onclick = showMoreAdminAlbums;
+    list.insertAdjacentElement("afterend", button);
+  }
+
+  if (!hasFilters && matchedCount > adminAlbumVisibleLimit) {
+    button.textContent = "Ver más álbumes";
+    button.style.removeProperty("display");
+  } else {
+    button.style.setProperty("display", "none", "important");
+  }
+}
+
+function showMoreAdminAlbums() {
+  adminAlbumVisibleLimit += 8;
+  filterAdminAlbumList();
 }
 async function loadAdminAlbumArtistFilter() {
   const select = $("adminAlbumArtistFilter");
@@ -5095,7 +5134,8 @@ window.saveAlbum = saveAlbum;
 window.editAlbum = editAlbum;
 window.deleteAlbum = deleteAlbum;
 window.filterAdminAlbumList = filterAdminAlbumList;
-
+window.showMoreAdminAlbums = showMoreAdminAlbums;
+   
 window.addAdminLinkFromFields = addAdminLinkFromFields;
 window.removeAdminLinkItem = removeAdminLinkItem;
 window.addAdminCapoVersionFromFields = addAdminCapoVersionFromFields;
@@ -5107,6 +5147,7 @@ window.saveSong = saveSong;
 window.editSong = editSong;
 window.deleteSong = deleteSong;
 window.filterAdminSongList = filterAdminSongList;
+window.showMoreAdminSongs = showMoreAdminSongs;
 window.updateAdminPreview = updateAdminPreview;
 
 window.saveDonationSettings = saveDonationSettings;
