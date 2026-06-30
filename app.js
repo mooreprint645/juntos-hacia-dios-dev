@@ -3350,6 +3350,12 @@ async function saveAdminCategoryOrder() {
    ADMIN: RENDER CATEGORÍAS Y CRUD
 ========================================================= */
 
+let adminCategoryVisibleLimit = 8;
+
+function showMoreAdminCategories() {
+  adminCategoryVisibleLimit += 8;
+  renderAdminCategoryBrowser();
+}
 function renderAdminCategoryBrowser() {
   const list = $("adminCategoryList");
 
@@ -3420,7 +3426,7 @@ function renderAdminCategoryBrowser() {
 
       ${children.length ? `
         <div class="admin-category-folder-grid">
-          ${children.map(function (category, index) {
+          ${children.slice(0, adminCategoryVisibleLimit).map(function (category, index) {
             const childCount = getCategoryChildrenFromBrowser(category.id).length;
 
             return `
@@ -3484,6 +3490,15 @@ function renderAdminCategoryBrowser() {
             `;
           }).join("")}
         </div>
+${children.length > adminCategoryVisibleLimit ? `
+  <button
+    type="button"
+    class="song-btn secondary-btn"
+    onclick="showMoreAdminCategories()"
+  >
+    Ver más categorías
+  </button>
+` : ""}
 
         <div class="admin-category-order-save">
           <button type="button" class="song-btn small-btn" onclick="saveAdminCategoryOrder()">
@@ -5167,6 +5182,7 @@ window.cancelCategoryEdit = cancelCategoryEdit;
 window.saveCategory = saveCategory;
 window.editCategory = editCategory;
 window.deleteCategory = deleteCategory;
+window.showMoreAdminCategories = showMoreAdminCategories;
 
 window.resetAlbumForm = resetAlbumForm;
 window.saveAlbum = saveAlbum;
